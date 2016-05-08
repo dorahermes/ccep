@@ -1,5 +1,5 @@
 
-function [n1_mat,n2_mat,rmseN1,rmseN2,fitted_line_n1,fitted_line_n2] = ccep_fitN1N2(paramsCCEPfit,ccep,data,times,el,elm)
+function [n1_mat,n2_mat,rmseN1,rmseN2,fitted_line_n1,fitted_line_n2] = ccep_fitN1N2(paramsCCEPfit,ccep,data,t,el,elm)
 
 
 
@@ -19,14 +19,14 @@ function [n1_mat,n2_mat,rmseN1,rmseN2,fitted_line_n1,fitted_line_n2] = ccep_fitN
 % Vassileva and Hermes, 2016, UMC Utrecht
 
 
-%% Define data and times to fit for each component:
+%% Define data and t to fit for each component:
 
 % N1:
-data2fitN1 = squeeze(nanmean(data(elm,times>paramsCCEPfit.t_low_N1 & times<paramsCCEPfit.t_up_N1,ccep(el).epochs),3));
+data2fitN1 = squeeze(nanmean(data(elm,t>paramsCCEPfit.t_low_N1 & t<paramsCCEPfit.t_up_N1,ccep(el).epochs),3));
 data2fitN1 = double(data2fitN1);
 
 % % N2:%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-data2fitN2 = squeeze(nanmean(data(elm,times>paramsCCEPfit.t_low_N2 & times<paramsCCEPfit.t_up_N2,ccep(el).epochs),3));
+data2fitN2 = squeeze(nanmean(data(elm,t>paramsCCEPfit.t_low_N2 & t<paramsCCEPfit.t_up_N2,ccep(el).epochs),3));
 data2fitN2 = double(data2fitN2);
 
 if find(isnan(data2fitN1),1)>0
@@ -40,10 +40,10 @@ end
 
 % calculate least squares
 [a, resNorm] =...
-  lsqnonlin(@(x) LinePlusGauss(x,data2fitN1,paramsCCEPfit.times2fitN1),paramsCCEPfit.X01,paramsCCEPfit.LB1,paramsCCEPfit.UB1,paramsCCEPfit.my_options);
+  lsqnonlin(@(x) LinePlusGauss(x,data2fitN1,paramsCCEPfit.t2fitN1),paramsCCEPfit.X01,paramsCCEPfit.LB1,paramsCCEPfit.UB1,paramsCCEPfit.my_options);
 
 % fit a line
-fitted_line_n1 = a(1)*sqrt(2*pi)*normpdf(paramsCCEPfit.times2fitN1,a(2),a(3));
+fitted_line_n1 = a(1)*sqrt(2*pi)*normpdf(paramsCCEPfit.t2fitN1,a(2),a(3));
 
 % calculate outputs
 amp = a(1);                  % amplitude
@@ -62,8 +62,8 @@ clear a amp funWidth peakLat resNorm
 %% Plot N1 data + fitted line
 % figure,
 % hold on
-% plot(times2fitN1,data2fitN1,'k')
-% plot(times2fitN1,fitted_line_n1,'r')
+% plot(t2fitN1,data2fitN1,'k')
+% plot(t2fitN1,fitted_line_n1,'r')
 % xlabel('ms')
 % ylabel('mV')
 % title(['N1 ' int2str(el) ' to ' int2str(elm) ' subj ' s])
@@ -72,10 +72,10 @@ clear a amp funWidth peakLat resNorm
 
 % calculate least squares
 [b, resNorm] =...
-    lsqnonlin(@(x) LinePlusGauss(x,data2fitN2,paramsCCEPfit.times2fitN2),paramsCCEPfit.X02,paramsCCEPfit.LB2,paramsCCEPfit.UB2,paramsCCEPfit.my_options);
+    lsqnonlin(@(x) LinePlusGauss(x,data2fitN2,paramsCCEPfit.t2fitN2),paramsCCEPfit.X02,paramsCCEPfit.LB2,paramsCCEPfit.UB2,paramsCCEPfit.my_options);
 
 % fit a line
-fitted_line_n2 = b(1)*sqrt(2*pi)*normpdf(paramsCCEPfit.times2fitN2,b(2),b(3));
+fitted_line_n2 = b(1)*sqrt(2*pi)*normpdf(paramsCCEPfit.t2fitN2,b(2),b(3));
 
 % calculate parameters
 amp = b(1)/b(3);                  % amplitude
@@ -91,8 +91,8 @@ clear b amp funWidth peakLat resNorm X0 LB UB
 %% Plot N2 data + fitted line
 % figure,
 % hold on
-% plot(times2fitN2,data2fitN2,'k')
-% plot(times2fitN2,fitted_line_n2,'g')
+% plot(t2fitN2,data2fitN2,'k')
+% plot(t2fitN2,fitted_line_n2,'g')
 % xlabel('ms')
 % ylabel('mV')
 % title(['N2 ' int2str(el) ' to ' int2str(elm)])

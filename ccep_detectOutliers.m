@@ -1,14 +1,14 @@
-function outlier_matrix = ccep_detectOutliers(data,ccep,times,varargin)
+function outlier_matrix = ccep_detectOutliers(data,ccep,t,varargin)
 % 
 % Detect outliers in terms of variance, standard deviations from the
 % median, voltage threshold and voltage jumps. Checks between 25 ms and
 % 550 ms after stimulation.
 % 
-% Call as detect_outliers(data,ccep,times,s), where:
+% Call as detect_outliers(data,ccep,t,s), where:
 %
 %   'data'      is the name of the matrix containing the data
 %   'ccep'      is the name of the struct that contains stimulation data
-%   'times'     is the time vector
+%   't'     is the time vector
 % 
 % optional input
 %   'makeFig'   if you want to make a figure
@@ -58,16 +58,16 @@ for el=1:size(data,1) % Check for outliers for every electrode
 %     c_var = c_var + sum(outlier_matrix(el,:),2);
 % 
 %     %%%%%% outlier threshold median %%%%%% PROBLEM: also detects cceps
-%     up_th_med=squeeze(median(data(el,times>t_start & times<t_end,:),3)+std_th_num*std(data(el,times>t_start & times<t_end,outlier_matrix(el,:)==0),[],3));
-%     low_th_med=squeeze(median(data(el,times>t_start & times<t_end,:),3)-std_th_num*std(data(el,times>t_start & times<t_end,outlier_matrix(el,:)==0),[],3));
+%     up_th_med=squeeze(median(data(el,t>t_start & t<t_end,:),3)+std_th_num*std(data(el,t>t_start & t<t_end,outlier_matrix(el,:)==0),[],3));
+%     low_th_med=squeeze(median(data(el,t>t_start & t<t_end,:),3)-std_th_num*std(data(el,t>t_start & t<t_end,outlier_matrix(el,:)==0),[],3));
 %     % check > median+3std
-%     a = bsxfun(@minus,data(el,times>t_start & times<t_end,:),up_th_med);
+%     a = bsxfun(@minus,data(el,t>t_start & t<t_end,:),up_th_med);
 %     a = a>0; a = squeeze(a); 
 %     a = sum(a,1); % sum across time: number of points where data are larger than the median + 3std 
 %     outlier_matrix(el,a>0)=2;
 %     c_med = c_med + sum(outlier_matrix(el,:)==2,2);
 %     % check < median-3std
-%     a = bsxfun(@minus,data(el,times>t_start & times<t_end,:),low_th_med);
+%     a = bsxfun(@minus,data(el,t>t_start & t<t_end,:),low_th_med);
 %     a = a<0; a = squeeze(a); 
 %     a = sum(a,1); % sum across time: number of points where data are smaller than the median - 3std 
 %     outlier_matrix(el,a<0)=3;
@@ -75,14 +75,14 @@ for el=1:size(data,1) % Check for outliers for every electrode
 %     clear a
 
     %%%%%% outlier threshold jumps %%%%%%
-    abs_diff_data = squeeze(abs(diff(data(el,times>t_start & times<t_end,:),1,2)));
+    abs_diff_data = squeeze(abs(diff(data(el,t>t_start & t<t_end,:),1,2)));
     nr_jumps_per_epoch = sum(abs_diff_data > jumps_threshold,1);
     outlier_matrix(el,nr_jumps_per_epoch>0) = 4;
     c_jump =  c_jump + sum(outlier_matrix(el,:)==4,2);
     clear abs_diff_data nr_jumps_per_epoch
     
     %%%%%% outlier threshold voltage %%%%%%
-    volt_thr_data = squeeze(abs(data(el,times>t_start & times<t_end,:)));
+    volt_thr_data = squeeze(abs(data(el,t>t_start & t<t_end,:)));
     nr_volt_out = sum(volt_thr_data >volt_threshold,1);
     outlier_matrix(el,nr_volt_out>0) = 5;
     c_volt =  c_volt + sum(outlier_matrix(el,:)==5,2);
@@ -117,8 +117,8 @@ end
 %         title({['Stimulated electrode: ' int2str(el)];...
 %              ['Upper voltage threshold: ' int2str(volt_threshold)]})
 % 
-%         plot(times,squeeze(data(elm,:,:)), 'g')
-%         plot(times,squeeze(data(elm,:,outlier_matrix(el,:)>0)), 'r')
+%         plot(t,squeeze(data(elm,:,:)), 'g')
+%         plot(t,squeeze(data(elm,:,outlier_matrix(el,:)>0)), 'r')
 %         xlim([-100 600])
 %         ylim([-2000 2000])  
 %         

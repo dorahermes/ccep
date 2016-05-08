@@ -1,10 +1,10 @@
-function data = ccep_median_corr(data,times,ccep,bs_period)
+function data = ccep_median_corr(data,t,ccep,bs_period)
 % Baseline correction of data
 % 
 % function subtracts the average difference from the median response
-% data = baseline(data,times,ccep,bs_period);
+% data = baseline(data,t,ccep,bs_period);
 % data - data matrix
-% times - time-points vector
+% t - time-points vector
 % ccep - structure for which epochs belong to stimulated trials
 %       should have:
 %           ccep.els (stimulated electrodes)
@@ -17,7 +17,7 @@ function data = ccep_median_corr(data,times,ccep,bs_period)
 
 % set the baseline period
 % bs_period = [10 600];
-time_bs = times>bs_period(1) & times<bs_period(2);
+time_bs = t>bs_period(1) & t<bs_period(2);
 
 for el=1:size(data,1)
     if numel(ccep(el).epochs)==0
@@ -28,7 +28,7 @@ for el=1:size(data,1)
             for k = 1:length(ccep(el).epochs)
                 trial_ccep = data(elm,time_bs,ccep(el).epochs(k));
                 
-                % what is the average difference between the trial and the
+                % what is the average difference between the trial an d the
                 % median? (average across time-points)
                 av_difference = nanmean(trial_ccep - median_ccep);
                 
