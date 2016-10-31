@@ -1,37 +1,30 @@
-function ccep_parmsN1fit = ccep_setFitParms(times)
+function ccep_parms = ccep_setFitParms(times)
 
 %% Function fitting parameters
 % Pick Times for each component
 % t_low_N1 - lower bounds for N1
 % t_up_N1 - upper bound for N1
-% t_low_N2 - lower bounds for N2
-% t_up_N2 - upper bounds for N2
 
-% N1:
-ccep_parmsN1fit.t_low_N1 = 10;
-ccep_parmsN1fit.t_up_N1 = 50;
-% N2:
-ccep_parmsN1fit.t_low_N2 = 50;
-ccep_parmsN1fit.t_up_N2 = 550;
+ccep_parms.t_low_N1 = 10;
+ccep_parms.t_up_N1 = 80;
 
 %%
-ccep_parmsN1fit.times2fitN1 = times(1,times>ccep_parmsN1fit.t_low_N1 & times<ccep_parmsN1fit.t_up_N1);
-ccep_parmsN1fit.alltN1 = size(ccep_parmsN1fit.times2fitN1,2);
-
-ccep_parmsN1fit.times2fitN2 = times(1,times>ccep_parmsN1fit.t_low_N2 & times<ccep_parmsN1fit.t_up_N2);
-ccep_parmsN1fit.alltN2 = size(ccep_parmsN1fit.times2fitN2,2);
+ccep_parms.times2fitN1 = times(1,times>ccep_parms.t_low_N1 & times<ccep_parms.t_up_N1);
+ccep_parms.alltN1 = size(ccep_parms.times2fitN1,2);
 
 % options for lsqnonlin:
-ccep_parmsN1fit.my_options=optimset('Display','off','Algorithm','trust-region-reflective'); 
+ccep_parms.my_options=optimset('Display','off','Algorithm','trust-region-reflective'); 
 
 %% N1 Parameters for the fit:
 %  amplitude, time, width, offset
-ccep_parmsN1fit.X01 = [-1 30 1 0];    % starting points
-ccep_parmsN1fit.LB1 = [-Inf 10 0 -Inf]; % lower bounds
-ccep_parmsN1fit.UB1 = [ 0 40 150 Inf]; % upper bounds
+ccep_parms.X01 = [-1 30 1 0];    % starting points
+ccep_parms.LB1 = [-Inf 10 0 -Inf]; % lower bounds
+ccep_parms.UB1 = [ 0 40 150 Inf]; % upper bounds
 
 %% N2 parameters for the fit
 %  amplitude, time, width
-ccep_parmsN1fit.X02 = [-1 40 1];   % starting points
-ccep_parmsN1fit.LB2 = [-Inf 0 50]; % lower bounds
-ccep_parmsN1fit.UB2 = [0 Inf 700]; % upper bounds
+ccep_parms.X02 = [-1 40 1];   % starting points
+ccep_parms.LB2 = [-Inf 0 50]; % lower bounds
+ccep_parms.UB2 = [0 Inf 700]; % upper bounds
+
+

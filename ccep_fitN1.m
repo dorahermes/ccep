@@ -1,5 +1,5 @@
 
-function [n1_mat,rmseN1,fitted_line_n1] = ccep_fitN1(ccep_parmsN1fit,ccep,data,times,el,elm)
+function [n1_mat,rmseN1,fitted_line_n1] = ccep_fitN1(ccep_parms,ccep,data,t,el,elm)
 
 
 
@@ -22,7 +22,7 @@ function [n1_mat,rmseN1,fitted_line_n1] = ccep_fitN1(ccep_parmsN1fit,ccep,data,t
 %% Define data and times to fit for each component:
 
 % N1:
-data2fitN1 = squeeze(nanmean(data(elm,times>ccep_parmsN1fit.t_low_N1 & times<ccep_parmsN1fit.t_up_N1,ccep(el).epochs),3));
+data2fitN1 = squeeze(nanmean(data(elm,t>ccep_parms.t_low_N1 & t<ccep_parms.t_up_N1,ccep(el).epochs),3));
 data2fitN1 = double(data2fitN1);
 
 if find(isnan(data2fitN1),1)>0
@@ -31,12 +31,12 @@ end
 
 %% Detect N1
 
-% calculate least squares
+% minimize with least squares
 [a, resNorm] =...
-  lsqnonlin(@(x) LinePlusGauss(x,data2fitN1,ccep_parmsN1fit.times2fitN1),ccep_parmsN1fit.X01,ccep_parmsN1fit.LB1,ccep_parmsN1fit.UB1,ccep_parmsN1fit.my_options);
+  lsqnonlin(@(x) LinePlusGauss(x,data2fitN1,ccep_parms.times2fitN1),ccep_parms.X01,ccep_parms.LB1,ccep_parms.UB1,ccep_parms.my_options);
 
-% fit a line
-fitted_line_n1 = a(1)*sqrt(2*pi)*normpdf(ccep_parmsN1fit.times2fitN1,a(2),a(3)) + a(4);
+% the fitted line
+fitted_line_n1 = a(1)*sqrt(2*pi)*normpdf(ccep_parms.times2fitN1,a(2),a(3)) + a(4);
 
 % calculate outputs
 amp = a(1)/a(3);                  % amplitude
@@ -45,7 +45,7 @@ peakLat = a(2);                   % peak latency
 
 % write stuff down:
 n1_mat = [a(1) a(2) a(3) a(4) amp funWidth];
-rmseN1 = sqrt(resNorm/ccep_parmsN1fit.alltN1); % root mean square error
+rmseN1 = sqrt(resNorm/ccep_parms.alltN1); % root mean square error
 % 
 clear a amp funWidth peakLat resNorm
 
