@@ -171,55 +171,50 @@ for s = 1%1:length(subjects)
     % subject code
     subj = subjects{s};
     
-%     % electrode locations name:
-%     dataLocName = [dataRootPath '/sub-' subj '/ses-01/ieeg/sub-' subj '_ses-01_acq-corrected_electrodes.tsv'];
     % gifti file name:
     dataGiiName = fullfile(dataRootPath,'derivatives','surfaces',['sub-' subj],...
         ['sub-' subj '_T1w_pial.' hemi_cap{s} '.surf.gii']);
-%     % first data run - to get good channels:
-%     dataName = dir([dataRootPath '/sub-' subj '/ses-01/ieeg/sub-' subj '_ses-01_task-*_run-*_ieeg_preproc.mat']);
     % surface labels 
     surface_labels_name = fullfile(dataRootPath,'derivatives','Freesurfer',['sub-' subj],'surf',...
         [hemi_small{s} 'h.benson14_varea.mgz']);
     surface_labels_B = MRIread(surface_labels_name);
     vert_label = surface_labels_B.vol(:);
 
-    % cmap = 'lines';
+    % create a colormap for the labels
     cmap = lines(max(vert_label));
     
+%     % electrode locations name:
+%     dataLocName = [dataRootPath '/sub-' subj '/ses-01/ieeg/sub-' subj '_ses-01_acq-corrected_electrodes.tsv'];
 %     % load electrode locations
 %     loc_info = readtable(dataLocName,'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'});
 %     elecmatrix = [loc_info.x loc_info.y loc_info.z];
 
     % load gifti:
     g = gifti(dataGiiName);
-
-%     % load channel info - do not plot bad channels in rendering
-%     load([dataRootPath '/sub-' subj '/ses-01/ieeg/' dataName(1).name]);
-
-%     % remove bad channels (replace with NaN)
-%     elecmatrix(exclude_channels,:) = NaN;
     
     % figure with rendering for different viewing angles
     for k = 1:size(v_dirs,1) % loop across viewing angles
         v_d = v_dirs(k,:);
         
+        figure
+        ecog_RenderGiftiLabels(g,vert_label,cmap,Benson_Area_Names)
+        ecog_ViewLight(v_d(1),v_d(2)) % change viewing angle   
+
 %         % make sure electrodes pop out
 %         a_offset = .1*max(abs(elecmatrix(:,1)))*[cosd(v_d(1)-90)*cosd(v_d(2)) sind(v_d(1)-90)*cosd(v_d(2)) sind(v_d(2))];
 %         els = elecmatrix+repmat(a_offset,size(elecmatrix,1),1);
-
-        figure
-        ecog_RenderGiftiLabels(g,vert_label,cmap,Benson_Area_Names)
-        
-%         ecog_RenderGifti(g) % render
 %         ecog_Label(els,30,12) % add electrode positions
-        ecog_ViewLight(v_d(1),v_d(2)) % change viewing angle   
+
         set(gcf,'PaperPositionMode','auto')
 %         print('-dpng','-r300',['./figures/render/BensonAreas_subj_' subj '_v' int2str(v_d(1)) '_' int2str(v_d(2))])
 %         close all
     end
 end
    
+
+
+%%
+%% LEFT OF HERE, ADJUST THIS CODE FOR BIDS LATER
 %%
 %% Render Benson Eccentricity with electrodes
 
