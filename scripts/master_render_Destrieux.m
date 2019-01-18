@@ -1,21 +1,23 @@
 % This script renders a brian surface with Destrieux maps
 % Can potentially add electrodes on top
-% dhermes % jvanderaar 2019, UMC Utrecht
+% dhermes & jvanderaar 2019, UMC Utrecht
 
 % Make sure that this toolbox is in the path:
 % can be cloned from: https://github.com/dorahermes/ecogBasicCode.git
-addpath('/Fridge/users/dora/github/ecogBasicCode/render/')
+addpath('/Fridge/users/jaap/github/ecogBasicCode/render/')
 
+% adding VistaSoft path
+addpath('/home/jaap/vistasoft/')
 %% Write gifti file in derivatives/surfaces with original MRI coordinates from freesurfer
 
 %%% Preperation step 1: create the output directory for your surface
-    % mkdir dataRootPath/derivatices/surfaces/subjectLabel
+    % mkdir dataRootPath/derivatives/surfaces/subjectLabel
 %%% Preperation step 2: create a gifti file from the freesurfer pial in Freesurfer coordinates
     % run next line in the terminal
     % mris_convert lh.pial lh.pial.gii 
 
-dataRootPath = '/Fridge/users/dora/ccep/dataBIDS/'; % BIDS dir
-subjects = {'chaam'};
+dataRootPath = '/Fridge/users/jaap/ccep/dataBIDS/'; % BIDS dir
+subjects = {'joure'};
 hemi_cap = {'R'};
 hemi_small = {'rh'};
 s = 1;
@@ -46,8 +48,8 @@ save(g,gifti_name,'Base64Binary')
 
 
 %% Render plain with used electrodes
-dataRootPath = '/Fridge/users/dora/ccep/dataBIDS/';
-subjects = {'chaam'};
+dataRootPath = '/Fridge/users/jaap/ccep/dataBIDS/';
+subjects = {'joure'};
 hemi_cap = {'R'};
 
 % pick a viewing angle:
@@ -95,27 +97,37 @@ end
 
 %% Render Destrieux with electrodes
 
-clear all
-dataRootPath = '/Fridge/users/dora/ccep/dataBIDS/';
+% comments/questions
 
-subjects = {'chaam','chaam'};
-hemi_cap = {'R','L'};
-hemi_small = {'r','l'};
+% - For sub-chaam, right hemisphere elektrodes, but the tsv-file states
+% left hemisphere (other way around?) - is an issue in Gio's github umcu_elec
+% - electrode positions TSV file is named ses-1 instead of ses-01
+
+clear all
+dataRootPath = '/Fridge/users/jaap/ccep/dataBIDS/';
+% add vistasoft for read_annotation
+addpath('/home/jaap/vistasoft/external/freesurfer');
+
+subjects = {'joure','chaam'};
+sessions = {'01','01'};
+hemi_cap = {'L','R'}; 
+hemi_small = {'l','r'};
 
 v_dirs = [270 0];%;90 0;90 -60;270 -60;0 0];
 
 
-for s = 1%1:length(subjects)
-    % subject code
+for s = 1:2%1:length(subjects)
+    % subject code 
     subj = subjects{s};
+    ses_label = sessions{s};
     
     % gifti file name:
     dataGiiName = fullfile(dataRootPath,'derivatives','surfaces',['sub-' subj],...
         ['sub-' subj '_T1w_pial.' hemi_cap{s} '.surf.gii']);
     % surface labels 
     surface_labels_name = fullfile(dataRootPath,'derivatives','Freesurfer',['sub-' subj],'label',...
-        [hemi_small{s} 'h.aparc.a2009s.annot']);
-    %surface_labels = MRIread(surface_labels_name);
+    [hemi_small{s} 'h.aparc.a2009s.annot']);
+    % surface_labels = MRIread(surface_labels_name);
     [vertices, label, colortable] = read_annotation(surface_labels_name);
     vert_label = label; % these labels are strange and do not go from 1:76, but need to be mapped to the colortable
     % mapping labels to colortable
@@ -127,10 +139,10 @@ for s = 1%1:length(subjects)
     cmap = colortable.table(:,1:3)./256;
     
     % electrode locations name:
-%     dataLocName = [dataRootPath '/sub-' subj '/ses-01/ieeg/sub-' subj '_ses-01_acq-corrected_electrodes.tsv'];
-%     % load electrode locations
-%     loc_info = readtable(dataLocName,'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'});
-%     elecmatrix = [loc_info.x loc_info.y loc_info.z];
+    dataLocName = [dataRootPath 'sub-' subj '/ses-' ses_label '/ieeg/sub-' subj '_ses-' ses_label '_acq-clinicalprojected_electrodes.tsv'];
+    % load electrode locations
+    loc_info = readtable(dataLocName,'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'});
+    elecmatrix = [loc_info.x loc_info.y loc_info.z];
 
     % load gifti:
     g = gifti(dataGiiName);
@@ -143,16 +155,17 @@ for s = 1%1:length(subjects)
         ecog_RenderGiftiLabels(g,vert_label,cmap,colortable.struct_names)
         ecog_ViewLight(v_d(1),v_d(2)) % change viewing angle   
         
-%         % make sure electrodes pop out
-%         a_offset = .1*max(abs(elecmatrix(:,1)))*[cosd(v_d(1)-90)*cosd(v_d(2)) sind(v_d(1)-90)*cosd(v_d(2)) sind(v_d(2))];
-%         els = elecmatrix+repmat(a_offset,size(elecmatrix,1),1);      
-%         ecog_Label(els,30,12) % add electrode positions
+        % make sure electrodes pop out
+        a_offset = .1*max(abs(elecmatrix(:,1)))*[cosd(v_d(1)-90)*cosd(v_d(2)) sind(v_d(1)-90)*cosd(v_d(2)) sind(v_d(2))];
+        els = elecmatrix+repmat(a_offset,size(elecmatrix,1),1);      
+        ecog_Label(els,30,12) % add electrode positions
 
         set(gcf,'PaperPositionMode','auto')
 %         print('-dpng','-r300',['./figures/render/Wang_subj_' subj '_v' int2str(v_d(1)) '_' int2str(v_d(2))])
 %         close all
     end
 end
+
 
 
 
