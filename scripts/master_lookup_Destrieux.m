@@ -64,7 +64,7 @@ for elec = 1:size(elecmatrix,1) % loop across electrodes
     % take the mode of the labels within 3 mm
     
     
-    % put the labels back in the matrix
+    % put the labels (vert_label) back in the matrix
     elec_destrieux_label(elec,1) =  
 end
 

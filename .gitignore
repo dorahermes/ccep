@@ -7,17 +7,14 @@ bin-release/
 .settings/
 
 # Do not safe matlab backup scripts 
-.m~
+*.m~
 
 # Do not safe data files
-.mat
+*.mat
 
 # Do not figures
-.png
-.epsc
-
-# Do not safe strange name files2
-.strangenamefiles2
+*.png
+*.epsc
 
 # Project files, i.e. `.project`, `.actionScriptProperties` and `.flexProperties`
 # should NOT be excluded as they contain compiler settings and other important
