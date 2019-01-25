@@ -51,20 +51,20 @@ end
 elec_destrieux_label = zeros(size(elecmatrix,1),1);
 
 for elec = 1:size(elecmatrix,1) % loop across electrodes
-    % gebruik dist
-    tic
-    a = dist(elecmatrix(elec,:),g.vertices');
-    toc
+%     % gebruik dist
+%     tic
+%     a = dist(elecmatrix(elec,:),g.vertices');
+%     toc
     
     % program your own dist
-    tic 
     b = sqrt(sum((g.vertices-repmat(elecmatrix(elec,:),size(g.vertices,1),1)).^2,2));
-    toc
+ 
     
     % take the mode of the labels within 3 mm
-    
+    localized_electrodes = mode(vert_label(find(b<3))); % note: cannot find where the labelnames are
+  
     
     % put the labels (vert_label) back in the matrix
-    elec_destrieux_label(elec,1) =  
+    elec_destrieux_label(elec,1) =  localized_electrodes
 end
 
