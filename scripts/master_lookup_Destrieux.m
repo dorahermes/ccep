@@ -17,7 +17,7 @@ subjects = {'joure','chaam'};
 sessions = {'01','01'};
 hemi_cap = {'L','R'}; 
 hemi_small = {'l','r'};
-s = 1;
+s = 2;
 
 % get correct subject info
 subj = subjects{s};
@@ -49,6 +49,7 @@ end
 
 % create your output matrix
 elec_destrieux_label = zeros(size(elecmatrix,1),1);
+elec_destrieux_label_text = cell(size(elecmatrix,1),1);
 
 for elec = 1:size(elecmatrix,1) % loop across electrodes
 %     % gebruik dist
@@ -65,6 +66,27 @@ for elec = 1:size(elecmatrix,1) % loop across electrodes
   
     
     % put the labels (vert_label) back in the matrix
-    elec_destrieux_label(elec,1) =  localized_electrodes
+    elec_destrieux_label(elec,1) =  localized_electrodes;
+    elec_destrieux_label_text{elec,1} = colortable.struct_names{elec_destrieux_label(elec,1)};
 end
+
+%%
+
+% how many electrodes in each area:
+figure,hist(elec_destrieux_label,[1:74])
+colormap(hot)
+xlim([1 75])
+% how many connections to each electrode would be possible 
+my_connect = zeros(74,74);
+for kk = 1:size(elec_destrieux_label,1)
+    % which electrode do we have now
+    my_connect(elec_destrieux_label(kk),elec_destrieux_label(setdiff(1:size(elec_destrieux_label,1),kk))) = 1;
+end
+
+figure,
+imagesc(my_connect,[0 1])
+% set(gca,'XTick',[1:74],'YTick',[1:74],'XTickLabel',[],'YTickLabel',[])
+% axis square
+colormap(hot)
+
 
