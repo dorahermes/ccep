@@ -1,6 +1,11 @@
+%%  This is a template in which the temporarily created electrodes matrix can be loaded
+%   And can be written into the existing electrodes.tsv file. Save the     
+%   template (with right x,y,z coordinates) in the corresponding subject folder 
 
-%%
+%   By Dora Hermes, Jaap van der Aar, Giulio Castegnaro 02-2019
 
+% This is where the original identified electrode locations are stored in a
+% matrix called 'elecmatrix' that has the size electrodes * x,y,z
 working_dir = fullfile('/Fridge','users','jaap','ccep','dataBIDS');
 CCEP_dir = fullfile('/Fridge','CCEP');
 
