@@ -7,9 +7,9 @@ function [electrodes_tableWithlabels] = ...
 % and extracts the labels from the corresponding atlas.
 %
 % Inputs:
-% g: a giti file with vertices in the same space as the electrode positions
+% g: a gifti file with vertices in the same space as the electrode positions
 % electrodes_tsv: electrodes.tsv file (BIDS format)
-% freesurer_dir: directory with freesurfer output + Benson & Kastner maps
+% freesurfer_dir: directory with freesurfer output + Benson & Kastner maps
 % hemi_small: hemisphere to look up labels (smaller case: l or h)
 % output_file: file name to save the new _electrodes.tsv file with labels
 % electrode_to_vertex_dist: how far from each electrode to search (default 3 mm)
@@ -38,14 +38,14 @@ clear vertices label
 
 % load DKT map
 surface_labels_DKT = fullfile(freesurfer_dir,'label',...
-[hemi_small 'h.aparc.DKTatlas40.annot']);
+[hemi_small 'h.aparc.DKTatlas.annot']);
 [vertices, label, colortable_DKT] = read_annotation(surface_labels_DKT);
 vert_label_DKT = label; % these labels are strange and do not go from 1:76, but need to be mapped to the colortable
 % mapping labels to colortable
 for kk = 1:size(colortable_DKT.table,1) 
     vert_label_DKT(label==colortable_DKT.table(kk,5)) = kk; % I don't get this line of code
 end
-clear vertices label 
+clear vertices label  
 
 %load Wang map
 Wang_ROI_Names = {...
@@ -107,16 +107,26 @@ for elec = 1:size(elecmatrix,1) % loop across electrodes
     % take the mode of the labels within X mm (X=electrode_to_vertex_dist)
     localized_electrodes = mode(vert_label_Destrieux(find(b<electrode_to_vertex_dist))); 
     % put the labels (vert_label) back in the matrix
-    Destrieux_label(elec,1) =  localized_electrodes;
-    Destrieux_label_text{elec,1} = colortable_Destrieux.struct_names{Destrieux_label(elec,1)};
+    if ~isnan(localized_electrodes)
+        Destrieux_label(elec,1) =  localized_electrodes;
+        Destrieux_label_text{elec,1} = colortable_Destrieux.struct_names{Destrieux_label(elec,1)};
+    else
+        Destrieux_label(elec,1) =  NaN;
+        Destrieux_label_text{elec,1} = 'n/a';        
+    end
     
     %%%% DKT:
     % take the mode of the labels within X mm
     localized_electrodes = mode(vert_label_DKT(find(b<electrode_to_vertex_dist))); 
     % put the labels (vert_label) back in the matrix
-    DKTatlas_label(elec,1) =  localized_electrodes;
-    DKTatlas_label_text{elec,1} = colortable_DKT.struct_names{DKTatlas_label(elec,1)};
-    
+    if localized_electrodes~=0 && ~isnan(localized_electrodes)
+        DKTatlas_label(elec,1) =  localized_electrodes;
+        DKTatlas_label_text{elec,1} = colortable_DKT.struct_names{DKTatlas_label(elec,1)};
+    else
+        DKTatlas_label(elec,1) =  NaN;
+        DKTatlas_label_text{elec,1} = 'n/a';
+    end
+
     %%%% WANG:
     % take the mode of the labels within X mm
     area_of_electrode = mode(vert_label_Wang(find(b<electrode_to_vertex_dist))); 
