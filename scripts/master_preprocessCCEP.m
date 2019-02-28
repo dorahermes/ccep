@@ -6,8 +6,8 @@
 
 clear all
 
-addpath(genpath('/Fridge/users/dora/github/ccep/'))
-addpath('/Fridge/users/dora/github/fieldtrip/')
+addpath(genpath('/Fridge/users/jaap/github/ccep/'))
+addpath('/Fridge/users/jaap/github/fieldtrip/')
 ft_defaults
 
 
@@ -61,9 +61,28 @@ events_name = fullfile(dataRootPath,['sub-' sub_label],['ses-' ses_label],'ieeg'
 
 cc_events = readtable(events_name,'FileType','text','Delimiter','\t');
 
+
+% the cc_events already has a cc_events.sample
+% If I would use round(cc_events.onset*data_hdr.FS) it would give slightly
+% different numbers.
+
+epoch_length = 5; % in seconds, -2.5:2.5
+
 % define the output structure
+data_epoch = zeros(size(data,1),length(cc_events.onset),round(epoch_length*data_hdr.Fs));
+
+% define starting time for each epoch/ should I do anything with this??
+tt = [1:epoch_length*data_hdr.Fs]/data_hdr.Fs - 2.5; 
 
 % loop through all events and add to the output structure
+for elec = 1:size(data,1); % for all channels
+    for l = 1:length(cc_events.onset); % for all epochs
+        data_epoch(elec,l,:) = data(elec,cc_events.sample(l)-(epoch_length/2*data_hdr.Fs)+1:cc_events.sample(l)+(epoch_length/2*data_hdr.Fs));
+    end
+end
 
-
-
+%% Make figures for specific epoch
+figure
+plot(tt,squeeze(data_epoch(:,1,:)))
+xlabel('time(s)')
+ylabel('amplitude(uV)')
