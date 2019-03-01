@@ -47,7 +47,7 @@ data_hdr = ft_read_header(ieeg_name,'dataformat','brainvision_eeg');
 % make a time vector t
 t = [1:size(data,2)]./data_hdr.Fs;
 figure
-plot(t,data(1,:))
+plot(t,data(5,:))
 xlabel('time(s)')
 ylabel('amplitude(uV)')
 
@@ -75,14 +75,34 @@ data_epoch = zeros(size(data,1),length(cc_events.onset),round(epoch_length*data_
 tt = [1:epoch_length*data_hdr.Fs]/data_hdr.Fs - 2.5; 
 
 % loop through all events and add to the output structure
-for elec = 1:size(data,1); % for all channels
-    for l = 1:length(cc_events.onset); % for all epochs
+for elec = 1:size(data,1) % for all channels
+    for l = 1:length(cc_events.onset) % for all epochs
         data_epoch(elec,l,:) = data(elec,cc_events.sample(l)-(epoch_length/2*data_hdr.Fs)+1:cc_events.sample(l)+(epoch_length/2*data_hdr.Fs));
     end
 end
 
 %% Make figures for specific epoch
 figure
-plot(tt,squeeze(data_epoch(:,1,:)))
+plot(tt,squeeze(data_epoch(5,1,:)))
 xlabel('time(s)')
 ylabel('amplitude(uV)')
+%% Average the epochs with the same stimulation site
+
+% Now we just assume this is always 5 stimulations, should we build
+% in a check, so the 5 is based on if cc_events.electrical_stimulation_site
+% is the same?
+amount_same_stimulation = 5; 
+
+% Reshape matrix to split into every unique combination of stimulations
+% sites. Take mean of these 5 stimulations and squeeze into 3D matrix. 
+avg_epoch_stimulation = squeeze(mean(reshape(data_epoch,size(data_epoch,1),...
+    amount_same_stimulation,(size(cc_events,1)/amount_same_stimulation),size(data_epoch,3)),2));
+
+% Look at averaged data of per stimulation combination. 
+figure
+plot(tt,squeeze(avg_epoch_stimulation(5,1,:)))
+xlabel('time(s)')
+% set(gca,'Ydir','reverse')
+ylabel('amplitude(uV)')
+
+%%
