@@ -46,9 +46,9 @@ data_hdr = ft_read_header(ieeg_name,'dataformat','brainvision_eeg');
 %% look at the signal from one channel
 % make a time vector t
 t = [1:size(data,2)]./data_hdr.Fs;
-for i = 31
+for ii = 31
     figure
-    plot(t,data(i,:))
+    plot(t,data(ii,:))
     axis([0, 1000, -4000, 4000])
     xlabel('time(s)')
     ylabel('amplitude(uV)')
