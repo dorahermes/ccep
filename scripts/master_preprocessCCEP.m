@@ -46,7 +46,7 @@ data_hdr = ft_read_header(ieeg_name,'dataformat','brainvision_eeg');
 %% look at the signal from one channel
 % make a time vector t
 t = [1:size(data,2)]./data_hdr.Fs;
-for ii = 31
+for ii = 1
     figure
     plot(t,data(ii,:))
     axis([0, 1000, -4000, 4000])
@@ -68,6 +68,10 @@ cc_events = readtable(events_name,'FileType','text','Delimiter','\t');
 % If I would use round(cc_events.onset*data_hdr.FS) it would give slightly
 % different numbers.
 
+% might want to add a check here if the stimulations are not closer than 5
+% seconds  to eachother (might be the case in older patients)
+
+% set epoch parameters
 epoch_length = 5; % in seconds, -2.5:2.5
 epoch_prestim = 2.5;
 
@@ -86,7 +90,7 @@ end
 
 %% Make figures for specific epoch
 figure
-plot(tt,squeeze(data_epoch(5,1:10,:)))
+plot(tt,squeeze(data_epoch(5,1,:)))
 xlabel('time(s)')
 ylabel('amplitude(uV)')
 
@@ -98,7 +102,7 @@ ylabel('amplitude(uV)')
 amount_same_stimulation = 5; 
 
 % get the unique number of stimulated pairs:
-[cc_stimsets,IA,IC] =  unique(cc_events.electrical_stimulation_site);
+[cc_stimsets,IA,IC] =  unique(cc_events.electrical_stimulation_site, 'stable');
 % run through these and see how many there are
 cc_nroftimes = zeros(length(cc_stimsets),1); % number of times each pair is stimulated
 for kk = 1:length(cc_stimsets)
@@ -109,6 +113,8 @@ end
 % are done 5 times. 
 if cc_nroftimes == 5*(ones((height(cc_events)/5),1))
     disp('All stimulations are done 5 times')
+    % cc_epoch_sorted_if_all5 = squeeze(mean(reshape(data_epoch,size(data_epoch,1),
+    % max_amount_same_stimulation,(size(cc_events,1)/amount_same_stimulation),size(data_epoch,3)),2));
 else
     disp('Caution: not all stimulations are done 5 times')
     for ll = 1:length(cc_nroftimes)
@@ -119,26 +125,80 @@ else
     end
 end
 
+%% Taking average of epochs 
 
-% max_amount_same_stimulation = max(cc_nroftimes); 
+% maximum stimulations of 1 unique pair 
+max_amount_same_stimulation = max(cc_nroftimes);
+
+% first create NaN matrix based on the max amount of stimulations in the
+% data set. For every unique stimulation 
+cc_epoch_sorted = NaN(size(data_epoch,1),(max_amount_same_stimulation*size(cc_nroftimes,1)),size(data_epoch,3));
+
+
+% for loop tat runs through all unique stimulation pairs and for every pair
+% it runs through the amount of stimulations to fill in the NaN matrix
+% if stimulations of that pair < max_amount_stimulations, this should leave NaN's 
+for yy = 1:length(cc_nroftimes)
+    for zz = 1:cc_nroftimes(yy)
+        cc_epoch_sorted(:,(IA(yy)+(zz-1)),:) = data_epoch(:,(IA(yy)+(zz-1)),:);
+        % if 'All stimulations are done 5 times' is displayed earlier, isequal(cc_epoch_sorted,data_epoch) == True 
+    end
+end
+
+% Reshape to split into groups of max_amount_stimulations (5), then take
+% mean of these stimulations and squeeze into 3D
+cc_epoch_sorted_avg = squeeze(mean(reshape(cc_epoch_sorted,size(cc_epoch_sorted,1),...
+    max_amount_same_stimulation,size(cc_nroftimes,1),size(cc_epoch_sorted,3)),2));
+
+%% plot avg epochs
+figure
+plot(tt,squeeze(cc_epoch_sorted_avg(3,1,:)))
+xlabel('time(s)')
+% set(gca,'Ydir','reverse')
+ylabel('amplitude(uV)')
+
+%% This part is just notes and test code i'll just leave for now
+% cc_epoch_sorted_if_all5 = squeeze(mean(reshape(data_epoch,size(data_epoch,1),max_amount_same_stimulation,(size(cc_events,1)/amount_same_stimulation),size(data_epoch,3)),2));
+
+% max_amount_same_stimulation = max(cc_nroftimes);
+% stimsets_avg_epoch = NaN(size(data_epoch,1),max_amount_same_stimulation,size(data_epoch,3));
 % 
-% % display in case there are unequal stimulation numbers
-% 
+% for zz = 1:length(cc_nroftimes)
+%     cc_epoch_sorted =  data_epoch(:,IA(zz):IA(zz+1)-1,:); 
+% end
+
+max_amount_same_stimulation = max(cc_nroftimes);
+stimsets_avg_epoch = NaN(size(data_epoch,1),max_amount_same_stimulation,size(data_epoch,3));
+
+
+cc_epoch_sorted = NaN(size(data_epoch,1),max_amount_same_stimulation,size(data_epoch,3));
+cc_epoch_sorted(:,1,:) = data_epoch(:,1,:); 
+
+% squeeze(mean(reshape( ... 
+
+cc_epoch_sorted = NaN(size(data_epoch,1),(max_amount_same_stimulation*size(cc_nroftimes,1)),size(data_epoch,3));
+
+for yy = 1:length(cc_nroftimes)
+    for zz = 1:cc_nroftimes(yy)
+        cc_epoch_sorted(:,(IA(yy)+(zz-1)),:) = data_epoch(:,(IA(yy)+(zz-1)),:);
+    end
+end
+
+
+cc_events_timer = 1;
+for yy = 1:length(cc_nroftimes)
+    cc_epoch_sorted = NaN(size(data_epoch,1),max_amount_same_stimulation,size(data_epoch,3));
+    for zz = 1:cc_nroftimes(yy)
+        cc_epoch_sorted(:,zz,:) = data_epoch(:,cc_events_timer,:);
+        cc_events_timer = cc_events_timer + 1;
+    end
+end
 % % generate a NaN array for all stimulation pairs, NaN, because they may not
 % % all fill up and we want to be able to use nanmean, nanstd etc 
 % cc_epoch_sorted = NaN(electrodes X max aantal stimulatiepairs(5) X time);
 % % overschrijf de NaN voor aantal matches
 % 
-% % Reshape matrix to split into every unique combination of stimulations
-% % sites. Take mean of these 5 stimulations and squeeze into 3D matrix. 
-% avg_epoch_stimulation = squeeze(mean(reshape(data_epoch,size(data_epoch,1),...
-%     amount_same_stimulation,(size(cc_events,1)/amount_same_stimulation),size(data_epoch,3)),2));
-% 
-% % Look at averaged data of per stimulation combination. 
-% figure
-% plot(tt,squeeze(avg_epoch_stimulation(3,1,:)))
-% xlabel('time(s)')
-% % set(gca,'Ydir','reverse')
-% ylabel('amplitude(uV)')
+
+
 
 %%
