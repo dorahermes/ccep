@@ -6,7 +6,7 @@
 
 clear all
 
-addpath(genpath('/Fridge/users/jaap/github/ccep/'))
+addpath(genpath('/Fridge/users/dora/github/ccep/'))
 addpath('/Fridge/users/jaap/github/fieldtrip/')
 ft_defaults
 
@@ -96,11 +96,6 @@ ylabel('amplitude(uV)')
 
 %% Average the epochs with the same stimulation site
 
-% Now we just assume this is always 5 stimulations, should we build
-% in a check, so the 5 is based on if cc_events.electrical_stimulation_site
-% is the same?
-amount_same_stimulation = 5; 
-
 % get the unique number of stimulated pairs:
 [cc_stimsets,IA,IC] =  unique(cc_events.electrical_stimulation_site, 'stable');
 % run through these and see how many there are
@@ -132,30 +127,35 @@ max_amount_same_stimulation = max(cc_nroftimes);
 
 % first create NaN matrix based on the max amount of stimulations in the
 % data set. For every unique stimulation 
-cc_epoch_sorted = NaN(size(data_epoch,1),(max_amount_same_stimulation*size(cc_nroftimes,1)),size(data_epoch,3));
+% Size: elec X nr of stimulations X stimtype X  time
+cc_epoch_sorted = NaN(size(data_epoch,1),max_amount_same_stimulation,size(cc_nroftimes,1),size(data_epoch,3));
 
-
-% for loop tat runs through all unique stimulation pairs and for every pair
+% for loop that runs through all unique stimulation pairs and for every pair
 % it runs through the amount of stimulations to fill in the NaN matrix
 % if stimulations of that pair < max_amount_stimulations, this should leave NaN's 
-for yy = 1:length(cc_nroftimes)
-    for zz = 1:cc_nroftimes(yy)
-        cc_epoch_sorted(:,(IA(yy)+(zz-1)),:) = data_epoch(:,(IA(yy)+(zz-1)),:);
-        % if 'All stimulations are done 5 times' is displayed earlier, isequal(cc_epoch_sorted,data_epoch) == True 
-    end
+for yy = 1:length(cc_nroftimes) % loop through epoch types (stimulated pairs)
+    % find the epochs of the current type
+    events_for_this_set = find(yy==IC);
+    % see how many there are
+    nr_events = length(events_for_this_set);
+    
+    % put things back in the matrix
+    cc_epoch_sorted(:,1:nr_events,yy,:) = data_epoch(:,events_for_this_set,:);
+    % if 'All stimulations are done 5 times' is displayed earlier, isequal(cc_epoch_sorted,data_epoch) == True 
 end
 
-% Reshape to split into groups of max_amount_stimulations (5), then take
-% mean of these stimulations and squeeze into 3D
-cc_epoch_sorted_avg = squeeze(mean(reshape(cc_epoch_sorted,size(cc_epoch_sorted,1),...
-    max_amount_same_stimulation,size(cc_nroftimes,1),size(cc_epoch_sorted,3)),2));
+% Take mean of these stimulations and squeeze into 3D
+cc_epoch_sorted_avg = squeeze(nanmean(cc_epoch_sorted,2));
 
 %% plot avg epochs
+stim_pair_nr = 1;
+ccep_elec = 3;
 figure
-plot(tt,squeeze(cc_epoch_sorted_avg(3,1,:)))
+plot(tt,squeeze(cc_epoch_sorted_avg(ccep_elec,stim_pair_nr,:)))
 xlabel('time(s)')
 % set(gca,'Ydir','reverse')
 ylabel('amplitude(uV)')
+title(['elec ' data_hdr.label{ccep_elec} ' for stimulation of ' cc_stimsets{stim_pair_nr} ])
 
 %% This part is just notes and test code i'll just leave for now
 % cc_epoch_sorted_if_all5 = squeeze(mean(reshape(data_epoch,size(data_epoch,1),max_amount_same_stimulation,(size(cc_events,1)/amount_same_stimulation),size(data_epoch,3)),2));
