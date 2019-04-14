@@ -94,8 +94,9 @@ plot(tt,squeeze(data_epoch(5,1,:)))
 xlabel('time(s)')
 ylabel('amplitude(uV)')
 
-%% Average the epochs with the same stimulation site
+%% Averaging the epochs - assuming F01-F02 is different from F02-F01
 
+%%%% First assume that F01-F02 is different from F02-F01
 % get the unique number of stimulated pairs:
 [cc_stimsets,IA,IC] =  unique(cc_events.electrical_stimulation_site, 'stable');
 % run through these and see how many there are
@@ -118,6 +119,17 @@ else
             disp(xx)
         end
     end
+end
+%% Averaging the epochs - assuming F01-F02 is the same as F02-F01
+
+%%%% Or assume that F01-F02 is the same as F02-F01
+unique_pairs = sort([cc_events.electrical_stimulation_site_num_1 cc_events.electrical_stimulation_site_num_2],2);
+% IC has length all stimulations 
+[cc_stimsets,~,IC] = unique(unique_pairs,'rows'); % make sure that we only have a vector of nX1 not nX2
+% cc_stimsets has length of unique stimulation pairs (assuming F02-F01=F01-F2)
+cc_nroftimes = zeros(size(cc_stimsets,1),1); % number of times each pair is stimulated
+for kk = 1:size(cc_stimsets,1)
+    cc_nroftimes(kk) = sum(ismember(unique_pairs,cc_stimsets(kk,:),'rows'));
 end
 
 %% Taking average of epochs 
@@ -147,7 +159,7 @@ end
 % Take mean of these stimulations and squeeze into 3D
 cc_epoch_sorted_avg = squeeze(nanmean(cc_epoch_sorted,2));
 
-%% plot avg epochs
+%% plot averaged epochs
 stim_pair_nr = 1;
 ccep_elec = 3;
 figure
@@ -155,50 +167,5 @@ plot(tt,squeeze(cc_epoch_sorted_avg(ccep_elec,stim_pair_nr,:)))
 xlabel('time(s)')
 % set(gca,'Ydir','reverse')
 ylabel('amplitude(uV)')
-title(['elec ' data_hdr.label{ccep_elec} ' for stimulation of ' cc_stimsets{stim_pair_nr} ])
+% title(['elec ' data_hdr.label{ccep_elec} ' for stimulation of ' cc_stimsets{stim_pair_nr} ])
 
-%% This part is just notes and test code i'll just leave for now
-% cc_epoch_sorted_if_all5 = squeeze(mean(reshape(data_epoch,size(data_epoch,1),max_amount_same_stimulation,(size(cc_events,1)/amount_same_stimulation),size(data_epoch,3)),2));
-
-% max_amount_same_stimulation = max(cc_nroftimes);
-% stimsets_avg_epoch = NaN(size(data_epoch,1),max_amount_same_stimulation,size(data_epoch,3));
-% 
-% for zz = 1:length(cc_nroftimes)
-%     cc_epoch_sorted =  data_epoch(:,IA(zz):IA(zz+1)-1,:); 
-% end
-
-max_amount_same_stimulation = max(cc_nroftimes);
-stimsets_avg_epoch = NaN(size(data_epoch,1),max_amount_same_stimulation,size(data_epoch,3));
-
-
-cc_epoch_sorted = NaN(size(data_epoch,1),max_amount_same_stimulation,size(data_epoch,3));
-cc_epoch_sorted(:,1,:) = data_epoch(:,1,:); 
-
-% squeeze(mean(reshape( ... 
-
-cc_epoch_sorted = NaN(size(data_epoch,1),(max_amount_same_stimulation*size(cc_nroftimes,1)),size(data_epoch,3));
-
-for yy = 1:length(cc_nroftimes)
-    for zz = 1:cc_nroftimes(yy)
-        cc_epoch_sorted(:,(IA(yy)+(zz-1)),:) = data_epoch(:,(IA(yy)+(zz-1)),:);
-    end
-end
-
-
-cc_events_timer = 1;
-for yy = 1:length(cc_nroftimes)
-    cc_epoch_sorted = NaN(size(data_epoch,1),max_amount_same_stimulation,size(data_epoch,3));
-    for zz = 1:cc_nroftimes(yy)
-        cc_epoch_sorted(:,zz,:) = data_epoch(:,cc_events_timer,:);
-        cc_events_timer = cc_events_timer + 1;
-    end
-end
-% % generate a NaN array for all stimulation pairs, NaN, because they may not
-% % all fill up and we want to be able to use nanmean, nanstd etc 
-% cc_epoch_sorted = NaN(electrodes X max aantal stimulatiepairs(5) X time);
-% % overschrijf de NaN voor aantal matches
-% 
-
-
-
-%%
