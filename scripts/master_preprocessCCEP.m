@@ -7,7 +7,7 @@
 clear all
 
 addpath(genpath('/Fridge/users/dora/github/ccep/'))
-addpath('/Fridge/users/jaap/github/fieldtrip/')
+addpath('/Fridge/users/dora/github/fieldtrip/')
 ft_defaults
 
 
