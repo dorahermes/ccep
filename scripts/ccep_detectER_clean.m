@@ -3,9 +3,9 @@ addpath(genpath('/Fridge/users/jaap/github/ccep/functions'))
 
 %% set defined parameters
 % pre-allocation: variables determined in Dorien's thesis
-thresh = 2.5;
-minSD = 50; 
-sel = 20;
+thresh = 2.5;   %
+minSD = 50;     % in microV: minimum standard deviation of prestimulus baseline in case actual std of prestim baseline is too small
+sel = 20;       % how many samples around peak not considered as another peak
 extrasamps = 5; % set to 5 now, to read properties of N1 onset
 SDfactor=[];
 SD = [];
@@ -15,19 +15,22 @@ SD = [];
 % this channel + stimulation gives nice N1 to test with
 % ii = 3; jj = 1; 
 
+% output in channels X stimulations X [onset(seconds) & amplitude]
+output_ER = NaN(size(cc_epoch_sorted_avg,1),size(cc_epoch_sorted_avg,2),2);
+
 % for every channel
-for ii = 1:size(cc_epoch_sorted_avg,1)
+for ii = 3%1:size(cc_epoch_sorted_avg,1)
     % for every averaged stimulation
-    for jj = 1:size(cc_epoch_sorted_avg,2)
+    for jj = 1%:size(cc_epoch_sorted_avg,2)
     
     % baseline subtraction: take median of part of the averaged signal for
     % this stimulation pair before stimulation, which is the half of the
     % epoch
     baseline_tt = tt>-2 & tt<-.1;
-    signal_median = median(cc_epoch_sorted_avg(ii,jj,baseline_tt));
+    signal_median = median(cc_epoch_sorted_avg(ii,jj,baseline_tt),3);
     
     % subtract median baseline from signal
-    new_signal = cc_epoch_sorted_avg(ii,jj,:) - signal_median; 
+    new_signal = squeeze(cc_epoch_sorted_avg(ii,jj,:)) - signal_median; 
     % testplot new signal: plot(tt,squeeze(new_signal))
     
     % take area before the stimulation of the new signal and calculate its SD
@@ -43,7 +46,7 @@ for ii = 1:size(cc_epoch_sorted_avg,1)
     % Should we e.g. channel F01 and F02 in stimulation of
     % F01-F02 load the data in as NaN?
     % so if member, do nothing or assign NaN
-    % elif: run rest of the loop and find peak
+    % elseif: run rest of the loop and find peak
     
         % use peakfinder to find all positive and negative peaks and their
         % amplitude. 
@@ -51,8 +54,8 @@ for ii = 1:size(cc_epoch_sorted_avg,1)
         % seconds sample of the total epoch 
         % As tt use first sample after timepoint 0  (+ extra samples to not take artifact)
         % till first sample after 0,5 seconds (rougly 1000 samples)
-        [temp_samppos, temp_amplpos] = peakfinder(new_signal(1,find(tt>0,1)+extrasamps:find(tt>0.5,1)),sel,[],1);
-        [temp_sampneg, temp_amplneg] = peakfinder(new_signal(1,find(tt>0,1)+extrasamps:find(tt>0.5,1)),sel,[],-1);
+        [temp_samppos, temp_amplpos] = ccep_peakfinder(new_signal(find(tt>0,1)+extrasamps:find(tt>0.5,1)),sel,[],1);
+        [temp_sampneg, temp_amplneg] = ccep_peakfinder(new_signal(find(tt>0,1)+extrasamps:find(tt>0.5,1)),sel,[],-1);
 
         % If the first selected sample is a peak, this is not a real peak,
         % so delete
@@ -64,38 +67,37 @@ for ii = 1:size(cc_epoch_sorted_avg,1)
         % Delete all data after the 0.1s after stimulation, because these cannot be 
         % the N1 peak. Set this to bigger if you also want to find the
         % delayed response
-
         temp_amplpos(temp_samppos >= find(tt>0.1,1) - (find(tt>0,1) + extrasamps)) = []; 
         temp_samppos(temp_samppos >= find(tt>0.1,1) - (find(tt>0,1) + extrasamps)) = [];
         temp_amplneg(temp_sampneg >= find(tt>0.1,1) - (find(tt>0,1) + extrasamps)) = [];
         temp_sampneg(temp_sampneg >= find(tt>0.1,1) - (find(tt>0,1) + extrasamps)) = [];
         
         %%%% NEXT LINES ARE TO CALCULATE THE N1 PEAK
-        %%%% FIRST CALCALCULATE BOTH NEGATIVE AND POSITIVE PEAKS
+        %%%% FIRST CALCULATE BOTH NEGATIVE AND POSITIVE PEAKS
         %%%% CONVERT BACK TO THE SAMPLES BASED ON TT
         %%%% THEN LOOK IF IT IS ACTUALLY A POSITIVE OR NEGATIVE PEAK % WHY?
         
-                
-        temp_n1peak_samplepos =[];
-        temp_n1peak_amplipos =[];
+        % positive peaks find max and get latency 
+        temp_n1peak_samplepos = [];
+        temp_n1peak_amplipos = [];
         if ~isempty(temp_samppos)
-            % find the maximum aplitude
+            % find peak with maximum amplitude
             maxamplpos = find(abs(temp_amplpos) == max(abs(temp_amplpos)));
-            % recalculate sample of maxamplneg based on the sampling with
+            % recalculate sample of maxamplpos based on the sampling with
             % tt, necessary because peakfinder adjusted this
-            temp_n1peak_samplepos = temp_samppos(maxamplpos(1))+ find(tt>0,1) + extrasamps;
+            temp_n1peak_samplepos = temp_samppos(maxamplpos(1)) + find(tt>0,1) + extrasamps-1;
             temp_n1peak_amplipos = temp_amplpos(maxamplpos(1));
         end  
         
-        % same for negative
-        temp_n1peak_sampleneg =[];
-        temp_n1peak_amplineg =[];
+        % negative peaks find max and get latency
+        temp_n1peak_sampleneg = [];
+        temp_n1peak_amplineg = [];
         if ~isempty(temp_sampneg)
             % find the maximum amplitude
             maxamplneg = find(abs(temp_amplneg) == max(abs(temp_amplneg)));
             % recalculate sample of maxamplneg based on the sampling with
             % tt, necessary because peakfinder adjusted this
-            temp_n1peak_sampleneg = temp_sampneg(maxamplneg(1))+ find(tt>0,1) + extrasamps;
+            temp_n1peak_sampleneg = temp_sampneg(maxamplneg(1)) + find(tt>0,1) + extrasamps-1;
             temp_n1peak_amplineg = temp_amplneg(maxamplneg(1));
         end  
 
@@ -108,7 +110,7 @@ for ii = 1:size(cc_epoch_sorted_avg,1)
         if ~isempty(temp_n1peak_samplepos) && isempty(temp_n1peak_sampleneg) 
             sample = temp_n1peak_samplepos;
             ampl =  temp_n1peak_amplipos;
-        % if only a negalive peak is found, this is the n1
+        % if only a negative peak is found, this is the n1
         elseif isempty(temp_n1peak_samplepos) && ~isempty(temp_n1peak_sampleneg) 
             sample = temp_n1peak_sampleneg;
             ampl = temp_n1peak_amplineg;
@@ -136,6 +138,9 @@ for ii = 1:size(cc_epoch_sorted_avg,1)
             ampl = 0;
         end      
         
+        output_ER(ii,jj,1) = sample;
+        output_ER(ii,jj,2) = ampl;
+        
         %%%% AND THEN HERE ANALYZE WHETHER THIS IS A SIGNIFICANT PEAK 
         %%%% SO IF IT CAN BE SEEN AS A REAL EARLY RESPONS (USE PRE_STIM_SD)
         
@@ -147,7 +152,7 @@ end
 
 %%%% TESTING FOUND OUT ITS ONE SAMPLE OFF/ SHOULD BE SAMPLE 5515
 
-plot((find(tt>0,1)+extrasamps:find(tt>0.1,1)),squeeze(new_signal(:,:,find(tt>0,1)+extrasamps:find(tt>0.1,1))))
+plot((find(tt>0,1)+extrasamps:find(tt>0.1,1)),new_signal(find(tt>0,1)+extrasamps:find(tt>0.1,1)))
 hold on
 
 plot(sample,ampl,'r*')
