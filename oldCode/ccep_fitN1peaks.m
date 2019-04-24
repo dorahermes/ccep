@@ -1,5 +1,6 @@
     
-function [n1_parms,test_model_error,error_meas,corr_test,fit_curve, signal_train,signal_test,t_use] = fit_n1peaks(data,t,el_m,epochs,srate)
+function [n1_parms,test_model_error,error_meas,corr_test,fit_curve, signal_train,signal_test,t_use,peak_sign]...
+    = ccep_fitN1peaks(data,t,el_m,epochs,srate)
 %
 % function fit_n1peaks
 %
@@ -36,12 +37,14 @@ signal_use = (signal_use-mean(signal_use(:)))./std(signal_use(:));
 
 % find the max and set to zero
 for k=1:size(signal_use,2)
-    [m_val,m_ind,m_w]=findpeaks(signal_use(:,k),...
-        'MinPeakDistance',round(.08*srate),'SortStr','descend');
-    signal_use(:,k) = bsxfun(@minus,signal_use(:,k),m_val(1));
+    [m_val]=findpeaks(signal_use(:,k),...
+        'MinPeakDistance',round(.05*srate),'SortStr','descend');
+    if ~isempty(m_val)
+        signal_use(:,k) = bsxfun(@minus,signal_use(:,k),m_val(1));
+    end
 end
-% % set first value to zero (subtract the first time-point):
-% signal_use = bsxfun(@minus,signal_use,signal_use(1,:));
+% set first value to zero (subtract the first time-point):
+signal_use = bsxfun(@minus,signal_use,signal_use(1,:));
 
 % training/testing data
 signal_train = signal_use(:,1:2:size(signal_use,2));
@@ -58,22 +61,48 @@ x = smooth(x,round(srate*.010),'lowess');
 [m_val,m_ind,m_w]=findpeaks(x,t_use,...
     'Annotate','extents','WidthReference','halfheight',...
     'MinPeakDistance',50);
+peak_sign = -1;
+% % check whether the first peak is positive or negative:
+% [m_val_min,m_ind_min,m_w_min]=findpeaks(-x,t_use,...
+%     'Annotate','extents','WidthReference','halfheight',...
+%     'MinPeakDistance',50);
+% if ~isempty(m_val) && ~isempty(m_val_min)
+%     if m_ind_min(1)<m_ind(1) % if there is a positive peak before a negative one
+%         m_val = m_val_min;
+%         m_ind = m_ind_min;
+%         m_w = m_w_min;
+%         peak_sign = 1;
+%     else
+%         peak_sign = -1;
+%     end
+% elseif ~isempty(m_val) && isempty(m_val_min)
+%     peak_sign = -1;
+% elseif isempty(m_val) && ~isempty(m_val_min)
+%     m_val = m_val_min;
+%     m_ind = m_ind_min;
+%     m_w = m_w_min;
+%     peak_sign = 1;
+% end
 
-if ~isempty(m_val)
+if ~isempty(m_val)    
     n1_parms = [m_val(1),m_ind(1),m_w(1)];
     % FITTED CURVE SHAPE:
     n = 1;
     peak_width = m_w(n)/2;%m_w(n)/2;
 %     fit_curve = m_val(n)*exp(-(([1:length(t_use)] - m_ind(n))/peak_width).^2);
     fit_curve = m_val(n)*exp(-(t_use - m_ind(n)).^2/(2*peak_width.^2));
-    fit_curve = -fit_curve';
+    fit_curve = peak_sign*fit_curve';
 
     % for the error calculations, select the N1 duration, otherwise we are
     % including the N2
 %     start_point = round(max([1 n1_parms(2)-2*n1_parms(3)])); % first time point or latency - 2sd
 %     end_point = round(min([length(signal_train) n1_parms(2)+2*n1_parms(3)])); % last time point or latency + 2sd
     start_point = 1; % this is the first time-point in t_use 
-    end_point = find(t_use>=60,1); % use t = 60
+    if m_ind(1)+3*peak_width>t_use(end)
+        end_point = length(t_use);
+    else
+        end_point = find(t_use>=m_ind(1)+3*peak_width,1);%find(t_use>=60,1); % use t = 60
+    end
     signal_test_4error = median(signal_test(start_point:end_point,:),2);
     signal_train_4error = median(signal_train(start_point:end_point,:),2);
     fit_curve_4error = fit_curve(start_point:end_point);
@@ -92,7 +121,7 @@ if ~isempty(m_val)
     total_undercurve = sum(abs(signal_test_4error));
     % total absolute error: fitted curve - test_signal
     total_abserror = sum(abs(signal_test_4error-fit_curve_4error));
-    % how much error wrt data (normalized absolute error
+    % how much error wrt data (normalized absolute error)
     error_meas(2) = total_abserror./total_undercurve;
 
     % dot product (can translate to angle between curves)
@@ -103,9 +132,11 @@ if ~isempty(m_val)
     corr_test = corr(signal_test_4error,fit_curve_4error);
 
 else
-    n1_parms = [NaN NaN NaN NaN];
+    n1_parms = [NaN NaN NaN];
+    test_model_error = NaN;
     error_meas = [NaN NaN NaN];
-    corr_test = NaN;
+    corr_test = NaN;   
+    fit_curve = NaN(size(signal_test,1),1);
 end
 
 
