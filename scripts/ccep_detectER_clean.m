@@ -6,7 +6,7 @@ addpath(genpath('/Fridge/users/jaap/github/ccep/functions'))
 
 % loads cc_epoch_sorted_avg and tt
 cd /Fridge/users/jaap/github/ccep/scripts/
-load('data_avg_epoch_and_timevector')
+load('/home/jaap/data_avg_epoch_and_timevector')
 %% set defined parameters
 % pre-allocation: variables determined in Dorien's thesis
 thresh = 2.5;   %
@@ -397,4 +397,60 @@ for ii = [3,11]
     end
 end
 
+%% render brain + effects
 
+
+
+%% Render plain with used electrodes
+dataRootPath = '/Fridge/users/jaap/ccep/dataBIDS/';
+subjects = {'RESP0706'};
+hemi_cap = {'R'};
+
+% pick a viewing angle:
+v_dirs = [90 0];%;90 0;90 -60;270 -60;0 0];
+
+stim_pair = 1;
+% which electrodes are stimulated? can we render these also?)
+n1_plot = squeeze(output_ER_all(:,stim_pair,3:4)); % measured electrodes X latency/ampl
+
+for s = 1%1:length(subjects)
+    % subject code
+    subj = subjects{s};
+    
+    % gifti file name:
+    dataGiiName = fullfile(dataRootPath,'derivatives','surfaces',['sub-' subj],...
+        ['sub-' subj '_T1w_pial.' hemi_cap{s} '.surf.gii']);
+    % load gifti:
+    g = gifti(dataGiiName);
+    
+    % electrode locations name:
+    dataLocName = dir(fullfile(dataRootPath,['sub-' subj],'ses-1','ieeg',...
+        ['sub-' subj '_ses-1_task-SPESclin_run-*_electrodes.tsv']));
+    dataLocName = fullfile(dataLocName(1).folder,dataLocName(1).name);
+    
+    % load electrode locations
+    loc_info = readtable(dataLocName,'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'});
+    elecmatrix = [loc_info.x loc_info.y loc_info.z];
+    
+    % figure with rendering for different viewing angles
+    for k = 1:size(v_dirs,1) % loop across viewing angles
+        v_d = v_dirs(k,:);
+        
+        figure
+        ecog_RenderGifti(g) % render
+        ecog_ViewLight(v_d(1),v_d(2)) % change viewing angle   
+        
+        % make sure electrodes pop out
+        a_offset = .1*max(abs(elecmatrix(:,1)))*[cosd(v_d(1)-90)*cosd(v_d(2)) sind(v_d(1)-90)*cosd(v_d(2)) sind(v_d(2))];
+        els = elecmatrix+repmat(a_offset,size(elecmatrix,1),1);
+%         ecog_Label(els,30,12) % add electrode positions
+        el_add(els,[0 0 0],20)
+        ccep_eladd_sizecolor(els,n1_plot(:,1),n1_plot(:,2),1,100)
+
+        set(gcf,'PaperPositionMode','auto')
+%         print('-dpng','-r300',fullfile(dataRootPath,'derivatives','render',...
+%             ['subj_' subj '_v' int2str(v_d(1)) '_' int2str(v_d(2))]))
+
+        % close all
+    end
+end
