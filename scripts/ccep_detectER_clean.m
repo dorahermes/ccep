@@ -376,8 +376,8 @@ end
 %% plot to test
 
 % makes it possible to plot multiple CCEPs to check
-for ii = [3,11]
-    for jj = 1:5
+for ii = 3
+    for jj = [1,8,10]
         
         if ~isnan(output_ER_all(ii,jj,3)) % exclude this if, to see how the ones without N1 look 
             
@@ -385,7 +385,7 @@ for ii = [3,11]
         signal_median = median(cc_epoch_sorted_avg(ii,jj,baseline_tt),3);
         new_signal = squeeze(cc_epoch_sorted_avg(ii,jj,:)) - signal_median; 
     
-        plot((find(tt>0,1)+extrasamps:find(tt>0.3,1)),new_signal(find(tt>0,1)+extrasamps:find(tt>0.3,1)))
+        plot((find(tt>-0.1,1)+extrasamps:find(tt>0.3,1)),new_signal(find(tt>-0.1,1)+extrasamps:find(tt>0.3,1)))
         hold on
 
         plot(output_ER_all(ii,jj,1),output_ER_all(ii,jj,2),'b*')
