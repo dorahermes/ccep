@@ -75,22 +75,40 @@ cc_events = readtable(events_name,'FileType','text','Delimiter','\t');
 epoch_length = 5; % in seconds, -2.5:2.5
 epoch_prestim = 2.5;
 
+% count how much stimulations there are 
+total_stim_count = sum(strcmp(cc_events.trial_type,'electrical_stimulation'));
+
 % define the output structure
-data_epoch = zeros(size(data,1),length(cc_events.onset),round(epoch_length*data_hdr.Fs));
+data_epoch = zeros(size(data,1),total_stim_count,round(epoch_length*data_hdr.Fs));
 
 % define time vector for all epochs (for plotting and knowing when tt==0 for onset stimulation)
 tt = [1:epoch_length*data_hdr.Fs]/data_hdr.Fs - epoch_prestim; 
 
-% loop through all events and add to the output structure
-for elec = 1:size(data,1) % for all channels
-    for ll = 1:length(cc_events.onset) % for all epochs
-        data_epoch(elec,ll,:) = data(elec,cc_events.sample(ll)-round((epoch_prestim*data_hdr.Fs))+1:cc_events.sample(ll)+round(((epoch_length-epoch_prestim)*data_hdr.Fs)));
+% set size of table with only stimlation events:
+% - question - 
+% how to initiate the size of the table, because then it needs the headers already
+
+% create cc_events_onlystims, which makes table of only the
+% stimulations and not e.g. artifact data
+ll_counter = 1;
+for ll = 1:length(cc_events.onset)
+    if strcmp(cc_events.trial_type(ll),'electrical_stimulation')
+        cc_events_onlystims(ll_counter,:) = cc_events(ll,:);
+        ll_counter = ll_counter + 1;
     end
 end
 
+% % loop through all stimulations and add to the output structure
+for elec = 1:size(data,1) % for all channels
+    for ll = 1:length(cc_events_onlystims.onset) % for all epochs
+        data_epoch(elec,ll,:) = data(elec,cc_events_onlystims.sample_start(ll)-round((epoch_prestim*data_hdr.Fs))+1:cc_events_onlystims.sample_start(ll)+round(((epoch_length-epoch_prestim)*data_hdr.Fs)));
+    end
+end
+
+
 %% Make figures for specific epoch
 figure
-plot(tt,squeeze(data_epoch(5,1,:)))
+plot(tt,squeeze(data_epoch(3,1,:)))
 xlabel('time(s)')
 ylabel('amplitude(uV)')
 
@@ -98,16 +116,16 @@ ylabel('amplitude(uV)')
 
 %%%% First assume that F01-F02 is different from F02-F01
 % get the unique number of stimulated pairs:
-[cc_stimsets,IA,IC] =  unique(cc_events.electrical_stimulation_site, 'stable');
+[cc_stimsets,IA,IC] =  unique(cc_events_onlystims.electrical_stimulation_site, 'stable');
 % run through these and see how many there are
 cc_nroftimes = zeros(length(cc_stimsets),1); % number of times each pair is stimulated
 for kk = 1:length(cc_stimsets)
-    cc_nroftimes(kk) = sum(ismember(cc_events.electrical_stimulation_site,cc_stimsets{kk}));
+    cc_nroftimes(kk) = sum(ismember(cc_events_onlystims.electrical_stimulation_site,cc_stimsets{kk}));
 end
 
 % check whether there is consistent stimulations, if all stimulations pairs
 % are done 5 times. 
-if cc_nroftimes == 5*(ones((height(cc_events)/5),1))
+if cc_nroftimes == 5*(ones((height(cc_events_onlystims)/5),1))
     disp('All stimulations are done 5 times')
     % cc_epoch_sorted_if_all5 = squeeze(mean(reshape(data_epoch,size(data_epoch,1),
     % max_amount_same_stimulation,(size(cc_events,1)/amount_same_stimulation),size(data_epoch,3)),2));
@@ -120,10 +138,20 @@ else
         end
     end
 end
+
 %% Averaging the epochs - assuming F01-F02 is the same as F02-F01
 
-%%%% Or assume that F01-F02 is the same as F02-F01
-unique_pairs = sort([cc_events.electrical_stimulation_site_num_1 cc_events.electrical_stimulation_site_num_2],2);
+% first extract stimulation sites from the cc_events_onlystims
+% for all rows in the table
+for ee = 1:size(cc_events_onlystims,1)
+    % extract the first stimulation site and add as column
+    cc_events_onlystims.electrical_stimulation_site_num_1(ee) = str2double(extractBefore(cc_events_onlystims.electrical_stimulation_site_num(ee),'  '));
+    % extract the second stimulation site and add as column
+    cc_events_onlystims.electrical_stimulation_site_num_2(ee) = str2double(extractAfter(cc_events_onlystims.electrical_stimulation_site_num(ee),'  '));
+end
+
+%%%% Assume that F01-F02 is the same as F02-F01
+unique_pairs = sort([cc_events_onlystims.electrical_stimulation_site_num_1 cc_events_onlystims.electrical_stimulation_site_num_2],2);
 % IC has length all stimulations 
 [cc_stimsets,~,IC] = unique(unique_pairs,'rows'); % make sure that we only have a vector of nX1 not nX2
 % cc_stimsets has length of unique stimulation pairs (assuming F02-F01=F01-F2)
@@ -167,5 +195,5 @@ plot(tt,squeeze(cc_epoch_sorted_avg(ccep_elec,stim_pair_nr,:)))
 xlabel('time(s)')
 % set(gca,'Ydir','reverse')
 ylabel('amplitude(uV)')
-% title(['elec ' data_hdr.label{ccep_elec} ' for stimulation of ' cc_stimsets{stim_pair_nr} ])
+title(['elec ' data_hdr.label{ccep_elec} ' for stimulation of ' data_hdr.label{cc_stimsets(stim_pair_nr,1)} ' and ' data_hdr.label{cc_stimsets(stim_pair_nr,2)} ])
 
