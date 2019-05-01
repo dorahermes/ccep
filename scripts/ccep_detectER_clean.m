@@ -7,6 +7,7 @@ addpath(genpath('/Fridge/users/jaap/github/ccep/functions'))
 % loads cc_epoch_sorted_avg and tt
 cd /Fridge/users/jaap/github/ccep/scripts/
 load('/home/jaap/data_avg_epoch_and_timevector')
+load('/home/jaap/cc_stimsets') 
 %% set defined parameters
 % pre-allocation: variables determined in Dorien's thesis
 thresh = 2.5;   %
@@ -385,7 +386,7 @@ end
 
 % makes it possible to plot multiple CCEPs to check
 for ii = 1:size(cc_epoch_sorted_avg,1) % measured channels
-    for jj = 6 % stimulated electrode pair
+    for jj = 2 % stimulated electrode pair
         
         if ~isnan(output_ER_all(ii,jj,3)) % exclude this if, to see how the ones without N1 look 
             
@@ -411,8 +412,6 @@ end
 
 %% render brain + effects
 
-
-
 %% Render plain with used electrodes
 addpath('/Fridge/users/jaap/github/ecogBasicCode/render/')
 dataRootPath = '/Fridge/users/jaap/ccep/dataBIDS/';
@@ -420,13 +419,15 @@ subjects = {'RESP0706'};
 hemi_cap = {'R'};
 
 % pick a viewing angle:
-v_dirs = [90 0];%;90 0;90 -60;270 -60;0 0];
+v_dirs = [90 0]; %;90 0;90 -60;270 -60;0 0];
 
-stim_pair = 8;
-% which electrodes are stimulated? can we render these also?)
-n1_plot = squeeze(output_ER_all(:,stim_pair,3:4)); % measured electrodes X latency/ampl
+% set stimulated pair you want to render
+stim_pair = 2;
 
-for s = 1%1:length(subjects)
+% select significant peaks in the other channels
+n1_plot = squeeze(output_ER_all(:,stim_pair,3:4)); % measured electrodes X latency/ampl of N1 peak
+
+for s = 1 %1:length(subjects)
     % subject code
     subj = subjects{s};
     
@@ -456,14 +457,22 @@ for s = 1%1:length(subjects)
         % make sure electrodes pop out
         a_offset = .1*max(abs(elecmatrix(:,1)))*[cosd(v_d(1)-90)*cosd(v_d(2)) sind(v_d(1)-90)*cosd(v_d(2)) sind(v_d(2))];
         els = elecmatrix+repmat(a_offset,size(elecmatrix,1),1);
-%         ecog_Label(els,30,12) % add electrode positions
-        el_add(els,[0 0 0],20)
-        ccep_eladd_sizecolor(els,n1_plot(:,1),n1_plot(:,2),1,100)
+        
+        % ecog_Label(els,30,12) % add electrode positions
+        % add electrodes
+        ccep_el_add(els,[0.1 0.1 0.1],20)
+        % give stimulated electrodes other color
+        ccep_el_add(els(cc_stimsets(stim_pair,1:2),:),[0 0 0],40)
+        % set size and color of channels with significant peak 
+        % based on sample (from stimulation on, so -5120) and the amplitude
+        % color = latency, size = amplitude
+        ccep_el_add_size_and_color(els,n1_plot(:,2),(n1_plot(:,1)-5120),500,200)
 
         set(gcf,'PaperPositionMode','auto')
-%         print('-dpng','-r300',fullfile(dataRootPath,'derivatives','render',...
-%             ['subj_' subj '_v' int2str(v_d(1)) '_' int2str(v_d(2))]))
+        % print('-dpng','-r300',fullfile(dataRootPath,'derivatives','render',...
+        % ['subj_' subj '_v' int2str(v_d(1)) '_' int2str(v_d(2))]))
 
         % close all
     end
 end
+
