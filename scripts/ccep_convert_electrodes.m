@@ -27,21 +27,24 @@ load(fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
 t = readtable(fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
     ['sub-' sub_label '_ses-' ses_label '_electrodes.tsv']),...
     'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'})
-%%
-% read the electrodes.tsv file that does not contain positions yet
-t = readtable(fullfile(CCEP_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
-    ['sub-' sub_label '_ses-' ses_label '_task-' task_label '_run-' run_label '_electrodes.tsv']),...
-    'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'});
+%% Manually add the elecmatrix to the table at the right place
+
+% check both the table and elecmatrix to see where the elecmatrix should be
+% placed. 
 
 % add electrode X positions
 t.x(1:64) = elecmatrix(1:64,1);
-% t.x(49:68) = NaN;
+t.x(65:68) = NaN;
+
 % add electrode Y positions
 t.y(1:64) = elecmatrix(1:64,2);
-% t.y(49:68) = NaN;
+t.y(65:68) = NaN;
+
 % add electrode Z positions
 t.z(1:64) = elecmatrix(1:64,3);
-% t.z(49:68) = NaN;
+t.z(65:68) = NaN;
+
+
 %% Add path of bids_tsv_nan2na.m function and run 
 
 % because NaN is not compatible with BIDS, use this function to change
@@ -52,5 +55,9 @@ t = bids_tsv_nan2na(t);
 %% write electrode file in working dir - check before moving to CCEP
 
 writetable(t, fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
-    ['sub-' sub_label '_ses-' ses_label '_task-' task_label '_run-' run_label '_electrodes.tsv']),...
+    ['sub-' sub_label '_ses-' ses_label '_electrodes.tsv']),...
     'FileType','text','Delimiter','\t');
+
+% Save file to have the possibility to check whether the elecmatrix is
+% filled in the right way. Save m-file as:  RESP<>_ses<>_convert_electrodes.m
+
