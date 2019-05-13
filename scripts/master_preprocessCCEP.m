@@ -64,12 +64,23 @@ events_name = fullfile(dataRootPath,['sub-' sub_label],['ses-' ses_label],'ieeg'
 
 cc_events = readtable(events_name,'FileType','text','Delimiter','\t');
 
-% the cc_events already has a cc_events.sample
-% If I would use round(cc_events.onset*data_hdr.FS) it would give slightly
-% different numbers.
-
 % might want to add a check here if the stimulations are not closer than 5
 % seconds  to eachother (might be the case in older patients)
+
+% set up index that iterates over artefact rows 
+% recalculate to samples and change these samples into NaN
+for qq = find(strcmp(cc_events.trial_type,'artefact'))
+    % if artefact is in all channels
+    if strcmp(cc_events.electrodes_involved_onset, 'all')
+        data(:,(round(cc_events.onset(qq)*data_hdr.Fs):((round(str2double(cc_events.offset(qq))*data_hdr.Fs))))) = NaN; 
+    % if artefact is only in specific channels
+    else 
+    % first need participant that has this to test how its annotated in
+    % cc_events. Also we have to be careful, because sometimes that do
+    % multiple channels have the same onset, but other offset, so need to
+    % include an extra elseif with offset. 
+    end
+end
 
 % set epoch parameters
 epoch_length = 5; % in seconds, -2.5:2.5
@@ -87,6 +98,8 @@ tt = [1:epoch_length*data_hdr.Fs]/data_hdr.Fs - epoch_prestim;
 % set size of table with only stimlation events:
 % - question - 
 % how to initiate the size of the table, because then it needs the headers already
+% also, is there an easier way to do this? e.g. Select only part of the
+% original table instead of iterating over the rows and creating new one
 
 % create cc_events_onlystims, which makes table of only the
 % stimulations and not e.g. artifact data
@@ -98,13 +111,12 @@ for ll = 1:length(cc_events.onset)
     end
 end
 
-% % loop through all stimulations and add to the output structure
+% loop through all stimulations and add to the output structure
 for elec = 1:size(data,1) % for all channels
     for ll = 1:length(cc_events_onlystims.onset) % for all epochs
         data_epoch(elec,ll,:) = data(elec,cc_events_onlystims.sample_start(ll)-round((epoch_prestim*data_hdr.Fs))+1:cc_events_onlystims.sample_start(ll)+round(((epoch_length-epoch_prestim)*data_hdr.Fs)));
     end
 end
-
 
 %% Make figures for specific epoch
 figure
