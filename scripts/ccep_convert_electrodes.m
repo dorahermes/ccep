@@ -19,14 +19,19 @@ ses_label = '1';
 
 % select the .mat file that contains the 'elecmatrix' (because it sometimes has 
 % different names, and not in BIDS, this is best done by GUI)
-load(fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
+filename_path = fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
     (uigetfile('*.mat','Select *.mat file',...
-    [fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg')]))));
+    [fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg')])));
+load(filename_path);
 
 % load empty electrodes.tsv to add the elecmatrix to
 t = readtable(fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
     ['sub-' sub_label '_ses-' ses_label '_electrodes.tsv']),...
     'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'})
+
+% create new variable for saving, because t will be overwritten
+t_empty = t;
+
 %% Manually add the elecmatrix to the table at the right place
 
 % check both the table and elecmatrix to see where the elecmatrix should be
@@ -44,7 +49,6 @@ t.y(65:68) = NaN;
 t.z(1:64) = elecmatrix(1:64,3);
 t.z(65:68) = NaN;
 
-
 %% Add path of bids_tsv_nan2na.m function and run 
 
 % because NaN is not compatible with BIDS, use this function to change
@@ -59,5 +63,8 @@ writetable(t, fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',
     'FileType','text','Delimiter','\t');
 
 % Save file to have the possibility to check whether the elecmatrix is
-% filled in the right way. Save m-file as:  RESP<>_ses<>_convert_electrodes.m
+% filled in the right way. Save m-file as:  RESP<>_ses<>__convert_electrodes_check.mat
+save([fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
+    ['sub-' sub_label '_ses-' ses_label '_convert_electrodes_check.mat'])],...
+    't_empty','t','elecmatrix','filename_path')
 
