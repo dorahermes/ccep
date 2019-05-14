@@ -223,26 +223,33 @@ for ii = 1:size(cc_epoch_sorted_avg,1)
         % - enter title 
         % - labels
         
+        xlabel('time(s)')
+        ylabel('amplitude(uV)')
+        % title(['elec ' data_hdr.label{ccep_elec} ' for stimulation of ' data_hdr.label{cc_stimsets(stim_pair_nr,1)} ' and ' data_hdr.label{cc_stimsets(jj,2)} ])    
+        
         % 4 plots
-        subplot(1,2,1)
+        subplot(2,2,1)
         yplot(new_signal)
         hold on
-        % plot original sd
+        % plot original sd for 
         % plot adjusted sd
         hold off
         
-        subplot(1,2,2)
+        subplot(2,2,2)
         % plot part of signal where N1_onset can be found
         % plot adjusted sd
         
-        % repeat for N1_peak and N2_onset
+        % repeat for N1_peak 
+        subplot(2,2,3)
+        % repeat for N2_onset
+        subplot(2,2,4)
         
         visually_found_n1_onset = input('n1 onset? [y/n] ','s');
         visually_found_n1_peak = input('n1 peak? [y/n] ','s');
         visually_found_n2_onset = input('n2 onset? [y/n] ','s');
         
         % - add y/n answers to matrix
-        % - convert codes answers to y/n (NaN = n, ## = y)
+        
     end 
 end
 
