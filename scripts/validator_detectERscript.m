@@ -1,17 +1,19 @@
 % this script is used to validate the ccep_detectER.m 
-% it plots the epochs and by visual assessment is decides whether there is
-% an ER. These are then compared to what the code found.
+% it plots the epochs and standard deviations.  By visual assessment is decided
+% whether there is an significant N1 peak.
+% This assesment is then compared to what the code found to validate the code
 
+% load master_preprocessCCEP script for the participant first,
+% to get all necessary variables
+
+
+% By J. van der Aar & D. Hermes, UMC Utrech 05-2019
+% inspired by code and paper of D. van Blooijs (2018)
 %% load in peakfinder
 addpath(genpath('/Fridge/users/jaap/github/ccep/functions')) 
 
 
-%% shortcut for loading in data without using preprocessCCEP script
 
-% loads cc_epoch_sorted_avg and tt
-cd /Fridge/users/jaap/github/ccep/scripts/
-load('/home/jaap/data_avg_epoch_and_timevector')
-load('/home/jaap/cc_stimsets') 
 %% set defined parameters
 % pre-allocation: variables determined in Dorien's thesis
 thresh = 2.5;   %
@@ -49,15 +51,17 @@ n2_samples_end = find(tt>0.3,1);
 % n1 amplitude, p2 sample, p2 amplitude, n2 sample, n2 amplitude]
 output_ER_all = NaN(size(cc_epoch_sorted_avg,1),size(cc_epoch_sorted_avg,2),8);
 
+validation_matrix = NaN(size(cc_epoch_sorted_avg,1),size(cc_epoch_sorted_avg,2),2);
+
 % for every channel
-for ii = 1:size(cc_epoch_sorted_avg,1)
+for ii = 2:size(cc_epoch_sorted_avg,1)
     % for every averaged stimulation
     for jj = 1:size(cc_epoch_sorted_avg,2)
         
         % baseline subtraction: take median of part of the averaged signal for
         % this stimulation pair before stimulation, which is the half of the
         % epoch
-        baseline_tt = tt>-2 & tt<-.1;
+        baseline_tt = tt>-1 & tt<-.01;
         signal_median = median(cc_epoch_sorted_avg(ii,jj,baseline_tt),3);
         
         % subtract median baseline from signal
@@ -215,45 +219,79 @@ for ii = 1:size(cc_epoch_sorted_avg,1)
         output_ER_all(ii,jj,8) = n2_peak_amplitude;
         
         
-        % PLOTTING AND VALIDATING PART
         
-        figure()
-        % - set fixed ylimits
-        % - recalculate to time for x axis
-        % - enter title 
-        % - labels
+        % plotting and validation part 
+        
+        % display figure in specific size
+        figh = figure(1);
+        pos = get(figh,'position');
+        set(figh,'position',[pos(1:2)/4 pos(3:4)*3])
+        % plot relevant part of the signal (1s before till 500ms after stimulation)
+        subplot(1,2,1)
+        plot(tt(tt>-1 & tt<.5),squeeze(new_signal(tt>-1 & tt<.5)))
         
         xlabel('time(s)')
         ylabel('amplitude(uV)')
-        % title(['elec ' data_hdr.label{ccep_elec} ' for stimulation of ' data_hdr.label{cc_stimsets(stim_pair_nr,1)} ' and ' data_hdr.label{cc_stimsets(jj,2)} ])    
+        title(['elec ' data_hdr.label{ccep_elec} ' for stimulation of ' data_hdr.label{cc_stimsets(jj,1)} ' and ' data_hdr.label{cc_stimsets(jj,2)} ])
+        ylim([-1000 1000])
         
-        % 4 plots
-        subplot(2,2,1)
-        yplot(new_signal)
         hold on
-        % plot original sd for 
-        % plot adjusted sd
+        % plot(tt(output_ER_all(ii,jj,1)),output_ER_all(ii,jj,2),'b*')
+        % plot(tt(output_ER_all(ii,jj,3)),output_ER_all(ii,jj,4),'r*')
+        % plot(tt(output_ER_all(ii,jj,5)),output_ER_all(ii,jj,6),'g*')
+        % plot(tt(output_ER_all(ii,jj,7)),output_ER_all(ii,jj,8),'y*')
+        
+        % plot calculated baseline standard deviation
+        plot(tt(baseline_tt), pre_stim_sd_orig+zeros(size(tt(baseline_tt))), 'r-')
+        plot(tt(baseline_tt), -pre_stim_sd_orig+zeros(size(tt(baseline_tt))), 'r-')
+        
+        % plot adjusted baseline (when calculated < minSD)
+        plot(tt(baseline_tt), pre_stim_sd+zeros(size(tt(baseline_tt))), 'g-')
+        plot(tt(baseline_tt), -pre_stim_sd+zeros(size(tt(baseline_tt))), 'g-')
         hold off
         
-        subplot(2,2,2)
-        % plot part of signal where N1_onset can be found
-        % plot adjusted sd
+        % plot part with n1 peak to inspect
+        subplot(1,2,2)
+        plot(tt(tt>0.01 & tt<.1),squeeze(new_signal(tt>0.01 & tt<.1)))
+        title(['elec ' data_hdr.label{ii} ' for stimulation of ' data_hdr.label{cc_stimsets(jj,1)} ' and ' data_hdr.label{cc_stimsets(jj,2)} ])
+        xlabel('time(s)')
+        ylabel('amplitude(uV)')
+        ylim([-1000 1000])
+        hold on
+        % plot SD * threshhold to see if it exceeds and is significant
+        plot(tt(tt>0 & tt<.1), thresh*pre_stim_sd+zeros(size(tt(tt>0 & tt<.1))), 'g-')
+        plot(tt(tt>0 & tt<.1), thresh*-pre_stim_sd+zeros(size(tt(tt>0 & tt<.1))), 'g-')
+        hold off
         
-        % repeat for N1_peak 
-        subplot(2,2,3)
-        % repeat for N2_onset
-        subplot(2,2,4)
-        
-        visually_found_n1_onset = input('n1 onset? [y/n] ','s');
+        % ask for input, do you see a significant n1 peak?
         visually_found_n1_peak = input('n1 peak? [y/n] ','s');
-        visually_found_n2_onset = input('n2 onset? [y/n] ','s');
+        close(figh)
         
-        % - add y/n answers to matrix
+        % save in matrix
+        % !!!!!!!!!!         110 = 'N', 121 = 'Y'          !!!!!!!!!!
+        validation_matrix(ii,jj,1) = visually_found_n1_peak;
+        % change NaNs in output_ER_all to 'n' and # to 'y'
+        % and add these to matrix
+        if ~isnan(output_ER_all(ii,jj,3))
+            validation_matrix(ii,jj,2) = 'y';
+        elseif isnan(output_ER_all(ii,jj,3))
+            validation_matrix(ii,jj,2) = 'n';
+        end
         
     end 
+    
+    % all stimulations of a channel, save data, so continuing later is
+    % possible
+    working_dir = fullfile('/Fridge','users','jaap','ccep','dataBIDS');
+    save([fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
+    ['sub-' sub_label '_ses-' ses_label '_run-' run_label 'validation_matrix.mat'])],...
+    'validation_matrix')
+    
+    
 end
 
-% write code that finds if:
+%% statistics & ROC
+% write code what finds:
 % true positives
 % true negatives
 % false positives
