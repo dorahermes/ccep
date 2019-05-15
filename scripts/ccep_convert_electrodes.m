@@ -3,7 +3,7 @@
 
 %   By Dora Hermes, Jaap van der Aar, Giulio Castegnaro 02-2019
 
-%   Modified by Jaap van der Aar, adjust to current pipeline/structure 05-2019
+%   Modified by Jaap van der Aar, adjusted to current pipeline/structure 05-2019
 
 % This is where the original identified electrode locations are stored in a
 % matrix called 'elecmatrix' that has the size electrodes * x,y,z
@@ -13,7 +13,7 @@ CCEP_dir = fullfile('/Fridge','CCEP');
 
 
 % Insert RESP and session
-sub_label = 'RESP0701';
+sub_label = 'RESP0621';
 ses_label = '1';
 
 
@@ -29,6 +29,8 @@ t = readtable(fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',
     ['sub-' sub_label '_ses-' ses_label '_electrodes.tsv']),...
     'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'})
 
+whos elecmatrix;
+
 % create new variable for saving, because t will be overwritten
 t_empty = t;
 
@@ -39,17 +41,21 @@ t_empty = t;
 
 % add electrode X positions
 t.x(1:64) = elecmatrix(1:64,1);
-t.x(65:68) = NaN;
+%t.x(65:68) = NaN;
 
 % add electrode Y positions
 t.y(1:64) = elecmatrix(1:64,2);
-t.y(65:68) = NaN;
+%t.y(65:68) = NaN;
 
 % add electrode Z positions
 t.z(1:64) = elecmatrix(1:64,3);
-t.z(65:68) = NaN;
+%t.z(65:68) = NaN;
 
-%% Add path of bids_tsv_nan2na.m function and run 
+if ~isequal(t.x,t_empty.x) 
+    disp('electrodes are placed in table')
+end
+
+% Add path of bids_tsv_nan2na.m function and run
 
 % because NaN is not compatible with BIDS, use this function to change
 % NaN's to N/a's 
