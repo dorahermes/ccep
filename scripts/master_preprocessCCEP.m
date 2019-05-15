@@ -76,10 +76,33 @@ for qq = find(strcmp(cc_events.trial_type,'artefact'))
     % if artefact is only in specific channels
     else 
     % first need participant that has this to test how its annotated in
-    % cc_events. Also we have to be careful, because sometimes that do
+    % cc_events. RESP0701 has channel specific artifact, include and test
+    % later. Also we have to be careful, because sometimes that do
     % multiple channels have the same onset, but other offset, so need to
-    % include an extra elseif with offset. 
+    % include an extra elseif with offset.
     end
+end
+
+
+
+% Exclude bad channels and channels that are not included
+% Load channels.tsv
+channel_table = readtable(fullfile(dataRootPath,['sub-' sub_label],['ses-' ses_label],'ieeg',...
+    ['sub-' sub_label '_ses-' ses_label '_task-' task_label '_run-' run_label '_channels.tsv']),...
+    'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'});
+% iterate over all channels
+for channel = 1:height(channel_table)
+    % if a channel is marked as bad, change data to NaN
+    if strcmp(channel_table.status(channel),'bad') 
+       data(channel,:) = NaN; 
+    % if a channel is not included, change data to NaN
+    elseif strcmp(channel_table.status_description(channel), 'not included')
+       data(channel,:) = NaN;
+    elseif strcmp(channel_table.status_description(channel), 'included')
+       % do nothing
+    else
+        disp('check channels.tsv, because there is another annotation')  
+    end  
 end
 
 % set epoch parameters
@@ -114,7 +137,13 @@ end
 % loop through all stimulations and add to the output structure
 for elec = 1:size(data,1) % for all channels
     for ll = 1:length(cc_events_onlystims.onset) % for all epochs
-        data_epoch(elec,ll,:) = data(elec,cc_events_onlystims.sample_start(ll)-round((epoch_prestim*data_hdr.Fs))+1:cc_events_onlystims.sample_start(ll)+round(((epoch_length-epoch_prestim)*data_hdr.Fs)));
+        % if data contain artifacts, which are adjusted to NaN's
+        % consider that epoch as unreliable and change epoch to NaN's
+        if sum(isnan(data_epoch(elec,ll,(tt>-1 & tt<.5)))) > 0
+            data_epoch(elec,ll,:) = NaN;
+        else
+            data_epoch(elec,ll,:) = data(elec,cc_events_onlystims.sample_start(ll)-round((epoch_prestim*data_hdr.Fs))+1:cc_events_onlystims.sample_start(ll)+round(((epoch_length-epoch_prestim)*data_hdr.Fs)));
+        end
     end
 end
 
@@ -123,7 +152,7 @@ figure
 plot(tt,squeeze(data_epoch(3,1,:)))
 xlabel('time(s)')
 ylabel('amplitude(uV)')
-
+sum(isnan(A(:)))
 %% Averaging the epochs - assuming F01-F02 is different from F02-F01
 
 %%%% First assume that F01-F02 is different from F02-F01
@@ -137,7 +166,7 @@ end
 
 % check whether there is consistent stimulations, if all stimulations pairs
 % are done 5 times. 
-if cc_nroftimes == 5*(ones((height(cc_events_onlystims)/5),1))
+if cc_nroftimes == 5*(ones(round(height(cc_events_onlystims)/5),1))
     disp('All stimulations are done 5 times')
     % cc_epoch_sorted_if_all5 = squeeze(mean(reshape(data_epoch,size(data_epoch,1),
     % max_amount_same_stimulation,(size(cc_events,1)/amount_same_stimulation),size(data_epoch,3)),2));

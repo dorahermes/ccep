@@ -175,7 +175,7 @@ end
 
 % makes it possible to plot multiple CCEPs to check
 for ii = 3
-    for jj = 1:68
+    for jj = 1:56
         
         % recalculate new_signal for this ii and jj to plot
         signal_median = median(cc_epoch_sorted_avg(ii,jj,baseline_tt),3);
@@ -197,8 +197,8 @@ end
 p1_samples_start = find(tt>0.002,1);
 p1_samples_end = find(tt>0.02,1);
 
-% N1 peak: 10 and 50 ms
-n1_samples_start = find(tt>0.01,1);
+% N1 peak: 8 and 50 ms
+n1_samples_start = find(tt>0.008,1);
 n1_samples_end = find(tt>0.05,1);
 
 % P2/N2 onset: 50 and 150 ms
@@ -217,6 +217,7 @@ n2_samples_end = find(tt>0.3,1);
 % n1 amplitude, p2 sample, p2 amplitude, n2 sample, n2 amplitude]
 output_ER_all = NaN(size(cc_epoch_sorted_avg,1),size(cc_epoch_sorted_avg,2),8);
 
+% for every channel
 for ii = 1:size(cc_epoch_sorted_avg,1)
     % for every averaged stimulation
     for jj = 1:size(cc_epoch_sorted_avg,2)
@@ -385,8 +386,9 @@ end
 %% plot to test
 
 % makes it possible to plot multiple CCEPs to check
-for ii = 1:size(cc_epoch_sorted_avg,1) % measured channels
-    for jj = 2 % stimulated electrode pair
+figure()
+for ii = 1:10%:size(cc_epoch_sorted_avg,1) % measured channels
+    for jj = 1:44 % stimulated electrode pair
         
         if ~isnan(output_ER_all(ii,jj,3)) % exclude this if, to see how the ones without N1 look 
             
@@ -395,13 +397,13 @@ for ii = 1:size(cc_epoch_sorted_avg,1) % measured channels
             new_signal = squeeze(cc_epoch_sorted_avg(ii,jj,:)) - signal_median;
             
             %plot((find(tt>-0.1,1)+extrasamps:find(tt>0.3,1)),new_signal(find(tt>-0.1,1)+extrasamps:find(tt>0.3,1)))
-            plot((find(tt>-0.01,1)+extrasamps:find(tt>0.1,1)),new_signal(find(tt>-0.01,1)+extrasamps:find(tt>=0.1,1)))
+            plot((find(tt>-0.01,1)+extrasamps:find(tt>0.5,1)),new_signal(find(tt>-0.01,1)+extrasamps:find(tt>=0.5,1)))
             hold on
             
             plot(output_ER_all(ii,jj,1),output_ER_all(ii,jj,2),'b*')
             plot(output_ER_all(ii,jj,3),output_ER_all(ii,jj,4),'r*')
             plot(output_ER_all(ii,jj,5),output_ER_all(ii,jj,6),'g*')
-            %plot(output_ER_all(ii,jj,7),output_ER_all(ii,jj,8),'y*')
+            plot(output_ER_all(ii,jj,7),output_ER_all(ii,jj,8),'y*')
             
             xlabel('sample')
             ylabel('amplitude(uV)')
@@ -422,7 +424,7 @@ hemi_cap = {'R'};
 v_dirs = [90 0]; %;90 0;90 -60;270 -60;0 0];
 
 % set stimulated pair you want to render
-stim_pair = 2;
+stim_pair = 1;
 
 % select significant peaks in the other channels
 n1_plot = squeeze(output_ER_all(:,stim_pair,3:4)); % measured electrodes X latency/ampl of N1 peak

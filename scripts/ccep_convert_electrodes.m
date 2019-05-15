@@ -13,7 +13,7 @@ CCEP_dir = fullfile('/Fridge','CCEP');
 
 
 % Insert RESP and session
-sub_label = 'RESP0701';
+sub_label = 'RESP0768';
 ses_label = '1';
 
 
@@ -25,6 +25,7 @@ filename_path = fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg
 load(filename_path);
 
 % load empty electrodes.tsv to add the elecmatrix to
+% print both and their sizes to see where to implement the elecmatrix
 t = readtable(fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
     ['sub-' sub_label '_ses-' ses_label '_electrodes.tsv']),...
     'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'})
@@ -39,22 +40,29 @@ t_empty = t;
 %% Manually add the elecmatrix to the table at the right place
 
 % check both the table and elecmatrix to see where the elecmatrix should be
-% placed. 
+% placed. Place NaNs on the places that should be empty. 
 
 % add electrode X positions
 t.x(1:64) = elecmatrix(1:64,1);
-t.x(65:68) = NaN;
+t.x(65) = NaN;
+t.x(66:81) = elecmatrix(65:80,1);
+t.x(82:133) = NaN;
 
 % add electrode Y positions
 t.y(1:64) = elecmatrix(1:64,2);
-t.y(65:68) = NaN;
+t.y(65) = NaN;
+t.y(66:81) = elecmatrix(65:80,2);
+t.y(82:133) = NaN;
 
 % add electrode Z positions
 t.z(1:64) = elecmatrix(1:64,3);
-t.z(65:68) = NaN;
+t.z(65) = NaN;
+t.z(66:81) = elecmatrix(65:80,3);
+t.z(82:133) = NaN;
 
 if ~isequal(t.x,t_empty.x) 
     disp('electrodes are placed in table')
+    disp('double check "t" if elecmatrix could not be place 1-on-1 in table')
 end
 
 % Add path of bids_tsv_nan2na.m function and run
