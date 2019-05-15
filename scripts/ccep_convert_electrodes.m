@@ -3,7 +3,7 @@
 
 %   By Dora Hermes, Jaap van der Aar, Giulio Castegnaro 02-2019
 
-%   Modified by Jaap van der Aar, adjust to current pipeline/structure 05-2019
+%   Modified by Jaap van der Aar, adjusted to current pipeline/structure 05-2019
 
 % This is where the original identified electrode locations are stored in a
 % matrix called 'elecmatrix' that has the size electrodes * x,y,z
@@ -28,6 +28,10 @@ load(filename_path);
 t = readtable(fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
     ['sub-' sub_label '_ses-' ses_label '_electrodes.tsv']),...
     'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'})
+elecmatrix
+
+whos t
+whos elecmatrix;
 
 % create new variable for saving, because t will be overwritten
 t_empty = t;
@@ -49,7 +53,11 @@ t.y(65:68) = NaN;
 t.z(1:64) = elecmatrix(1:64,3);
 t.z(65:68) = NaN;
 
-%% Add path of bids_tsv_nan2na.m function and run 
+if ~isequal(t.x,t_empty.x) 
+    disp('electrodes are placed in table')
+end
+
+% Add path of bids_tsv_nan2na.m function and run
 
 % because NaN is not compatible with BIDS, use this function to change
 % NaN's to N/a's 
@@ -67,4 +75,6 @@ writetable(t, fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',
 save([fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
     ['sub-' sub_label '_ses-' ses_label '_convert_electrodes_check.mat'])],...
     't_empty','t','elecmatrix','filename_path')
+
+disp('TSV-file saved in folder')
 
