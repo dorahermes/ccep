@@ -13,7 +13,7 @@ CCEP_dir = fullfile('/Fridge','CCEP');
 
 
 % Insert RESP and session
-sub_label = 'RESP0621';
+sub_label = 'RESP0701';
 ses_label = '1';
 
 
@@ -28,7 +28,9 @@ load(filename_path);
 t = readtable(fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
     ['sub-' sub_label '_ses-' ses_label '_electrodes.tsv']),...
     'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'})
+elecmatrix
 
+whos t
 whos elecmatrix;
 
 % create new variable for saving, because t will be overwritten
@@ -41,15 +43,15 @@ t_empty = t;
 
 % add electrode X positions
 t.x(1:64) = elecmatrix(1:64,1);
-%t.x(65:68) = NaN;
+t.x(65:68) = NaN;
 
 % add electrode Y positions
 t.y(1:64) = elecmatrix(1:64,2);
-%t.y(65:68) = NaN;
+t.y(65:68) = NaN;
 
 % add electrode Z positions
 t.z(1:64) = elecmatrix(1:64,3);
-%t.z(65:68) = NaN;
+t.z(65:68) = NaN;
 
 if ~isequal(t.x,t_empty.x) 
     disp('electrodes are placed in table')
@@ -73,4 +75,6 @@ writetable(t, fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',
 save([fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
     ['sub-' sub_label '_ses-' ses_label '_convert_electrodes_check.mat'])],...
     't_empty','t','elecmatrix','filename_path')
+
+disp('TSV-file saved in folder')
 
