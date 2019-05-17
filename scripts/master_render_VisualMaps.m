@@ -6,44 +6,6 @@
 % can be cloned from: https://github.com/dorahermes/ecogBasicCode.git
 addpath('/Fridge/users/dora/github/ecogBasicCode/render/')
 
-%% Write gifti file in derivatives/surfaces with original MRI coordinates from freesurfer
-
-%%% Preperation step 1: create the output directory for your surface
-    % mkdir dataRootPath/derivatices/surfaces/subjectLabel
-%%% Preperation step 2: create a gifti file from the freesurfer pial in Freesurfer coordinates
-    % run next line in the terminal
-    % mris_convert lh.pial lh.pial.gii 
-
-dataRootPath = '/Fridge/users/dora/ccep/dataBIDS/'; % BIDS dir
-subjects = {'chaam'};
-hemi_cap = {'R'};
-hemi_small = {'rh'};
-s = 1;
-
-subj = subjects{s};
-
-% load the Freesurfer gifti
-g = gifti([dataRootPath '/derivatives/Freesurfer/sub-' subj '/surf/' hemi_small{s} '.pial.gii']);
-
-% convert from freesurfer space to original space
-mri_orig = ([dataRootPath '/derivatives/Freesurfer/sub-' subj '/mri/orig.mgz']);
-orig = MRIread(mri_orig);
-Torig = orig.tkrvox2ras;
-Norig = orig.vox2ras;
-freeSurfer2T1 = Norig*inv(Torig);
-
-% convert vertices to original space
-vert_mat = double(([g.vertices ones(size(g.vertices,1),1)])');
-vert_mat = freeSurfer2T1*vert_mat;
-vert_mat(4,:) = [];
-vert_mat = vert_mat';
-g.vertices = vert_mat; clear vert_mat
-
-% save as a gifti
-gifti_name = [dataRootPath '/derivatives/surfaces/sub-' subj '/sub-' subj '_T1w_pial.' hemi_cap{s} '.surf.gii'];
-
-save(g,gifti_name,'Base64Binary')
-
 
 %% Render plain with used electrodes
 dataRootPath = '/Fridge/users/dora/ccep/dataBIDS/';
