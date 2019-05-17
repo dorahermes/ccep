@@ -25,10 +25,10 @@ ft_defaults
 dataRootPath = '/Fridge/CCEP/';
 
 % Subject information
-subjects = {'RESP0706'}; % subject number
+subjects = {'RESP0701'}; % subject number
 sessions = {'1'}; % session number
 task_labels = {'SPESclin'};
-run_labels = {'041501'};
+run_labels = {'021112'};
 data_nr = 1; % dataset number in the above cell array
 
 sub_label = subjects{data_nr};
@@ -64,26 +64,36 @@ events_name = fullfile(dataRootPath,['sub-' sub_label],['ses-' ses_label],'ieeg'
 
 cc_events = readtable(events_name,'FileType','text','Delimiter','\t');
 
+
+electrodes_file = fullfile(dataRootPath,['sub-' sub_label],['ses-' ses_label],...
+    'ieeg',['sub-' sub_label '_ses-' ses_label '_electrodes.tsv']);
+
+electrodes_table = readtable(electrodes_file,'Filetype','text','Delimiter','\t');
+
 % might want to add a check here if the stimulations are not closer than 5
 % seconds  to eachother (might be the case in older patients)
 
 % set up index that iterates over artefact rows 
 % recalculate to samples and change these samples into NaN
-for qq = find(strcmp(cc_events.trial_type,'artefact'))
+for qq = find(strcmp(cc_events.trial_type,'artefact'))' 
     % if artefact is in all channels
-    if strcmp(cc_events.electrodes_involved_onset, 'all')
-        data(:,(round(cc_events.onset(qq)*data_hdr.Fs):((round(str2double(cc_events.offset(qq))*data_hdr.Fs))))) = NaN; 
-    % if artefact is only in specific channels
-    else 
-    % first need participant that has this to test how its annotated in
-    % cc_events. RESP0701 has channel specific artifact, include and test
-    % later. Also we have to be careful, because sometimes that do
-    % multiple channels have the same onset, but other offset, so need to
-    % include an extra elseif with offset.
+    if strcmp(cc_events.electrodes_involved_onset(qq), 'all')
+        data(:,(cc_events.sample_start(qq):str2double(cc_events.sample_end(qq)))) = NaN; 
+    % if artefact is only in specific channels. 
+    % WARNING: it might be possible that there are channel specific
+    % artifacts with the same onset but another offset. Therefore, there is
+    % an extra 'else' included that will capture this problem if a
+    % participant has this. Then this can be fixed in this loop. Same for
+    % multiple channel specific artifacts at the same time
+    elseif isequal(cc_events.electrodes_involved_onset(qq),cc_events.electrodes_involved_offset(qq))
+        arti_channel = find(strcmp(electrodes_table.name,cc_events.electrodes_involved_onset(qq)));
+        data(arti_channel,(cc_events.sample_start(qq):str2double(cc_events.sample_end(qq)))) = NaN;
+    else
+        disp('Warning, there might be multiple channel specific artifacts')
+        disp('These could have another onset, or offset')
+        disp('Add this option to the loop to process these')
     end
 end
-
-
 
 % Exclude bad channels and channels that are not included
 % Load channels.tsv
@@ -152,7 +162,6 @@ figure
 plot(tt,squeeze(data_epoch(3,1,:)))
 xlabel('time(s)')
 ylabel('amplitude(uV)')
-sum(isnan(A(:)))
 %% Averaging the epochs - assuming F01-F02 is different from F02-F01
 
 %%%% First assume that F01-F02 is different from F02-F01
@@ -218,12 +227,13 @@ for yy = 1:length(cc_nroftimes) % loop through epoch types (stimulated pairs)
     % find the epochs of the current type
     events_for_this_set = find(yy==IC);
     % see how many there are
-    nr_events = length(events_for_this_set);
-    
+    nr_events = length(events_for_this_set);   
     % put things back in the matrix
     cc_epoch_sorted(:,1:nr_events,yy,:) = data_epoch(:,events_for_this_set,:);
     % if 'All stimulations are done 5 times' is displayed earlier, isequal(cc_epoch_sorted,data_epoch) == True 
 end
+
+% might only want to take the mean if there are at least ... stimulations?
 
 % Take mean of these stimulations and squeeze into 3D
 cc_epoch_sorted_avg = squeeze(nanmean(cc_epoch_sorted,2));

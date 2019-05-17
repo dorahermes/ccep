@@ -1,5 +1,5 @@
 function [electrodes_tableWithlabels] = ...
-    ccep_lookupAtlases(g,electrodes_tsv,freesurfer_dir,dataRootPath,hemi_small,output_file,electrode_to_vertex_dist, subj, ses_label)
+    ccep_lookupAtlases(g,electrodes_tsv,freesurfer_dir,dataRootPath,hemi_small,output_file,electrode_to_vertex_dist, subj, ses_label, s)
 %
 % This function looks up several atlas labels for electrodes in a
 % _electrodes.tsv file
@@ -27,7 +27,7 @@ elecmatrix = [loc_info.x loc_info.y loc_info.z];
 
 % load Destrieux map
 surface_labels_Destrieux = fullfile(freesurfer_dir,'label',...
-    [hemi_small 'h.aparc.a2009s.annot']);
+    [hemi_small{s} 'h.aparc.a2009s.annot']);
 [vertices, label, colortable_Destrieux] = read_annotation(surface_labels_Destrieux);
 vert_label_Destrieux = label; % these labels are strange and do not go from 1:76, but need to be mapped to the colortable
 % mapping labels to colortable
@@ -38,7 +38,7 @@ clear vertices label
 
 % load DKT map
 surface_labels_DKT = fullfile(freesurfer_dir,'label',...
-[hemi_small 'h.aparc.DKTatlas.annot']);
+[hemi_small{s} 'h.aparc.DKTatlas.annot']);
 [vertices, label, colortable_DKT] = read_annotation(surface_labels_DKT);
 vert_label_DKT = label; % these labels are strange and do not go from 1:76, but need to be mapped to the colortable
 % mapping labels to colortable
@@ -53,32 +53,32 @@ Wang_ROI_Names = {...
     'TO2' 'TO1' 'LO2' 'LO1' 'V3B' 'V3A' 'IPS0' 'IPS1' 'IPS2' 'IPS3' 'IPS4' ...
     'IPS5' 'SPL1' 'FEF'};
 surface_labels_name = fullfile(freesurfer_dir,'surf',...
-    [hemi_small 'h.wang15_mplbl.mgz']);
+    [hemi_small{s} 'h.wang15_mplbl.mgz']);
 surface_labels = MRIread(surface_labels_name);
 vert_label_Wang = surface_labels.vol(:);
 
 %load Benson map
 Benson_Area_Names = {'V1','V2','V3','hV4','V01','V02','L01','L02','T01','T02','V3b','V3a'};
 surface_labels_name = fullfile(freesurfer_dir,'surf',...
-[hemi_small 'h.benson14_varea.mgz']);
+[hemi_small{s} 'h.benson14_varea.mgz']);
 surface_labels_B = MRIread(surface_labels_name);
 vert_label_Benson = surface_labels_B.vol(:);
 
 % load Benson Eccen
 surface_labels_name = fullfile(freesurfer_dir,'surf',...
-    [hemi_small 'h.benson14_eccen.mgz']);
+    [hemi_small{s} 'h.benson14_eccen.mgz']);
 surface_labels = MRIread(surface_labels_name);
 vert_eccen_label = surface_labels.vol(:);
 clear surface_labels surface_labels_name
 %load Benson Angle
 surface_labels_name = fullfile(freesurfer_dir,'surf',...
-    [hemi_small 'h.benson14_angle.mgz']);
+    [hemi_small{s} 'h.benson14_angle.mgz']);
 surface_labels = MRIread(surface_labels_name);
 vert_angle_label = surface_labels.vol(:);
 clear surface_labels surface_labels_name
 % load Benson Sigma
 surface_labels_name = fullfile(freesurfer_dir,'surf',...
-    [hemi_small 'h.benson14_sigma.mgz']);
+    [hemi_small{s} 'h.benson14_sigma.mgz']);
 surface_labels = MRIread(surface_labels_name);
 vert_sigma_label = surface_labels.vol(:);
 clear surface_labels surface_labels_name
@@ -185,10 +185,12 @@ t = table(...
 % concatenate the table to what is already in loc_info
 electrodes_tableWithlabels = horzcat(loc_info,t);
 
+electrodes_tableWithlabels = bids_tsv_nan2na(electrodes_tableWithlabels);
+
 if ~exist(fullfile(dataRootPath,['sub-' subj],['ses-' ses_label],'ieeg',...
     ['sub-' subj '_ses-' ses_label '_' output_file]),'file')
     disp(['writing output ' output_file])
-    writetable(t,fullfile(dataRootPath,['sub-' subj],['ses-' ses_label],'ieeg',...
+    writetable(electrodes_tableWithlabels,fullfile(dataRootPath,['sub-' subj],['ses-' ses_label],'ieeg',...
     ['sub-' subj '_ses-' ses_label '_' output_file]),'FileType','text','Delimiter','\t');
 else
     disp(['ERROR: can not overwrite, output file already exists ' output_file])
