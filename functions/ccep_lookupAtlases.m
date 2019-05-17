@@ -1,5 +1,5 @@
 function [electrodes_tableWithlabels] = ...
-    ccep_lookupAtlases(g,electrodes_tsv,freesurfer_dir,hemi_small,output_file,electrode_to_vertex_dist)
+    ccep_lookupAtlases(g,electrodes_tsv,freesurfer_dir,dataRootPath,hemi_small,output_file,electrode_to_vertex_dist, subj, ses_label)
 %
 % This function looks up several atlas labels for electrodes in a
 % _electrodes.tsv file
@@ -185,10 +185,11 @@ t = table(...
 % concatenate the table to what is already in loc_info
 electrodes_tableWithlabels = horzcat(loc_info,t);
 
-if ~exist(output_file,'file')
+if ~exist(fullfile(dataRootPath,['sub-' subj],['ses-' ses_label],'ieeg',...
+    ['sub-' subj '_ses-' ses_label '_' output_file]),'file')
     disp(['writing output ' output_file])
-    writetable(electrodes_tableWithlabels,output_file,...
-        'Filetype','text','Delimiter','\t'); 
+    writetable(t,fullfile(dataRootPath,['sub-' subj],['ses-' ses_label],'ieeg',...
+    ['sub-' subj '_ses-' ses_label '_' output_file]),'FileType','text','Delimiter','\t');
 else
     disp(['ERROR: can not overwrite, output file already exists ' output_file])
 end

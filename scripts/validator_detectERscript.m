@@ -15,7 +15,7 @@ addpath(genpath('/Fridge/users/jaap/github/ccep/functions'))
 
 
 %% set defined parameters
-% pre-allocation: variables determined in Dorien's thesis
+% pre-allocation: variables determined in Dorien's paper
 thresh = 2.5;   %
 minSD = 50;     % in microV: minimum standard deviation of prestimulus baseline in case actual std of prestim baseline is too small
 sel = 20;       % how many samples around peak not considered as another peak
@@ -54,7 +54,7 @@ output_ER_all = NaN(size(cc_epoch_sorted_avg,1),size(cc_epoch_sorted_avg,2),8);
 validation_matrix = NaN(size(cc_epoch_sorted_avg,1),size(cc_epoch_sorted_avg,2),2);
 
 % for every channel
-for ii = 2:size(cc_epoch_sorted_avg,1)
+for ii = 1:size(cc_epoch_sorted_avg,1)
     % for every averaged stimulation
     for jj = 1:size(cc_epoch_sorted_avg,2)
         
@@ -232,7 +232,7 @@ for ii = 2:size(cc_epoch_sorted_avg,1)
         
         xlabel('time(s)')
         ylabel('amplitude(uV)')
-        title(['elec ' data_hdr.label{ccep_elec} ' for stimulation of ' data_hdr.label{cc_stimsets(jj,1)} ' and ' data_hdr.label{cc_stimsets(jj,2)} ])
+        title(['elec ' data_hdr.label{ii} ' for stimulation of ' data_hdr.label{cc_stimsets(jj,1)} ' and ' data_hdr.label{cc_stimsets(jj,2)} ])
         ylim([-1000 1000])
         
         hold on
@@ -284,7 +284,7 @@ for ii = 2:size(cc_epoch_sorted_avg,1)
     % possible
     working_dir = fullfile('/Fridge','users','jaap','ccep','dataBIDS');
     save([fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
-    ['sub-' sub_label '_ses-' ses_label '_run-' run_label 'validation_matrix.mat'])],...
+    ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_validation_matrix.mat'])],...
     'validation_matrix')
     
     
