@@ -53,10 +53,11 @@ output_ER_all = NaN(size(cc_epoch_sorted_avg,1),size(cc_epoch_sorted_avg,2),8);
 
 validation_matrix = NaN(size(cc_epoch_sorted_avg,1),size(cc_epoch_sorted_avg,2),2);
 
+%%
 % for every channel
-for ii = 1:size(cc_epoch_sorted_avg,1)
+for jj = 27:size(cc_epoch_sorted_avg,1)
     % for every averaged stimulation
-    for jj = 1:size(cc_epoch_sorted_avg,2)
+    for ii = 1:size(cc_epoch_sorted_avg,2)
         
         % baseline subtraction: take median of part of the averaged signal for
         % this stimulation pair before stimulation, which is the half of the
@@ -218,64 +219,49 @@ for ii = 1:size(cc_epoch_sorted_avg,1)
         output_ER_all(ii,jj,7) = n2_peak_sample;
         output_ER_all(ii,jj,8) = n2_peak_amplitude;
         
-        
-        
-        % plotting and validation part 
+         % plotting and validation part 
         
         % display figure in specific size
         figh = figure(1);
         pos = get(figh,'position');
         set(figh,'position',[pos(1:2)/4 pos(3:4)*3])
         % plot relevant part of the signal (1s before till 500ms after stimulation)
-        subplot(1,2,1)
         plot(tt(tt>-1 & tt<.5),squeeze(new_signal(tt>-1 & tt<.5)))
+        hold on
+        % plot stimulation artifact (first 20 samples, +/- 10ms)
+        plot(tt(5120:5140),squeeze(new_signal(5120:5140)),'r')
         
         xlabel('time(s)')
         ylabel('amplitude(uV)')
         title(['elec ' data_hdr.label{ii} ' for stimulation of ' data_hdr.label{cc_stimsets(jj,1)} ' and ' data_hdr.label{cc_stimsets(jj,2)} ])
-        ylim([-1000 1000])
+        ylim([-2000 2000])
         
-        hold on
         % plot(tt(output_ER_all(ii,jj,1)),output_ER_all(ii,jj,2),'b*')
         % plot(tt(output_ER_all(ii,jj,3)),output_ER_all(ii,jj,4),'r*')
         % plot(tt(output_ER_all(ii,jj,5)),output_ER_all(ii,jj,6),'g*')
         % plot(tt(output_ER_all(ii,jj,7)),output_ER_all(ii,jj,8),'y*')
         
-        % plot calculated baseline standard deviation
-        plot(tt(baseline_tt), pre_stim_sd_orig+zeros(size(tt(baseline_tt))), 'r-')
-        plot(tt(baseline_tt), -pre_stim_sd_orig+zeros(size(tt(baseline_tt))), 'r-')
-        
-        % plot adjusted baseline (when calculated < minSD)
-        plot(tt(baseline_tt), pre_stim_sd+zeros(size(tt(baseline_tt))), 'g-')
-        plot(tt(baseline_tt), -pre_stim_sd+zeros(size(tt(baseline_tt))), 'g-')
-        hold off
-        
-        % plot part with n1 peak to inspect
-        subplot(1,2,2)
-        plot(tt(tt>0.01 & tt<.1),squeeze(new_signal(tt>0.01 & tt<.1)))
-        title(['elec ' data_hdr.label{ii} ' for stimulation of ' data_hdr.label{cc_stimsets(jj,1)} ' and ' data_hdr.label{cc_stimsets(jj,2)} ])
-        xlabel('time(s)')
-        ylabel('amplitude(uV)')
-        ylim([-1000 1000])
-        hold on
-        % plot SD * threshhold to see if it exceeds and is significant
-        plot(tt(tt>0 & tt<.1), thresh*pre_stim_sd+zeros(size(tt(tt>0 & tt<.1))), 'g-')
-        plot(tt(tt>0 & tt<.1), thresh*-pre_stim_sd+zeros(size(tt(tt>0 & tt<.1))), 'g-')
         hold off
         
         % ask for input, do you see a significant n1 peak?
         visually_found_n1_peak = input('n1 peak? [y/n] ','s');
         close(figh)
         
+        
         % save in matrix
         % !!!!!!!!!!         110 = 'N', 121 = 'Y'          !!!!!!!!!!
         validation_matrix(ii,jj,1) = visually_found_n1_peak;
+        if validation_matrix(ii,jj,1) == 121
+            validation_matrix(ii,jj,1) = 1;
+        elseif validation_matrix(ii,jj,1) == 110
+            validation_matrix(ii,jj,1) = 0;
+        end
         % change NaNs in output_ER_all to 'n' and # to 'y'
         % and add these to matrix
         if ~isnan(output_ER_all(ii,jj,3))
-            validation_matrix(ii,jj,2) = 'y';
+            validation_matrix(ii,jj,2) = 1;
         elseif isnan(output_ER_all(ii,jj,3))
-            validation_matrix(ii,jj,2) = 'n';
+            validation_matrix(ii,jj,2) = 0;
         end
         
     end 
@@ -289,9 +275,84 @@ for ii = 1:size(cc_epoch_sorted_avg,1)
     
     
 end
+%% Another option to visualise validator, with subplots
+
+% this option gives more insight to the data, plots the SD, minSD,
+% threshold, and N1 range
+
+% plotting and validation part 
+        
+% display figure in specific size
+figh = figure(1);
+pos = get(figh,'position');
+set(figh,'position',[pos(1:2)/4 pos(3:4)*3])
+% plot relevant part of the signal (1s before till 500ms after stimulation)
+subplot(1,2,1)
+plot(tt(tt>-1 & tt<.5),squeeze(new_signal(tt>-1 & tt<.5)))
+
+xlabel('time(s)')
+ylabel('amplitude(uV)')
+title(['elec ' data_hdr.label{ii} ' for stimulation of ' data_hdr.label{cc_stimsets(jj,1)} ' and ' data_hdr.label{cc_stimsets(jj,2)} ])
+ylim([-1000 1000])
+
+hold on
+% plot stimulation artifact (first 20 samples, +/- 10ms)
+plot(tt(5120:5140),squeeze(new_signal(5120:5140)),'r')
+% plot found peaks and onsets
+% plot(tt(output_ER_all(ii,jj,1)),output_ER_all(ii,jj,2),'b*')
+% plot(tt(output_ER_all(ii,jj,3)),output_ER_all(ii,jj,4),'r*')
+% plot(tt(output_ER_all(ii,jj,5)),output_ER_all(ii,jj,6),'g*')
+% plot(tt(output_ER_all(ii,jj,7)),output_ER_all(ii,jj,8),'y*')
+
+% plot calculated baseline standard deviation
+plot(tt(baseline_tt), pre_stim_sd_orig+zeros(size(tt(baseline_tt))), 'r-')
+plot(tt(baseline_tt), -pre_stim_sd_orig+zeros(size(tt(baseline_tt))), 'r-')
+
+% plot adjusted baseline (when calculated < minSD)
+plot(tt(baseline_tt), pre_stim_sd+zeros(size(tt(baseline_tt))), 'g-')
+plot(tt(baseline_tt), -pre_stim_sd+zeros(size(tt(baseline_tt))), 'g-')
+hold off
+
+% plot part with n1 peak to inspect
+subplot(1,2,2)
+plot(tt(tt>0.01 & tt<.1),squeeze(new_signal(tt>0.01 & tt<.1)))
+title(['elec ' data_hdr.label{ii} ' for stimulation of ' data_hdr.label{cc_stimsets(jj,1)} ' and ' data_hdr.label{cc_stimsets(jj,2)} ])
+xlabel('time(s)')
+ylabel('amplitude(uV)')
+ylim([-1000 1000])
+hold on
+% plot SD * threshhold to see if it exceeds and is significant
+plot(tt(tt>0 & tt<.1), thresh*pre_stim_sd+zeros(size(tt(tt>0 & tt<.1))), 'g-')
+plot(tt(tt>0 & tt<.1), thresh*-pre_stim_sd+zeros(size(tt(tt>0 & tt<.1))), 'g-')
+hold off
+
+% ask for input, do you see a significant n1 peak?
+visually_found_n1_peak = input('n1 peak? [y/n] ','s');
+close(figh)
 
 %% statistics & ROC
 % write code what finds:
+
+
+class_1_visual = reshape(validation_matrix(:,1:jj,1),1,jj*133);
+
+class_2_code = reshape(validation_matrix(:,1:jj,2),1,jj*133);
+
+TP = length(find(class_1_visual == 1 & class_2_code == 1));
+TN = length(find(class_1_visual == 0 & class_2_code == 0));
+FP = length(find(class_1_visual == 0 & class_2_code == 1));
+FN = length(find(class_1_visual == 1 & class_2_code == 0));
+
+sensitivity = TP/ (TP + FN);
+specificity = TN / (TN + FP);
+
+figure()
+plotconfusion(class_1_visual,class_2_code)
+
+figure()
+plotroc(class_1_visual,class_2_code)
+
+
 % true positives
 % true negatives
 % false positives
