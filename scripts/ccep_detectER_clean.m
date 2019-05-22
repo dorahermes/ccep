@@ -217,10 +217,10 @@ n2_samples_end = find(tt>0.3,1);
 % n1 amplitude, p2 sample, p2 amplitude, n2 sample, n2 amplitude]
 output_ER_all = NaN(size(cc_epoch_sorted_avg,1),size(cc_epoch_sorted_avg,2),8);
 
-% for every channel
-for ii = 1:size(cc_epoch_sorted_avg,1)
-    % for every averaged stimulation
-    for jj = 1:size(cc_epoch_sorted_avg,2)
+% for every averaged stimulation
+for jj = 1:size(cc_epoch_sorted_avg,2)
+    % for every channel
+    for ii = 1:size(cc_epoch_sorted_avg,1)
         
         % baseline subtraction: take median of part of the averaged signal for
         % this stimulation pair before stimulation, which is the half of the

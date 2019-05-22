@@ -54,10 +54,11 @@ output_ER_all = NaN(size(cc_epoch_sorted_avg,1),size(cc_epoch_sorted_avg,2),8);
 validation_matrix = NaN(size(cc_epoch_sorted_avg,1),size(cc_epoch_sorted_avg,2),2);
 
 %%
-% for every channel
-for jj = 27:size(cc_epoch_sorted_avg,1)
-    % for every averaged stimulation
-    for ii = 1:size(cc_epoch_sorted_avg,2)
+
+% for every averaged stimulation
+for jj = 1:size(cc_epoch_sorted_avg,2)
+    % for every channel
+    for ii = 1:size(cc_epoch_sorted_avg,1)
         
         % baseline subtraction: take median of part of the averaged signal for
         % this stimulation pair before stimulation, which is the half of the
@@ -333,10 +334,16 @@ close(figh)
 %% statistics & ROC
 % write code what finds:
 
+jj = 32;
 
-class_1_visual = reshape(validation_matrix(:,1:jj,1),1,jj*133);
+class_1_visual = reshape(validation_matrix(:,1:jj,1),1,jj*size(cc_epoch_sorted_avg,1));
 
-class_2_code = reshape(validation_matrix(:,1:jj,2),1,jj*133);
+class_2_code = reshape(validation_matrix(:,1:jj,2),1,jj*size(cc_epoch_sorted_avg,1));
+
+TP_array = find(class_1_visual == 1 & class_2_code == 1);
+TN_array = find(class_1_visual == 0 & class_2_code == 0);
+FP_array = find(class_1_visual == 0 & class_2_code == 1);
+FN_array = find(class_1_visual == 1 & class_2_code == 0);
 
 TP = length(find(class_1_visual == 1 & class_2_code == 1));
 TN = length(find(class_1_visual == 0 & class_2_code == 0));
@@ -348,12 +355,103 @@ specificity = TN / (TN + FP);
 
 figure()
 plotconfusion(class_1_visual,class_2_code)
+[c,cm,ind,per] = confusion(class_1_visual,class_2_code);
 
 figure()
 plotroc(class_1_visual,class_2_code)
 
+%%
+%% This script is used to further inspect the epochs that e.g. gave FPs
 
-% true positives
-% true negatives
-% false positives
-% false negatives
+% put here if you want to inspect TP, TN, FP or FN in array form
+xxx = FN_array;
+
+for bb = 1:size(xxx,2)
+    
+    % reculculate ii & jj
+    jj = floor(xxx(bb)/(size(cc_epoch_sorted_avg,1))+1);
+    ii = rem(xxx(bb),(size(cc_epoch_sorted_avg,1)));
+    
+    % recalculate baseline & SD
+    % baseline subtraction: take median of part of the averaged signal for
+    % this stimulation pair before stimulation, which is the half of the
+    % epoch
+    baseline_tt = tt>-1 & tt<-.01;
+    signal_median = median(cc_epoch_sorted_avg(ii,jj,baseline_tt),3);
+
+    % subtract median baseline from signal
+    new_signal = squeeze(cc_epoch_sorted_avg(ii,jj,:)) - signal_median;
+    % testplot new signal: plot(tt,squeeze(new_signal))
+
+    % take area before the stimulation of the new signal and calculate its SD
+    pre_stim_sd_orig = std(new_signal(baseline_tt));
+
+    % if the pre_stim_sd is smaller that the minimally needed SD, use this
+    % the minSD as pre_stim_sd
+    if pre_stim_sd_orig < minSD
+        pre_stim_sd = minSD;
+    else 
+        pre_stim_sd =  pre_stim_sd_orig;
+    end
+    
+    % display figure in specific size
+    figh = figure(1);
+    pos = get(figh,'position');
+    set(figh,'position',[pos(1:2)/4 pos(3:4)*3])
+    % plot relevant part of the signal (1s before till 500ms after stimulation)
+    subplot(1,2,1)
+    plot(tt(tt>-1 & tt<.5),squeeze(new_signal(tt>-1 & tt<.5)))
+
+    xlabel('time(s)')
+    ylabel('amplitude(uV)')
+    title(['elec ' data_hdr.label{ii} ' for stimulation of ' data_hdr.label{cc_stimsets(jj,1)} ...
+        ' and ' data_hdr.label{cc_stimsets(jj,2)} ])
+    ylim([-2000 2000])
+
+    hold on
+    % plot stimulation artifact (first 20 samples, +/- 10ms)
+    plot(tt(5120:5140),squeeze(new_signal(5120:5140)),'r')
+    % plot found peaks and onsets
+    % plot(tt(output_ER_all(ii,jj,1)),output_ER_all(ii,jj,2),'b*')
+    % plot(tt(output_ER_all(ii,jj,3)),output_ER_all(ii,jj,4),'r*')
+    % plot(tt(output_ER_all(ii,jj,5)),output_ER_all(ii,jj,6),'g*')
+    % plot(tt(output_ER_all(ii,jj,7)),output_ER_all(ii,jj,8),'y*')
+
+    % plot calculated baseline standard deviation
+    plot(tt(baseline_tt), pre_stim_sd_orig+zeros(size(tt(baseline_tt))), 'r-')
+    plot(tt(baseline_tt), -pre_stim_sd_orig+zeros(size(tt(baseline_tt))), 'r-')
+
+    % plot adjusted baseline (when calculated < minSD)
+    plot(tt(baseline_tt), pre_stim_sd+zeros(size(tt(baseline_tt))), 'g-')
+    plot(tt(baseline_tt), -pre_stim_sd+zeros(size(tt(baseline_tt))), 'g-')
+    
+    % plot lines with timeframe of n1 peak
+    plot([tt(n1_samples_start) tt(n1_samples_start)],[-2000 2000], 'c-','LineWidth',0.5)
+    plot([tt(n1_samples_end) tt(n1_samples_end)],[-2000 2000], 'c-','LineWidth',0.5)
+
+    hold off
+
+    % plot part with n1 peak to inspect
+    subplot(1,2,2)
+    plot(tt(tt>0.01 & tt<.1),squeeze(new_signal(tt>0.01 & tt<.1)))
+    title(['elec ' data_hdr.label{ii} ' for stimulation of ' data_hdr.label{cc_stimsets(jj,1)} ' and ' data_hdr.label{cc_stimsets(jj,2)} ])
+    xlabel('time(s)')
+    ylabel('amplitude(uV)')
+    ylim([-2000 2000])
+    hold on
+    % plot SD * threshhold to see if it exceeds and is significant
+    plot(tt(tt>0 & tt<.1), thresh*pre_stim_sd+zeros(size(tt(tt>0 & tt<.1))), 'g-')
+    plot(tt(tt>0 & tt<.1), thresh*-pre_stim_sd+zeros(size(tt(tt>0 & tt<.1))), 'g-')
+    plot([tt(n1_samples_start) tt(n1_samples_start)],[-2000 2000], 'c-','LineWidth',0.5)
+    plot([tt(n1_samples_end) tt(n1_samples_end)],[-2000 2000], 'c-','LineWidth',0.5)
+    hold off
+    
+    % putting answer into matrix for comments based on numbers
+    % and to register to sum these 
+    FN_comment = input('comment to result ');
+    close(figh)
+    FN_comments(ii,jj) = FN_comment;
+
+    
+    % sum(TP_comments(:) == 3)
+end
