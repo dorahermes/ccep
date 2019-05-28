@@ -196,7 +196,7 @@ ylabel('time end (s)')
 
 %% ROC plots with different parameters - different ROCs for amplitude
 
-figure
+figure('Position',[0 0 450 450])
 subplot(1,4,1:3)
 % plot change level line
 plot([0 1],[0 1],'k'),hold on
@@ -212,9 +212,11 @@ for ampl_th = 1:size(parameters_optimalize_mat,1)
 
     plot(1-spes_plot,sens_plot,'Color',my_colors(ampl_th,:))
 end
+axis square
 xlabel('1-specificity')
 ylabel('sensitivity')
 xlim([0 1]),ylim([0 1])
+set(gca,'XTick',[0:.2:1],'YTick',[0:.2:1],'FontName','Arial','FontSize',10) % get(gca) to see properties to change
 
 % plot legenda for all ROCs
 thresh = [1:.2:5]*50; 
@@ -224,3 +226,6 @@ for ampl_th = 1:size(parameters_optimalize_mat,1)
     plot(0,thresh(ampl_th),'.','MarkerSize',20,'Color',my_colors(ampl_th,:))
 end
 ylabel('significant amplitude threshold (uV)')
+
+set(gcf,'PaperPositionMode','auto')
+print('-dpng','-r300','/Fridge/users/dora/temp2')
