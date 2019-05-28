@@ -159,9 +159,15 @@ end
 
 toc;
 
-save([fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
-['sub-' sub_label '_ses-' ses_label '_run-' run_label '_parameters_optimalization.mat'])],...
-'parameters_optimalize_mat')
+if ~exist(fullfile(working_dir,['sub-' subj],['ses-' ses_label],'ieeg',...
+    ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_parameters_optimalization.mat']))
+    disp('writing output parameters_optimalize_mat.mat')
+    save([fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
+    ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_parameters_optimalization.mat'])],...
+    'parameters_optimalize_mat')
+else
+    disp(['ERROR: can not overwrite, output file already exists '])
+end
 
 %% ROC plots with different parameters - different ROCs for time
 

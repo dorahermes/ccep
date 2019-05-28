@@ -276,10 +276,15 @@ for jj = 1:size(cc_epoch_sorted_avg,2)
     % all stimulations of a channel, save data, so continuing later is
     % possible
     working_dir = fullfile('/Fridge','users','jaap','ccep','dataBIDS');
-    save([fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
-    ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_validation_matrix.mat'])],...
-    'validation_matrix')
-    
+    if ~exist(fullfile(working_dir,['sub-' subj],['ses-' ses_label],'ieeg',...
+        ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_validation_matrix.mat']))
+        disp('writing output validation_matrix.mat')
+        save([fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
+        ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_validation_matrix.mat'])],...
+        'validation_matrix')
+    else
+        disp(['ERROR: can not overwrite, output file already exists '])
+    end
     
 end
 %% Another option to visualise validator, with subplots
