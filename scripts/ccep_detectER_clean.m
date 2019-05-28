@@ -387,8 +387,8 @@ end
 
 % makes it possible to plot multiple CCEPs to check
 figure()
-for ii = 1:10%:size(cc_epoch_sorted_avg,1) % measured channels
-    for jj = 1:44 % stimulated electrode pair
+for ii = 1:11%:size(cc_epoch_sorted_avg,1) % measured channels
+    for jj = 1% stimulated electrode pair
         
         if ~isnan(output_ER_all(ii,jj,3)) % exclude this if, to see how the ones without N1 look 
             
@@ -441,7 +441,7 @@ for s = 1 %1:length(subjects)
     
     % electrode locations name:
     dataLocName = dir(fullfile(dataRootPath,['sub-' subj],'ses-1','ieeg',...
-        ['sub-' subj '_ses-1_task-SPESclin_run-*_electrodes.tsv']));
+        ['sub-' subj '_ses-1_electrodes.tsv']));
     dataLocName = fullfile(dataLocName(1).folder,dataLocName(1).name);
     
     % load electrode locations
