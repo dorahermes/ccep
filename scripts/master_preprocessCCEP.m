@@ -25,10 +25,10 @@ ft_defaults
 dataRootPath = '/Fridge/CCEP/';
 
 % Subject information
-subjects = {'RESP0701'}; % subject number
+subjects = {'RESP0706'}; % subject number
 sessions = {'1'}; % session number
 task_labels = {'SPESclin'};
-run_labels = {'021112'};
+run_labels = {'041501'};
 data_nr = 1; % dataset number in the above cell array
 
 sub_label = subjects{data_nr};

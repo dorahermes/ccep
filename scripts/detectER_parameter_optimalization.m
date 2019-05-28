@@ -13,7 +13,7 @@ minSD = 50;
 % N1 peak default is 10 and 50 ms. Also try 40, 50, 60, 70 and 80ms as end
 
 n1_samples_start = find(tt>0.01,1);
-n1_samples_end = [find(tt>0.04,1), find(tt>0.05,1), find(tt>0.06,1), find(tt>0.07,1), find(tt>0.08,1)]; % can be higher for RESP0768
+n1_samples_end = [find(tt>0.04,1), find(tt>0.05,1), find(tt>0.06,1), find(tt>0.07,1), find(tt>0.08,1), find(tt>0.09,1), find(tt>0.1,1), find(tt>0.11,1)]; % can be higher for RESP0768
 
 
 %%
@@ -78,7 +78,7 @@ for th = 1:length(thresh)
                     % As tt use first sample after timepoint 0  (+ extra samples to not take artifact)
                     % till first sample after 0,5 seconds (rougly 1000 samples)
                     [all_samppos, all_amplpos] = ccep_peakfinder(new_signal(find(tt>0,1)+extrasamps:find(tt>0.5,1)),sel,[],1);
-                    [all_sampneg, all_amplneg] = ccep_peakfinder(new_signal(find(tt>0,1)+extrasamps:find(tt>0.5,1)),sel,[],-1); %%%%%%%
+                    [all_sampneg, all_amplneg] = ccep_peakfinder(new_signal(find(tt>0,1)+extrasamps:find(tt>0.5,1)),sel,[],-1);
 
                     % If the first selected sample is a peak, this is not a real peak,
                     % so delete
@@ -137,7 +137,7 @@ for th = 1:length(thresh)
         end
     
         class_1_visual = reshape(validation_matrix(:,:,1),1,size(cc_epoch_sorted_avg,1)*size(cc_epoch_sorted_avg,2));
-        class_2_code = reshape(temp_mat,1,size(cc_epoch_sorted_avg,1)*size(cc_epoch_sorted_avg,2));
+        class_2_code = reshape(temp_mat(:,:),1,size(cc_epoch_sorted_avg,1)*size(cc_epoch_sorted_avg,2));
         
         
         TP = length(find(class_1_visual == 1 & class_2_code == 1));
@@ -162,3 +162,65 @@ toc;
 save([fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
 ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_parameters_optimalization.mat'])],...
 'parameters_optimalize_mat')
+
+%% ROC plots with different parameters - different ROCs for time
+
+figure
+subplot(1,4,1:3)
+% plot change level line
+plot([0 1],[0 1],'k'),hold on
+
+% use jet as colors
+my_colors = jet(size(parameters_optimalize_mat,2));
+
+% for all different ranges plot a ROC- curve
+for time_th = 1:size(parameters_optimalize_mat,2)
+
+    sens_plot = parameters_optimalize_mat(:,time_th,1);
+    spes_plot = parameters_optimalize_mat(:,time_th,2);
+
+    plot(1-spes_plot,sens_plot,'Color',my_colors(time_th,:))
+end
+xlabel('1-specificity')
+ylabel('sensitivity')
+xlim([0 1]),ylim([0 1])
+
+% plot legenda for all ROCs
+time_end = tt(n1_samples_end);
+
+subplot(1,4,4),hold on
+for time_th = 1:size(parameters_optimalize_mat,2)
+    plot(0,time_end(time_th),'.','MarkerSize',20,'Color',my_colors(time_th,:))
+end
+ylabel('time end (s)')
+
+%% ROC plots with different parameters - different ROCs for amplitude
+
+figure
+subplot(1,4,1:3)
+% plot change level line
+plot([0 1],[0 1],'k'),hold on
+
+% use jet as colors
+my_colors = jet(size(parameters_optimalize_mat,1));
+
+% for all different ranges plot a ROC- curve
+for ampl_th = 1:size(parameters_optimalize_mat,1)
+
+    sens_plot = parameters_optimalize_mat(ampl_th,:,1);
+    spes_plot = parameters_optimalize_mat(ampl_th,:,2);
+
+    plot(1-spes_plot,sens_plot,'Color',my_colors(ampl_th,:))
+end
+xlabel('1-specificity')
+ylabel('sensitivity')
+xlim([0 1]),ylim([0 1])
+
+% plot legenda for all ROCs
+thresh = [1:.2:5]*50; 
+
+subplot(1,4,4),hold on
+for ampl_th = 1:size(parameters_optimalize_mat,1)
+    plot(0,thresh(ampl_th),'.','MarkerSize',20,'Color',my_colors(ampl_th,:))
+end
+ylabel('significant amplitude threshold (uV)')

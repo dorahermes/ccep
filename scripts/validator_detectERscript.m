@@ -53,6 +53,12 @@ output_ER_all = NaN(size(cc_epoch_sorted_avg,1),size(cc_epoch_sorted_avg,2),8);
 
 validation_matrix = NaN(size(cc_epoch_sorted_avg,1),size(cc_epoch_sorted_avg,2),2);
 
+
+%% set size of the matrix to ensure to not run over a lot of NaNs
+% idealy this variable would not be necessary 
+size_elecmatrix = 64;
+
+
 %%
 
 % for every averaged stimulation
@@ -334,11 +340,10 @@ close(figh)
 %% statistics & ROC
 % write code what finds:
 
-jj = 32;
 
-class_1_visual = reshape(validation_matrix(:,1:jj,1),1,jj*size(cc_epoch_sorted_avg,1));
+class_1_visual = reshape(validation_matrix(:,:,1),1,size(cc_epoch_sorted_avg,1)*size(cc_epoch_sorted_avg,2));
 
-class_2_code = reshape(validation_matrix(:,1:jj,2),1,jj*size(cc_epoch_sorted_avg,1));
+class_2_code = reshape(validation_matrix(:,:,2),1,size(cc_epoch_sorted_avg,1)*size(cc_epoch_sorted_avg,2));
 
 TP_array = find(class_1_visual == 1 & class_2_code == 1);
 TN_array = find(class_1_visual == 0 & class_2_code == 0);
@@ -354,11 +359,14 @@ sensitivity = TP/ (TP + FN);
 specificity = TN / (TN + FP);
 
 figure()
-plotconfusion(class_1_visual,class_2_code)
 [c,cm,ind,per] = confusion(class_1_visual,class_2_code);
+plotconfusion(class_1_visual,class_2_code,'Performance N1 Peak Detector')
+xlabel('Visual Assessment')
+ylabel('Code Performance')
 
 figure()
 plotroc(class_1_visual,class_2_code)
+title('ROC curve with default parameters')
 
 %%
 %% This script is used to further inspect the epochs that e.g. gave FPs
@@ -369,8 +377,8 @@ xxx = FN_array;
 for bb = 1:size(xxx,2)
     
     % reculculate ii & jj
-    jj = floor(xxx(bb)/(size(cc_epoch_sorted_avg,1))+1);
-    ii = rem(xxx(bb),(size(cc_epoch_sorted_avg,1)));
+    jj = floor(xxx(bb)/52)+1;
+    ii = rem(xxx(bb),52);
     
     % recalculate baseline & SD
     % baseline subtraction: take median of part of the averaged signal for
@@ -455,3 +463,6 @@ for bb = 1:size(xxx,2)
     
     % sum(TP_comments(:) == 3)
 end
+
+
+
