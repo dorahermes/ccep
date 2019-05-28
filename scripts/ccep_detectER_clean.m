@@ -290,9 +290,15 @@ for jj = 1:size(cc_epoch_sorted_avg,2)
                 max_n1_ampl = find(abs(temp_n1_peaks_ampl) == max(abs(temp_n1_peaks_ampl)));
                 n1_peak_sample = temp_n1_peaks_samp(max_n1_ampl(1));
                 n1_peak_amplitude = temp_n1_peaks_ampl(max_n1_ampl(1));
-                % otherwise give the amplitude the value 0
+                % otherwise give the amplitude the value NaN
             elseif isempty(temp_n1_peaks_samp)
-                n1_peak_amplitude = 0;
+                n1_peak_amplitude = NaN;
+            end
+            
+            % if N1 exceeds positive threshold, it is deleted
+            if temp_n1_peaks_ampl > 0
+               n1_peak_sample = NaN;
+               n1_peak_amplitude = NaN;   
             end
             
             % when peak amplitude is saturated, it is deleted

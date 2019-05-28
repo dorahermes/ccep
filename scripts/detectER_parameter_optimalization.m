@@ -106,11 +106,17 @@ for th = 1:length(thresh)
                         max_n1_ampl = find(abs(temp_n1_peaks_ampl) == max(abs(temp_n1_peaks_ampl)));
                         n1_peak_sample = temp_n1_peaks_samp(max_n1_ampl(1));
                         n1_peak_amplitude = temp_n1_peaks_ampl(max_n1_ampl(1));
-                        % otherwise give the amplitude the value 0
+                        % otherwise give the amplitude the value NaN
                     elseif isempty(temp_n1_peaks_samp)
                         n1_peak_amplitude = NaN;
                     end
 
+                    % if N1 exceeds positive threshold, it is deleted
+                    if temp_n1_peaks_ampl > 0
+                       n1_peak_sample = NaN;
+                       n1_peak_amplitude = NaN;   
+                    end
+                    
                     % when peak amplitude is saturated, it is deleted
                     if abs(n1_peak_amplitude) > 3000
                         n1_peak_sample = NaN;
@@ -159,6 +165,7 @@ end
 
 toc;
 
+% write parameters_optimalization.mat to folder
 if ~exist(fullfile(working_dir,['sub-' subj],['ses-' ses_label],'ieeg',...
     ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_parameters_optimalization.mat']))
     disp('writing output parameters_optimalize_mat.mat')
@@ -235,3 +242,169 @@ ylabel('significant amplitude threshold (uV)')
 
 set(gcf,'PaperPositionMode','auto')
 print('-dpng','-r300','/Fridge/users/dora/temp2')
+
+%% Combine the validation scores of multiple datasets + ROCcurve
+
+% The validation_matrix and parameters_optimalize_mat of all validated data
+% are loaded (the variables in the mat-files are renamed so they do not overwrite)
+load(fullfile(working_dir,'validation', 'sub-RESP0621_ses-1_run-021147_parameters_optimalization.mat'))
+load(fullfile(working_dir,'validation', 'sub-RESP0621_ses-1_run-021147_validation_matrix.mat'))
+load(fullfile(working_dir,'validation', 'sub-RESP0706_ses-1_run-041501_parameters_optimalization.mat'))
+load(fullfile(working_dir,'validation', 'sub-RESP0706_ses-1_run-041501_validation_matrix.mat'))
+load(fullfile(working_dir,'validation', 'sub-RESP0733_ses-1b_run-050941_parameters_optimalization.mat'))
+load(fullfile(working_dir,'validation', 'sub-RESP0733_ses-1b_run-050941_validation_matrix.mat'))
+load(fullfile(working_dir,'validation', 'sub-RESP0768_ses-1_run-021704_parameters_optimalization.mat'))
+load(fullfile(working_dir,'validation', 'sub-RESP0768_ses-1_run-021704_validation_matrix.mat'))
+
+% The scores of the different datasets are based on a different amount of averaged epochs
+% To calculate the average scores, it first needs recalculation.
+
+% Calculate total amount of epochs over all datasets
+total_validated_epochs = (size(validation_matrix_0621,1)*size(validation_matrix_0621,2)) ...
+    + (size(validation_matrix_0706,1)*size(validation_matrix_0706,2)) ...
+    + (size(validation_matrix_0733,1)*size(validation_matrix_0733,2)) ... 
+    + (size(validation_matrix_0768,1)*size(validation_matrix_0768,2));
+
+% multiply each parameters_optimalize_mat by the fraction on total epochs
+parameters_optimalize_mat_0621 = parameters_optimalize_mat_0621 * ...
+    (size(validation_matrix_0621,1)*size(validation_matrix_0621,2)/total_validated_epochs);
+parameters_optimalize_mat_0706 = parameters_optimalize_mat_0706 * ...
+    (size(validation_matrix_0706,1)*size(validation_matrix_0706,2)/total_validated_epochs);
+parameters_optimalize_mat_0733 = parameters_optimalize_mat_0733 * ...
+    (size(validation_matrix_0733,1)*size(validation_matrix_0733,2)/total_validated_epochs); 
+parameters_optimalize_mat_0768 = parameters_optimalize_mat_0768 * ...
+    (size(validation_matrix_0768,1)*size(validation_matrix_0768,2)/total_validated_epochs); 
+
+% add scores to get 1 averaged matrix with parameter scores
+averaged_parameter_scores = parameters_optimalize_mat_0621 + parameters_optimalize_mat_0706 ...
+    + parameters_optimalize_mat_0733 + parameters_optimalize_mat_0768;
+
+figure
+subplot(1,4,1:3)
+% plot change level line
+plot([0 1],[0 1],'k'),hold on
+
+% use jet as colors
+my_colors = jet(size(averaged_parameter_scores,2));
+
+% for all different ranges plot a ROC- curve
+for time_th = 1:size(averaged_parameter_scores,2)
+
+    sens_plot = averaged_parameter_scores(:,time_th,1);
+    spes_plot = averaged_parameter_scores(:,time_th,2);
+
+    plot(1-spes_plot,sens_plot,'Color',my_colors(time_th,:))
+end
+xlabel('1-specificity')
+ylabel('sensitivity')
+xlim([0 1]),ylim([0 1])
+set(gca,'XTick',[0:.05:1],'YTick',[0:.05:1],'FontName','Arial','FontSize',10) % get(gca) to see properties to change
+
+% plot legenda for all ROCs
+time_end = tt(n1_samples_end);
+
+subplot(1,4,4),hold on
+for time_th = 1:size(averaged_parameter_scores,2)
+    plot(0,time_end(time_th),'.','MarkerSize',20,'Color',my_colors(time_th,:))
+end
+ylabel('time end (s)')
+
+%%
+
+figure('Position',[0 0 450 450])
+subplot(1,4,1:3)
+% plot change level line
+plot([0 1],[0 1],'k'),hold on
+
+% use jet as colors
+my_colors = jet(size(averaged_parameter_scores,1));
+
+% for all different ranges plot a ROC- curve
+for ampl_th = 1:size(averaged_parameter_scores,1)
+
+    sens_plot = averaged_parameter_scores(ampl_th,:,1);
+    spes_plot = averaged_parameter_scores(ampl_th,:,2);
+
+    plot(1-spes_plot,sens_plot,'Color',my_colors(ampl_th,:))
+end
+axis square
+xlabel('1-specificity')
+ylabel('sensitivity')
+xlim([0 1]),ylim([0 1])
+set(gca,'XTick',[0:.05:1],'YTick',[0:.05:1],'FontName','Arial','FontSize',10) % get(gca) to see properties to change
+
+% plot legenda for all ROCs
+thresh = [1:.2:5]*50; 
+
+subplot(1,4,4),hold on
+for ampl_th = 1:size(averaged_parameter_scores,1)
+    plot(0,thresh(ampl_th),'.','MarkerSize',20,'Color',my_colors(ampl_th,:))
+end
+ylabel('significant amplitude threshold (uV)')
+
+set(gcf,'PaperPositionMode','auto')
+print('-dpng','-r300','/Fridge/users/jaap/temp2')
+
+
+%% looking at total ROC without RESP0768
+
+
+% The validation_matrix and parameters_optimalize_mat of all validated data
+% are loaded (the variables in the mat-files are renamed so they do not overwrite)
+load(fullfile(working_dir,'validation', 'sub-RESP0621_ses-1_run-021147_parameters_optimalization.mat'))
+load(fullfile(working_dir,'validation', 'sub-RESP0621_ses-1_run-021147_validation_matrix.mat'))
+load(fullfile(working_dir,'validation', 'sub-RESP0706_ses-1_run-041501_parameters_optimalization.mat'))
+load(fullfile(working_dir,'validation', 'sub-RESP0706_ses-1_run-041501_validation_matrix.mat'))
+load(fullfile(working_dir,'validation', 'sub-RESP0733_ses-1b_run-050941_parameters_optimalization.mat'))
+load(fullfile(working_dir,'validation', 'sub-RESP0733_ses-1b_run-050941_validation_matrix.mat'))
+
+% The scores of the different datasets are based on a different amount of averaged epochs
+% To calculate the average scores, it first needs recalculation.
+
+% Calculate total amount of epochs over all datasets
+total_validated_epochs = (size(validation_matrix_0621,1)*size(validation_matrix_0621,2)) ...
+    + (size(validation_matrix_0706,1)*size(validation_matrix_0706,2)) ...
+    + (size(validation_matrix_0733,1)*size(validation_matrix_0733,2));
+
+% multiply each parameters_optimalize_mat by the fraction on total epochs
+parameters_optimalize_mat_0621 = parameters_optimalize_mat_0621 * ...
+    (size(validation_matrix_0621,1)*size(validation_matrix_0621,2)/total_validated_epochs);
+parameters_optimalize_mat_0706 = parameters_optimalize_mat_0706 * ...
+    (size(validation_matrix_0706,1)*size(validation_matrix_0706,2)/total_validated_epochs);
+parameters_optimalize_mat_0733 = parameters_optimalize_mat_0733 * ...
+    (size(validation_matrix_0733,1)*size(validation_matrix_0733,2)/total_validated_epochs); 
+
+% add scores to get 1 averaged matrix with parameter scores
+averaged_parameter_scores = parameters_optimalize_mat_0621 + parameters_optimalize_mat_0706 ...
+    + parameters_optimalize_mat_0733;
+
+figure
+subplot(1,4,1:3)
+% plot change level line
+plot([0 1],[0 1],'k'),hold on
+
+% use jet as colors
+my_colors = jet(size(averaged_parameter_scores,2));
+
+% for all different ranges plot a ROC- curve
+for time_th = 1:size(averaged_parameter_scores,2)
+
+    sens_plot = averaged_parameter_scores(:,time_th,1);
+    spes_plot = averaged_parameter_scores(:,time_th,2);
+
+    plot(1-spes_plot,sens_plot,'Color',my_colors(time_th,:))
+end
+xlabel('1-specificity')
+ylabel('sensitivity')
+xlim([0 1]),ylim([0 1])
+set(gca,'XTick',[0:.05:1],'YTick',[0:.05:1],'FontName','Arial','FontSize',10) % get(gca) to see properties to change
+
+% plot legenda for all ROCs
+time_end = tt(n1_samples_end);
+
+subplot(1,4,4),hold on
+for time_th = 1:size(averaged_parameter_scores,2)
+    plot(0,time_end(time_th),'.','MarkerSize',20,'Color',my_colors(time_th,:))
+end
+ylabel('time end (s)')
+
