@@ -1,4 +1,4 @@
-%% add a header of what this script does in 2 sentences
+%% 
 %This script has been created to create and plot a matrix in which possible
 %connections are shown. Afterwards another matrix shows the areas that show
 %an early response after a stimulation in the source areas. 
