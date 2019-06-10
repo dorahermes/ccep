@@ -3,7 +3,7 @@
 %connections are shown. Afterwards another matrix shows the areas that show
 %an early response after a stimulation in the source areas. 
 %The first part of the script is useful to integrate Benson and
-%Wang&Kastner visual atlases.
+%Wang & Kastner visual atlases.
 % D. Hermes and G. Castegnaro, 2019, UMC Utrecht
 
 %% we need to make a matrix of size Atlas areas X Atlas areas
@@ -85,6 +85,7 @@ for kk = 1:size(cc_stimsets,1)
     
     % get the label of the second stimulated electrode
     stim_el2_label = channel_labels(cc_stimsets(kk,2));
+    
     if stim_el2_label>0 % this electrode has a label
         [nn,~] = hist(measured_channel_labels(measured_channel_labels>0),[1:25]);
         % add the number of measured channels
@@ -95,84 +96,114 @@ for kk = 1:size(cc_stimsets,1)
 end
 
 %%
-figure('Position',[0 0 400 400])
+figure('Position',[0 0 800 800])
 imagesc(measured_connection_matrix,[0 max(measured_connection_matrix(:))])
 axis square
 xlabel('Target Visual Area'),ylabel('Source Visual Area')
-set(gca,'XTick',[1 25],'YTick',[1 25],'FontName','Arial','FontSize',18,...
+set(gca,'XTick',[1:25],'YTick',[1:25],'FontName','Lato','FontSize',12,...
     'XDir','normal');
 cm = jet(max(measured_connection_matrix(:)));
 cm = [0 0 0; cm];
 colormap(cm)
 hcb = colorbar;
-title(hcb,'#')
+title(hcb,'# of stimulations per area')
 set(gcf,'PaperPositionMode','auto')
 % print('-dpng','-r300','/home/giulio/figures/measured_connections_matrix')
 
-%% Matrix coming from data, 1 if there is a ccep, 0 if no ccep is detected 
-measured_N1_matrix = zeros(25,25);
+%% create a matrix starting from the ccep data (ccep_detect_onlyN1)
+%on the y axis all the stimulation pairs, on the x axis all the target
+%areas (electrodes). If CCEP is significant then 1, if not then 0. 
 
 %check which areas were stimulated % e.g. V1d avd V2d
 channel_labels; %contains the labeled areas of the electrode that are recorded   
 
 %check which area had an early response % e.g. V3d
-conn_plot; %contains a 1 for the electrode and the stimulated pairs that produce an ER
-
-% now we have a table in which channels and electrode number match 
-conn_plot; % every column contains a one if that stimulation(column) has produced ccep in that electrode(row)
-
-
-for ee = 1:size(conn_plot,1)
-    for ss = 1:size(conn_plot,2)
-        if conn_plot(ee,ss) == 1 && channel_labels(ee) ~= 0
-            measured_N1_matrix(channel_labels(ee)) = 1  
-        end 
-    end
+%contains a 1 for the electrode and the stimulated pair that produce an ER
+conn_plot = output_ER(:,:,2) < 0; % negative N1 amplitude
+% remove measured N1 in stimulated electrodes (no N1 is possible)
+for kk = 1:size(cc_stimsets,1)
+    conn_plot(cc_stimsets(kk,1:2),kk) = 0; % set stimulated channels to zero
 end
 
-
-%--> put a 1 in the matrix % e.g. at position 2,6 and 4,6 % new_label
-    
-%gives you the position in the matrix
-    
-%check which areas did not have an early response % e.g. hV4
-    
-%--> put a -1 in the matrix % e.g. at position 2,7 and 4,7
-
-
-%to erase nan from channel_labels 
-for kk=1:66 
-    if isnan(channel_labels(kk))
-        channel_labels(kk) = 0 
-    end
+% necessary to assign a label to every stimulation pair and match it with
+% the channels that do have a label (channel_labels)
+labeled_stimsets = zeros(size(cc_stimsets));
+for kk = 1:size(cc_stimsets,1)
+    labeled_stimsets(kk,1:2) = channel_labels(cc_stimsets(kk,1:2));
 end
 
-        
-         
+% we have: 
+% output_ER:        channels X Nstimpairs X amplitude & latency
+% conn_plot:        1 if significant output_ER, channels X Nstimpairs 
+% cc_stimsets:      stimulated channels, stimpairs X 2
+% labeled_stimsets: labels of stimulated pairs, stimpairs X 2
+% channel_labels:   labels of the channels, channesl x 1
+
+% adding a 1 in the matrix when stimulated electrode produce ER in other
+% electrodes 
+% Matrix coming from data, 1 if there is a ccep, 0 if no ccep is detected 
+measured_N1_matrix = zeros(25,25);
+for ss = 1:size(conn_plot,2) % stimulated channels/stimpairs
+    if labeled_stimsets(ss,1) ~= 0 && ~isnan(labeled_stimsets(ss,1)) % does the first stimulated electrode have a label
+        % then add 1s for measured CCEPs
+        for ee = 1:size(conn_plot,1) % measured channels
+            % does the measured channel have a label?
+            if channel_labels(ee) ~= 0 && ~isnan(channel_labels(ee)) 
+                measured_N1_matrix(channel_labels(ee),labeled_stimsets(ss,1)) = ...
+                    conn_plot(ee,ss)+ measured_N1_matrix(channel_labels(ee),labeled_stimsets(ss,1));
+            end
+        end
+    end
+    if labeled_stimsets(ss,2) ~= 0 && ~isnan(labeled_stimsets(ss,2)) % does the second stimulated electrode have a label
+        % then add 1s for measured CCEPs
+        for ee = 1:size(conn_plot,1) % measured channels
+            % does the measured channel have a label?
+            if channel_labels(ee) ~= 0 && ~isnan(channel_labels(ee))
+                measured_N1_matrix(channel_labels(ee),labeled_stimsets(ss,2)) = ...
+                    conn_plot(ee,ss)+ measured_N1_matrix(channel_labels(ee),labeled_stimsets(ss,2));
+            end
+        end
+    end
+
+end
+
+% adding a NaN on areas that are not covered
+measured_N1_matrix(measured_connection_matrix==0) = NaN;
+
+
 %%
-%script to create a matrix starting from the ccep data (ccep_detect_onlyN1)
-%on the y axis all the stimulation pairs, on the x axis all the target
-%areas (electrodes). If CCEP is significant then 1, if not then 0. 
+% absolute number of N1 responses 
+figure('Position',[0 0 800 800])
+imagesc(measured_N1_matrix,[0 max(measured_N1_matrix(:))])
+axis square
+xlabel('Recorded Visual Area'),ylabel('Stimulated Visual Area')
+set(gca,'XTick',[1:25],'YTick',[1:25],'FontName','Lato','FontSize',12,...
+    'XDir','normal');
+cm = summer(max(measured_N1_matrix(:)));
+cm = [1 1 1; cm];
+colormap(cm)
+hcb = colorbar;%('TicksMode','manual', 'Ticks',[-1 0 1],'TickLabels', {'not recorded', 'no response', 'Early response(CCEP)'});
+title(hcb,'# CCEP')
+set(gcf,'PaperPositionMode','auto')
+% print('-dpng','-r300','/home/giulio/figures/measured_N1_matrix')
 
-% select significant peaks in the other channels
-conn_plot = output_ER(:,:,1) > 0.0001; % amplitude larger than 0.0001
+%% relative number of N1 responses
+% we could have measured all connections in measured_connection_matrix
+% which percentage of these potential connections did we find?
 
-stim_pair = 46;
-%to see which stim_pair corresponds to which electrodes 
-cc_stimsets (stim_pair, :);
+% absolute number of N1 responses 
+figure('Position',[0 0 600 600])
+imagesc(measured_N1_matrix./measured_connection_matrix,[0 1])
+axis square
+xlabel('Recording Visual Area'),ylabel('Stimulated Visual Area')
+set(gca,'XTick',[1:5:25],'YTick',[1:5:25],'FontName','Lato','FontSize',12,...
+    'XDir','normal');
+cm = summer(100);
+cm = [0 0 0; cm];
+colormap(cm)
+hcb = colorbar;%('TicksMode','manual', 'Ticks',[-1 0 1],'TickLabels', {'not recorded', 'no response', 'Early response(CCEP)'});
+title(hcb,'%')
+set(gcf,'PaperPositionMode','auto')
+% print('-dpng','-r300','/home/giulio/figures/realative_N1_matrix')
 
-%% we make a matrix of which connections show an N1 
 
-measured_N1_matrix = NaN(25,25);
-
-% now we have a table in which channels and electrode number match 
-conn_plot; % every column contains a one if that stimulation(column) has produced ccep in that electrode(row)
-for 1:size(conn_plot,1)
-    if 
-% --> put a 1 in the matrix % e.g. at position 2,6 and 4,6 % new_label
-    
-% gives you the position in the matrix
-    
-% check which areas did not have an early response % e.g. hV4
-    
-% --> put a -1 in the matrix % e.g. at position 2,7 and 4,7
