@@ -136,9 +136,15 @@ for jj = 1:size(cc_epoch_sorted_avg,2)
                 max_n1_ampl = find(abs(temp_n1_peaks_ampl) == max(abs(temp_n1_peaks_ampl)));
                 n1_peak_sample = temp_n1_peaks_samp(max_n1_ampl(1));
                 n1_peak_amplitude = temp_n1_peaks_ampl(max_n1_ampl(1));
-                % otherwise give the amplitude the value 0
+                % otherwise give the amplitude the value NaN
             elseif isempty(temp_n1_peaks_samp)
-                n1_peak_amplitude = 0;
+                n1_peak_amplitude = NaN;
+            end
+            
+            % if N1 exceeds positive threshold, it is deleted
+            if temp_n1_peaks_ampl > 0
+               n1_peak_sample = NaN;
+               n1_peak_amplitude = NaN;   
             end
             
             % when peak amplitude is saturated, it is deleted
@@ -276,10 +282,15 @@ for jj = 1:size(cc_epoch_sorted_avg,2)
     % all stimulations of a channel, save data, so continuing later is
     % possible
     working_dir = fullfile('/Fridge','users','jaap','ccep','dataBIDS');
-    save([fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
-    ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_validation_matrix.mat'])],...
-    'validation_matrix')
-    
+    if ~exist(fullfile(working_dir,['sub-' subj],['ses-' ses_label],'ieeg',...
+        ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_validation_matrix.mat']))
+        disp('writing output validation_matrix.mat')
+        save([fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
+        ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_validation_matrix.mat'])],...
+        'validation_matrix')
+    else
+        disp(['ERROR: can not overwrite, output file already exists '])
+    end
     
 end
 %% Another option to visualise validator, with subplots
@@ -372,13 +383,13 @@ title('ROC curve with default parameters')
 %% This script is used to further inspect the epochs that e.g. gave FPs
 
 % put here if you want to inspect TP, TN, FP or FN in array form
-xxx = FN_array;
+xxx = FP_array;
 
 for bb = 1:size(xxx,2)
     
     % reculculate ii & jj
-    jj = floor(xxx(bb)/52)+1;
-    ii = rem(xxx(bb),52);
+    jj = floor(xxx(bb)/size(validation_matrix,1))+1;
+    ii = rem(xxx(bb),size(validation_matrix,1));
     
     % recalculate baseline & SD
     % baseline subtraction: take median of part of the averaged signal for
@@ -421,7 +432,7 @@ for bb = 1:size(xxx,2)
     plot(tt(5120:5140),squeeze(new_signal(5120:5140)),'r')
     % plot found peaks and onsets
     % plot(tt(output_ER_all(ii,jj,1)),output_ER_all(ii,jj,2),'b*')
-    % plot(tt(output_ER_all(ii,jj,3)),output_ER_all(ii,jj,4),'r*')
+     plot(tt(output_ER_all(ii,jj,3)),output_ER_all(ii,jj,4),'r*')
     % plot(tt(output_ER_all(ii,jj,5)),output_ER_all(ii,jj,6),'g*')
     % plot(tt(output_ER_all(ii,jj,7)),output_ER_all(ii,jj,8),'y*')
 
