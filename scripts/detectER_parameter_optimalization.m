@@ -166,6 +166,7 @@ end
 toc;
 
 % write parameters_optimalization.mat to folder
+working_dir = fullfile('/Fridge','users','jaap','ccep','dataBIDS');
 if ~exist(fullfile(working_dir,['sub-' subj],['ses-' ses_label],'ieeg',...
     ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_parameters_optimalization.mat']))
     disp('writing output parameters_optimalize_mat.mat')
@@ -207,41 +208,6 @@ for time_th = 1:size(parameters_optimalize_mat,2)
 end
 ylabel('time end (s)')
 
-%% ROC plots with different parameters - different ROCs for amplitude
-
-figure('Position',[0 0 450 450])
-subplot(1,4,1:3)
-% plot change level line
-plot([0 1],[0 1],'k'),hold on
-
-% use jet as colors
-my_colors = jet(size(parameters_optimalize_mat,1));
-
-% for all different ranges plot a ROC- curve
-for ampl_th = 1:size(parameters_optimalize_mat,1)
-
-    sens_plot = parameters_optimalize_mat(ampl_th,:,1);
-    spes_plot = parameters_optimalize_mat(ampl_th,:,2);
-
-    plot(1-spes_plot,sens_plot,'Color',my_colors(ampl_th,:))
-end
-axis square
-xlabel('1-specificity')
-ylabel('sensitivity')
-xlim([0 1]),ylim([0 1])
-set(gca,'XTick',[0:.2:1],'YTick',[0:.2:1],'FontName','Arial','FontSize',10) % get(gca) to see properties to change
-
-% plot legenda for all ROCs
-thresh = [1:.2:5]*50; 
-
-subplot(1,4,4),hold on
-for ampl_th = 1:size(parameters_optimalize_mat,1)
-    plot(0,thresh(ampl_th),'.','MarkerSize',20,'Color',my_colors(ampl_th,:))
-end
-ylabel('significant amplitude threshold (uV)')
-
-set(gcf,'PaperPositionMode','auto')
-print('-dpng','-r300','/Fridge/users/dora/temp2')
 
 %% Combine the validation scores of multiple datasets + ROCcurve
 
@@ -309,7 +275,17 @@ for time_th = 1:size(averaged_parameter_scores,2)
 end
 ylabel('time end (s)')
 
-%%
+working_dir = fullfile('/Fridge','users','jaap','ccep','dataBIDS');
+if ~exist(fullfile(working_dir,'validation', 'averaged_parameters_optimalization.mat'))
+    disp('writing output averaged_parameters_optimalization.mat')
+    save(fullfile(working_dir,'validation', 'averaged_parameters_optimalization.mat'),...
+    'averaged_parameter_scores')
+else
+    disp(['ERROR: can not overwrite, output file already exists '])
+end
+
+
+%% ROC plots with different parameters - different ROCs for amplitude
 
 figure('Position',[0 0 450 450])
 subplot(1,4,1:3)
@@ -348,7 +324,6 @@ print('-dpng','-r300','/Fridge/users/jaap/temp2')
 
 %% looking at total ROC without RESP0768
 
-
 % The validation_matrix and parameters_optimalize_mat of all validated data
 % are loaded (the variables in the mat-files are renamed so they do not overwrite)
 load(fullfile(working_dir,'validation', 'sub-RESP0621_ses-1_run-021147_parameters_optimalization.mat'))
@@ -362,20 +337,20 @@ load(fullfile(working_dir,'validation', 'sub-RESP0733_ses-1b_run-050941_validati
 % To calculate the average scores, it first needs recalculation.
 
 % Calculate total amount of epochs over all datasets
-total_validated_epochs = (size(validation_matrix_0621,1)*size(validation_matrix_0621,2)) ...
+total_validated_epochs_corrected = (size(validation_matrix_0621,1)*size(validation_matrix_0621,2)) ...
     + (size(validation_matrix_0706,1)*size(validation_matrix_0706,2)) ...
     + (size(validation_matrix_0733,1)*size(validation_matrix_0733,2));
 
 % multiply each parameters_optimalize_mat by the fraction on total epochs
 parameters_optimalize_mat_0621 = parameters_optimalize_mat_0621 * ...
-    (size(validation_matrix_0621,1)*size(validation_matrix_0621,2)/total_validated_epochs);
+    (size(validation_matrix_0621,1)*size(validation_matrix_0621,2)/total_validated_epochs_corrected);
 parameters_optimalize_mat_0706 = parameters_optimalize_mat_0706 * ...
-    (size(validation_matrix_0706,1)*size(validation_matrix_0706,2)/total_validated_epochs);
+    (size(validation_matrix_0706,1)*size(validation_matrix_0706,2)/total_validated_epochs_corrected);
 parameters_optimalize_mat_0733 = parameters_optimalize_mat_0733 * ...
-    (size(validation_matrix_0733,1)*size(validation_matrix_0733,2)/total_validated_epochs); 
+    (size(validation_matrix_0733,1)*size(validation_matrix_0733,2)/total_validated_epochs_corrected); 
 
 % add scores to get 1 averaged matrix with parameter scores
-averaged_parameter_scores = parameters_optimalize_mat_0621 + parameters_optimalize_mat_0706 ...
+averaged_parameter_scores_corrected = parameters_optimalize_mat_0621 + parameters_optimalize_mat_0706 ...
     + parameters_optimalize_mat_0733;
 
 figure
@@ -384,13 +359,13 @@ subplot(1,4,1:3)
 plot([0 1],[0 1],'k'),hold on
 
 % use jet as colors
-my_colors = jet(size(averaged_parameter_scores,2));
+my_colors = jet(size(averaged_parameter_scores_corrected,2));
 
 % for all different ranges plot a ROC- curve
-for time_th = 1:size(averaged_parameter_scores,2)
+for time_th = 1:size(averaged_parameter_scores_corrected,2)
 
-    sens_plot = averaged_parameter_scores(:,time_th,1);
-    spes_plot = averaged_parameter_scores(:,time_th,2);
+    sens_plot = averaged_parameter_scores_corrected(:,time_th,1);
+    spes_plot = averaged_parameter_scores_corrected(:,time_th,2);
 
     plot(1-spes_plot,sens_plot,'Color',my_colors(time_th,:))
 end
@@ -403,8 +378,49 @@ set(gca,'XTick',[0:.05:1],'YTick',[0:.05:1],'FontName','Arial','FontSize',10) % 
 time_end = tt(n1_samples_end);
 
 subplot(1,4,4),hold on
-for time_th = 1:size(averaged_parameter_scores,2)
+for time_th = 1:size(averaged_parameter_scores_corrected,2)
     plot(0,time_end(time_th),'.','MarkerSize',20,'Color',my_colors(time_th,:))
 end
 ylabel('time end (s)')
 
+working_dir = fullfile('/Fridge','users','jaap','ccep','dataBIDS');
+if ~exist(fullfile(working_dir,'validation', 'averaged_parameters_optimalization_corrected.mat'))
+    disp('writing output averaged_parameters_optimalization_corrected.mat')
+    save(fullfile(working_dir,'validation', 'averaged_parameters_optimalization_corrected.mat'),...
+    'averaged_parameter_scores_corrected')
+else
+    disp(['ERROR: can not overwrite, output file already exists '])
+end
+
+%% Finding optimal parameters
+
+
+% change all not-optimal endpoints to NaN (all but 70 and 80ms)
+averaged_parameter_scores_corrected(:,1:3,:) = NaN;
+averaged_parameter_scores_corrected(:,6:8,:) = NaN;
+
+
+% Set necessary specificity on 95%
+test = averaged_parameter_scores_corrected(:,:,2) >= 0.95;
+
+% loop through results and change 
+for opt_len = 1:size(averaged_parameter_scores_corrected(:,:,2),1)
+    for opt_wid = 1:size(averaged_parameter_scores_corrected(:,:,2),2)
+        if test(opt_len,opt_wid) == 0 
+            averaged_parameter_scores_corrected(opt_len,opt_wid,:) = NaN;
+        end
+    end
+end
+
+% find optimal sensitivity under condition of specificitity >= 95%
+optimal_sensi = max(max(averaged_parameter_scores_corrected(:,:,1)));
+
+% find corresponding parameters location in matrix
+optimum_mat = find(averaged_parameter_scores_corrected(:,:,1)==optimal_sensi);
+
+
+% convert this position to the parameters
+optimum_mat_x = rem(optimum_mat,size(averaged_parameter_scores_corrected(:,:,1),1));
+optimum_mat_y = floor(optimum_mat/size(averaged_parameter_scores_corrected(:,:,1),1))+1;
+optimum_threshold = thresh(optimum_mat_x);
+optimum_endpoint = tt(n1_samples_end(optimum_mat_y));

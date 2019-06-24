@@ -11,14 +11,13 @@ dataRootPath = '/Fridge/users/jaap/ccep/dataBIDS/';
 addpath('/Fridge/users/jaap/github/JSONio')
 %%
 %%%% Add subject and session
-subjects = {'RESP0733'};
-sessions = {'1a'};
+subjects = {'RESP0768'};
+sessions = {'1'};
 s = 1;
 
 subj = subjects{s};
 ses_label = sessions{s};
 
-%%
 root_dir = dataRootPath;
 % deleted ieeg_project
 ieeg_sub = subj;

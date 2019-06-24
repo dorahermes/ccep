@@ -1,3 +1,44 @@
+
+% list of subjects that you want to include in analysis
+subjects = {'RESP0621', 'RESP0706', 'RESP0733', 'RESP0768'};
+% main path
+topPath = '/Fridge/users/jaap/ccep/dataBIDS/';
+
+dataBase = [];
+% for all subjects, create subject struct withing dataBase
+for ss = 1:length(subjects)
+    dataBase.subj{ss} = subjects{ss};
+    
+    % First create the sesPath by adding the the subj to topPath. 
+    sesPath = fullfile(topPath,['sub-' subjects{ss}]);
+    % look in the sesPath. sesList returns only names of the folders and
+    % only in that folder and not any deeper because depth = 0
+    sesList = dirPlus(sesPath, 'ReturnDirs', true, 'Depth',0);
+    
+    % for all sessions in the sesPath folder create struct. 
+    % because the sesPath folder only contains ses folders, we can iterate
+    % over the length of the sesList
+    for tt = 1:length(sesList)
+        dataBase.subj{ss}.ses{tt} = sesList{tt}
+    end
+    
+    
+    
+    
+    % then another for loop: for all tasks, create struct
+    
+    % the another for loop: for all runs, create struct
+end
+
+%% other methods
+
+% using dirwalk
+[pathNames, dirNames, fileNames] = dirwalk(sesPath);
+
+% using dir()
+fileinfo = dir('/Fridge/users/jaap/ccep/dataBIDS/');
+fileinfo.name
+
 % Setting data root path
 dataRootPath = '/Fridge/CCEP/';
 

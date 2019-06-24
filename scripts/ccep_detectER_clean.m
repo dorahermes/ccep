@@ -10,7 +10,7 @@ load('/home/jaap/data_avg_epoch_and_timevector')
 load('/home/jaap/cc_stimsets') 
 %% set defined parameters
 % pre-allocation: variables determined in Dorien's thesis
-thresh = 2.5;   %
+thresh = 2.8;   %
 minSD = 50;     % in microV: minimum standard deviation of prestimulus baseline in case actual std of prestim baseline is too small
 sel = 20;       % how many samples around peak not considered as another peak
 extrasamps = 5; % set to 5 now, to read properties of N1 onset
@@ -197,9 +197,9 @@ end
 p1_samples_start = find(tt>0.002,1);
 p1_samples_end = find(tt>0.02,1);
 
-% N1 peak: 10 and 50 ms
+% N1 peak: 10 and 70 ms
 n1_samples_start = find(tt>0.01,1);
-n1_samples_end = find(tt>0.05,1);
+n1_samples_end = find(tt>0.07,1);
 
 % P2/N2 onset: 50 and 150 ms
 p2_samples_start = find(tt>0.05,1);
@@ -393,7 +393,7 @@ end
 
 % makes it possible to plot multiple CCEPs to check
 figure()
-for ii = 1:11%:size(cc_epoch_sorted_avg,1) % measured channels
+for ii = 1:3%:size(cc_epoch_sorted_avg,1) % measured channels
     for jj = 1% stimulated electrode pair
         
         if ~isnan(output_ER_all(ii,jj,3)) % exclude this if, to see how the ones without N1 look 
@@ -423,19 +423,19 @@ end
 %% Render plain with used electrodes
 addpath('/Fridge/users/jaap/github/ecogBasicCode/render/')
 dataRootPath = '/Fridge/users/jaap/ccep/dataBIDS/';
-subjects = {'RESP0706'};
+subjects = {'RESP0621'};
 hemi_cap = {'R'};
 
 % pick a viewing angle:
 v_dirs = [90 0]; %;90 0;90 -60;270 -60;0 0];
 
 % set stimulated pair you want to render
-stim_pair = 1;
+stim_pair = 5;
 
 % select significant peaks in the other channels
 n1_plot = squeeze(output_ER_all(:,stim_pair,3:4)); % measured electrodes X latency/ampl of N1 peak
 
-for s = 1 %1:length(subjects)
+for s = 1%:3 %1:length(subjects)
     % subject code
     subj = subjects{s};
     

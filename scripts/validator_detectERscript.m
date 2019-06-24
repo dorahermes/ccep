@@ -432,7 +432,7 @@ for bb = 1:size(xxx,2)
     plot(tt(5120:5140),squeeze(new_signal(5120:5140)),'r')
     % plot found peaks and onsets
     % plot(tt(output_ER_all(ii,jj,1)),output_ER_all(ii,jj,2),'b*')
-     plot(tt(output_ER_all(ii,jj,3)),output_ER_all(ii,jj,4),'r*')
+    % plot(tt(output_ER_all(ii,jj,3)),output_ER_all(ii,jj,4),'r*')
     % plot(tt(output_ER_all(ii,jj,5)),output_ER_all(ii,jj,6),'g*')
     % plot(tt(output_ER_all(ii,jj,7)),output_ER_all(ii,jj,8),'y*')
 
@@ -441,8 +441,8 @@ for bb = 1:size(xxx,2)
     plot(tt(baseline_tt), -pre_stim_sd_orig+zeros(size(tt(baseline_tt))), 'r-')
 
     % plot adjusted baseline (when calculated < minSD)
-    plot(tt(baseline_tt), pre_stim_sd+zeros(size(tt(baseline_tt))), 'g-')
-    plot(tt(baseline_tt), -pre_stim_sd+zeros(size(tt(baseline_tt))), 'g-')
+    plot(tt(baseline_tt), (pre_stim_sd*2.5)+zeros(size(tt(baseline_tt))), 'g-')
+    plot(tt(baseline_tt), (-pre_stim_sd*2.5)+zeros(size(tt(baseline_tt))), 'g-')
     
     % plot lines with timeframe of n1 peak
     plot([tt(n1_samples_start) tt(n1_samples_start)],[-2000 2000], 'c-','LineWidth',0.5)

@@ -12,7 +12,7 @@ addpath('/home/jaap/vistasoft/')
 
 %% Render plain with used electrodes
 dataRootPath = '/Fridge/users/jaap/ccep/dataBIDS/';
-subjects = {'joure'};
+subjects = {'RESP0621'};
 hemi_cap = {'R'};
 
 % pick a viewing angle:
@@ -71,15 +71,15 @@ dataRootPath = '/Fridge/users/jaap/ccep/dataBIDS/';
 % add vistasoft for read_annotation
 addpath('/home/jaap/vistasoft/external/freesurfer');
 
-subjects = {'joure','chaam'};
-sessions = {'01','01'};
-hemi_cap = {'L','R'}; 
-hemi_small = {'l','r'};
+subjects = {'RESP0621','chaam'};
+sessions = {'1','01'};
+hemi_cap = {'R','R'}; 
+hemi_small = {'r','r'};
 
-v_dirs = [270 0];%;90 0;90 -60;270 -60;0 0];
+v_dirs = [90 0];%;90 0;90 -60;270 -60;0 0];
 
 
-for s = 1:2%1:length(subjects)
+for s = 1%:2%1:length(subjects)
     % subject code 
     subj = subjects{s};
     ses_label = sessions{s};
@@ -88,7 +88,7 @@ for s = 1:2%1:length(subjects)
     dataGiiName = fullfile(dataRootPath,'derivatives','surfaces',['sub-' subj],...
         ['sub-' subj '_T1w_pial.' hemi_cap{s} '.surf.gii']);
     % surface labels 
-    surface_labels_name = fullfile(dataRootPath,'derivatives','Freesurfer',['sub-' subj],'label',...
+    surface_labels_name = fullfile(dataRootPath,'derivatives','freesurfer',['sub-' subj],'label',...
     [hemi_small{s} 'h.aparc.a2009s.annot']);
     % surface_labels = MRIread(surface_labels_name);
     [vertices, label, colortable] = read_annotation(surface_labels_name);
@@ -102,7 +102,7 @@ for s = 1:2%1:length(subjects)
     cmap = colortable.table(:,1:3)./256;
     
     % electrode locations name:
-    dataLocName = [dataRootPath 'sub-' subj '/ses-' ses_label '/ieeg/sub-' subj '_ses-' ses_label '_acq-clinicalprojected_electrodes.tsv'];
+    dataLocName = [dataRootPath 'sub-' subj '/ses-' ses_label '/ieeg/sub-' subj '_ses-' ses_label '_electrodes.tsv'];
     % load electrode locations
     loc_info = readtable(dataLocName,'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'});
     elecmatrix = [loc_info.x loc_info.y loc_info.z];
