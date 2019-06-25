@@ -36,7 +36,7 @@ for ss = 1:length(subjects)
     % only in that folder and not any deeper because depth = 0
     sesList = dirPlus(sesPath, 'ReturnDirs', true, 'Depth',0);
     
-    % if there is just one sessions, add metadata that are found in the
+    % if there is just one sessions, add metadata that are found in these 
     % folders to the structure
     if length(sesList) == 1
       % for all sessions in the sesPath folder create struct. 
@@ -90,8 +90,8 @@ for ss = 1:length(subjects)
       dataBase(ss).metaData = metaData;
     
     % in some cases there are two sessions. In this case the metadata of the second 
-    % sesson have to be added in the lines underneath the metadata of the
-    % first session.
+    % sesson have to be added in the dataBase struct on the lines underneath
+    % the metadata of the first session.
     elseif length(sesList) >= 2
         
         % create metaData structure, to ensure it will be cleared every
@@ -148,7 +148,8 @@ for ss = 1:length(subjects)
             % the data will be written in the rows under the rows under the
             % first session
             if ses > 1
-                                                          
+                
+                % add runCounter to length of runList
                 for runs = (1:length(runList))+runCounter
                     
                     % write subject to metadata (it is already in dataBase, but
