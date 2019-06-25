@@ -1,13 +1,34 @@
+% This script is used to create a structure named 'dataBase' that can hold
+% all metadata and data of the subjects. This 'dataBase' structure can be
+% used to put in several ccep functions. 
+
+% Structure is created using BIDS-format. The script walks through the
+% folders of the subjects to find the right metadata and reads this into
+% the structure. Later on, by using other functions, this structure can be
+% used to e.g. add averaged epochs to them. 
+
+% INPUT
+% subjects = a cell array holding the subjects you want analyse.
+%               e.g. {'RESP0001', 'RESP0002'}
+% topPath = folder in which the subjects can be found (begin of the
+%               BIDS-structure. E.g. 'Fridge/CCEP' or '/Fridge/users/jaap/ccep/dataBIDS/'
+
+% IMPORTANT: function uses dirPlus function. Add this to path. 
+
+% By Jaap van der Aar & Dorien van Blooijs, 05-2019, UMC Utrecht
+
 
 % list of subjects that you want to include in analysis
 subjects = {'RESP0621', 'RESP0706', 'RESP0733', 'RESP0768'};
 % main path
 topPath = '/Fridge/users/jaap/ccep/dataBIDS/';
 
-dataBase = [];
+% create dataBase structure
+dataBase = struct('subj',cell(size(subjects)));
+
 % for all subjects, create subject struct withing dataBase
 for ss = 1:length(subjects)
-    dataBase.subj{ss} = subjects{ss};
+    dataBase(ss).subj = subjects{ss};
     
     % First create the sesPath by adding the the subj to topPath. 
     sesPath = fullfile(topPath,['sub-' subjects{ss}]);
@@ -15,106 +36,162 @@ for ss = 1:length(subjects)
     % only in that folder and not any deeper because depth = 0
     sesList = dirPlus(sesPath, 'ReturnDirs', true, 'Depth',0);
     
-    % for all sessions in the sesPath folder create struct. 
-    % because the sesPath folder only contains ses folders, we can iterate
-    % over the length of the sesList
-    for tt = 1:length(sesList)
-        dataBase.subj{ss}.ses{tt} = sesList{tt}
-    end
+    % if there is just one sessions, add metadata that are found in the
+    % folders to the structure
+    if length(sesList) == 1
+      % for all sessions in the sesPath folder create struct. 
+      % because the sesPath folder only contains ses folders, we can iterate
+      % over the length of the sesList
+      for ses = 1:length(sesList)
+
+        % The number of events.tsv files correspond with the number of
+        % different runs, so use dirPlus to find this amount
+        runList = dirPlus(sesList{ses}, 'FileFilter', '\_events.tsv$');
+
+        % create metaData structure, to ensure it will be cleared every
+        % iteration. Size not defined yet, because we are not sure how
+        % much we want to add to the structure
+        metaData = {};
+
+        % for all runs found in the scans.tsv
+        for runs = 1:length(runList)
+
+            % write subject to metadata (it is already in dataBase, but
+            % useful to have it here as well
+            metaData(runs).subject = subjects{ss};
+
+            % extract name of the session
+            sesIdx = strfind(sesList{ses},'ses');
+            session = sesList{ses}(sesIdx(end)+4:end);
+
+            % write session into metadata
+            metaData(runs).session = session;
+
+            % extract name of the task
+            taskIdxStart = strfind(runList{runs}, 'task-');
+            taskIdxEnd = strfind(runList{runs}, '_run');
+            task = runList{runs}(taskIdxStart+5:taskIdxEnd-1);
+
+            % write task into second data column
+            metaData(runs).task = task;
+
+            % extract name of the run
+            runIdxStart = strfind(runList{runs}, 'run-');
+            runIdxEnd = strfind(runList{runs}, '_events.tsv');
+            run = runList{runs}(runIdxStart+4:runIdxEnd-1);
+
+            % write run into third data column
+            metaData(runs).run = run;
+
+        end
+      end     
+      
+      % write metaData structure to dataBase structure
+      dataBase(ss).metaData = metaData;
     
-    
-    
-    
-    % then another for loop: for all tasks, create struct
-    
-    % the another for loop: for all runs, create struct
-end
-
-%% other methods
-
-% using dirwalk
-[pathNames, dirNames, fileNames] = dirwalk(sesPath);
-
-% using dir()
-fileinfo = dir('/Fridge/users/jaap/ccep/dataBIDS/');
-fileinfo.name
-
-% Setting data root path
-dataRootPath = '/Fridge/CCEP/';
-
-% Subject information
-db.subjects = {'RESP0621', 'RESP0706', 'RESP0733', 'RESP0768'}; % subject number
-db.sessions = {'1', '1', '1b', '1'}; % session number
-db.task_labels = {'SPESclin', 'SPESclin', 'SPESclin', 'SPESclin'};
-db.run_labels = {'021147', '041501', '050941', '021704'};
-
-% IN FUNCTION
-data_nr = 1; % dataset number in the above cell array
-
-% IN PREPROCESS
-for zz = 1:size(data_nr,2)
-
-    sub_label = db.subjects{db.data_nr};
-    ses_label = db.sessions{db.data_nr};
-    task_label = db.task_labels{db.data_nr};
-    run_label = db.run_labels{db.data_nr};
-    
-end
-
-
-db.resp
-%%
-% We need to create a list of the subjects we want to analyse: this is the
-% list used for all Jaap's analyses, because there can be subjects added
-% afterwards that we don't include and there can be subjects or datasets we
-% exclude. This is necessary because we are still curating the database. 
-subjects = {'RESP0621', 'RESP0706', 'RESP0733', 'RESP0768'}; % subject number
-dataBase = [];
-for ss = 1:length(subjects)
-    if isequal(subjects{ss},'RESP0621')
-        dataBase.subj = subjects{ss};
-        % read dir
-        % get data
-        % potentially remove excluded data with a reason
-        % if thisdata.dataname=='whatever', make it empty, end
+    % in some cases there are two sessions. In this case the metadata of the second 
+    % sesson have to be added in the lines underneath the metadata of the
+    % first session.
+    elseif length(sesList) >= 2
         
+        % create metaData structure, to ensure it will be cleared every
+        % iteration. Size not defined yet, because we are not sure how
+        % much we want to add to the structure
+        metaData = {};
+            
+        % for every session
+        for ses = 1:length(sesList)
+            
+            % The number of events.tsv files correspond with the number of
+            % different runs, so use dirPlus to find this amount
+            runList = dirPlus(sesList{ses}, 'FileFilter', '\_events.tsv$');
+            
+            % for the first session, no adjustments to code are made
+            if ses == 1
+               
+                % save number of runs in first session
+                runCounter = length(runList);
+                               
+                for runs = 1:length(runList)
+                    
+                    % write subject to metadata (it is already in dataBase, but
+                    % useful to have it here as well
+                    metaData(runs).subject = subjects{ss};
+                    
+                    % extract name of the session
+                    sesIdx = strfind(sesList{ses},'ses');
+                    session = sesList{ses}(sesIdx(end)+4:end);
+                    
+                    % write session into metadata
+                    metaData(runs).session = session;
+                    
+                    % extract name of the task
+                    taskIdxStart = strfind(runList{runs}, 'task-');
+                    taskIdxEnd = strfind(runList{runs}, '_run');
+                    task = runList{runs}(taskIdxStart+5:taskIdxEnd-1);
+                    
+                    % write task into second data column
+                    metaData(runs).task = task;
+                    
+                    % extract name of the run
+                    runIdxStart = strfind(runList{runs}, 'run-');
+                    runIdxEnd = strfind(runList{runs}, '_events.tsv');
+                    run = runList{runs}(runIdxStart+4:runIdxEnd-1);
+                    
+                    % write run into third data column
+                    metaData(runs).run = run;
+                    
+                end  
+            end 
+            
+            % for next sessions, add the runCounter to the runs to ensure
+            % the data will be written in the rows under the rows under the
+            % first session
+            if ses > 1
+                                                          
+                for runs = (1:length(runList))+runCounter
+                    
+                    % write subject to metadata (it is already in dataBase, but
+                    % useful to have it here as well
+                    metaData(runs).subject = subjects{ss};
+                    
+                    % extract name of the session
+                    sesIdx = strfind(sesList{ses},'ses');
+                    session = sesList{ses}(sesIdx(end)+4:end);
+                    
+                    % write session into metadata
+                    metaData(runs).session = session;
+                    
+                    % extract name of the task (runCouter subtracted)
+                    taskIdxStart = strfind(runList{runs-runCounter}, 'task-');
+                    taskIdxEnd = strfind(runList{runs-runCounter}, '_run');
+                    task = runList{runs-runCounter}(taskIdxStart+5:taskIdxEnd-1);
+                    
+                    % write task into second data column
+                    metaData(runs).task = task;
+                    
+                    % extract name of the run (runCouter subtracted)
+                    runIdxStart = strfind(runList{runs-runCounter}, 'run-');
+                    runIdxEnd = strfind(runList{runs-runCounter}, '_events.tsv');
+                    run = runList{runs-runCounter}(runIdxStart+4:runIdxEnd-1);
+                    
+                    % write run into third data column
+                    metaData(runs).run = run;             
+                    
+                    % add latest list to runCounter in case there is a
+                    % third session
+                    runCounter = runCounter + length(runList);
+                    
+                end   
+            end    
+        end       
+        
+        % write metaData structure to dataBase structure
+        dataBase(ss).metaData = metaData;
+
     end
+    
 end
 
-%% notes on structs
-
-% list of subjects that you want to include in analysis
-subjects = {'RESP0621', 'RESP0706', 'RESP0733', 'RESP0768'};
-% main path
-topPath = '/Fridge/users/jaap/ccep/dataBIDS/';
-
-dataBase = [];
-% for all subjects, create subject struct withing dataBase
-for ss = 1:length(subjects)
-    dataBase.subj{ss} = subjects{ss};
-    
-    % First create the sesPath by adding the the subj to topPath. 
-    sesPath = fullfile(topPath,['sub-' subjects{ss}]);
-    % look in the sesPath. sesList returns only names of the folders and
-    % only in that folder and not any deeper because depth = 0
-    sesList = dirPlus(sesPath, 'ReturnDirs', true, 'Depth',0);
-    
-    % for all sessions in the sesPath folder create struct. 
-    % because the sesPath folder only contains ses folders, we can iterate
-    % over the length of the sesList
-    for tt = 1:length(sesList)
-        dataBase.subj{ss}.ses{tt} = sesList{tt}
-    end
-    
-    
-    
-    
-    % then another for loop: for all tasks, create struct
-    
-    % the another for loop: for all runs, create struct
-end
-
-[pathNames, dirNames, fileNames] = dirwalk(sesPath);
-
-fileinfo = dir('/Fridge/users/jaap/ccep/dataBIDS/RESP0621/');
-fileinfo.name
+% then you can put in this struct whatever you want e.g. avg epochs
+% dataBase(ss).metaData(runs).test = avg_epoch
