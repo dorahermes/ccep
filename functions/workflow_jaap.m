@@ -1,4 +1,5 @@
 
+clear all
 
 %% Add paths for database
 
