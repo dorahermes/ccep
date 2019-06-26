@@ -1,6 +1,6 @@
-function database = ccep_load_database(subjects, top_path)
+function [database] = ccep_load_database(subjects, top_path)
 
-% This script is used to create a structure named 'dataBase' that can hold
+% This function is used to create a structure named 'dataBase' that can hold
 % all metadata and data of the subjects. This 'dataBase' structure can be
 % used to put in several ccep functions. 
 
@@ -11,10 +11,13 @@ function database = ccep_load_database(subjects, top_path)
 % (database(subj).metadata(runs).test = avg_epoch;) 
 
 % INPUT
-% subjects = a cell array holding the subjects you want analyse.
+% subjects  = a cell array holding the subjects you want analyse.
 %               e.g. {'RESP0001', 'RESP0002'}
-% topPath = folder in which the subjects can be found (begin of the
+% topPath   = folder in which the subjects can be found (begin of the
 %               BIDS-structure. E.g. 'Fridge/CCEP' or '/Fridge/users/jaap/ccep/dataBIDS/'
+
+% OUTPUT
+% database  = structure including the subjects, all their sessions, and runs
 
 % IMPORTANT: function uses dirPlus function. Add this to path. 
 
