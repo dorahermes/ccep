@@ -249,19 +249,7 @@ for subj = 1:length(database)
         database(subj).metadata(runs).electrodes_filename = electrodes_name;
         database(subj).metadata(runs).electrodes = electrodes_table;
         
-        % add chan        % loop through all stimulations and add to the output structure
-        for elec = 1:size(data,1) % for all channels
-            for ll = 1:length(ccep_events_onlystims.onset) % for all epochs
-                % if data contain artifacts, which are adjusted to NaN's
-                % consider that epoch as unreliable and change epoch to NaN's
-                if sum(isnan(data_epoch(elec,ll,(tt>-1 & tt<.5)))) > 0
-                    data_epoch(elec,ll,:) = NaN;
-                else
-                    data_epoch(elec,ll,:) = data(elec,ccep_events_onlystims.sample_start(ll)-round((epoch_prestim*data_hdr.Fs))+1 ...
-                    :ccep_events_onlystims.sample_start(ll)+round(((epoch_length-epoch_prestim)*data_hdr.Fs)));
-                end
-            end
-        endnels file name and electrodes tabel to database struct
+        % add channels file name and electrodes tabel to database struct
         database(subj).metadata(runs).channels_filename = channels_name;
         database(subj).metadata(runs).channels = channel_table;
 
