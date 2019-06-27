@@ -24,7 +24,7 @@ function [database] = ccep_data_preprocess(database, top_path)
 % - Splits epochs into 2.5s before and 2.5s after stimulation
 % - Adds data, events, electrodes and channels files and filenames to
 %       datastucture
-% - Adds epoched data, averaged epoched data and stimulated pairs to
+% - Adds data, epoched data, averaged epoched data and stimulated pairs to
 %       datastructure
 
 
@@ -52,8 +52,8 @@ for subj = 1:length(database)
         data_hdr = ft_read_header(ieeg_name,'dataformat','brainvision_eeg');
 
         
-        % to do a quick check on how the data look, these lines of code
-        % plot some data for small visual assessment
+%         to do a quick check on how the data look, these lines of code
+%         plot some data for small visual assessment
 %         t = [1:size(data,2)]./data_hdr.Fs;
 %         figure
 %         plot(t,data(ii,:))
@@ -91,7 +91,8 @@ for subj = 1:length(database)
                 data(:,(ccep_events.sample_start(qq):str2double(ccep_events.sample_end(qq)))) = NaN;
                 % if artefact is only in specific channels.
                 % WARNING: it might be possible that there are channel specific
-                % artifacts with the same onset but another offset. Therefore, there is
+                % artifacts with the same onset but another offset (or any other 
+                % problems that are currently not so. Therefore, there is
                 % an extra 'else' included that will capture this problem if a
                 % participant has this. Then this can be fixed in this loop. Same for
                 % multiple channel specific artifacts at the same time
@@ -216,19 +217,20 @@ for subj = 1:length(database)
         % Take mean of these stimulations and squeeze into 3D
         ccep_epoch_sorted_avg = squeeze(nanmean(ccep_epoch_sorted,2));
 
-        
-        % Option to plot and test the data:      
+         
+%         Option to plot and test the data:
+%         subj = 1;
+%         runs = 1;
 %         stim_pair_nr = 1;
 %         ccep_elec = 3;
 %         figure()
-%         plot(tt(tt>-1 & tt<1),zeros(size(tt(tt>-1 & tt<1))),'Color',[.5 .5 .5]) 
+%         plot(tt(tt>-1 & tt<1),zeros(size(tt(tt>-1 & tt<1))),'Color',[.5 .5 .5])
 %         plot(tt(tt>-1 & tt<1),squeeze(ccep_epoch_sorted_avg(ccep_elec,stim_pair_nr,(tt>-1 & tt<1))))
 %         xlabel('time(s)')
 %         ylabel('amplitude(uV)')
 %         title(['elec ' database(subj).metadata(runs).data_hdr.label{ccep_elec} ' for stimulation of ' ...
 %             database(subj).metadata(runs).data_hdr.label{ccep_stimsets(stim_pair_nr,1)} ...
 %             ' and ' database(subj).metadata(runs).data_hdr.label{ccep_stimsets(stim_pair_nr,2)} ])
-          
         
         % add data paths and data to the database structure:
         % not all might be necessary for further processing
@@ -266,8 +268,3 @@ for subj = 1:length(database)
         
     end
 end
-
-
-
-
-
