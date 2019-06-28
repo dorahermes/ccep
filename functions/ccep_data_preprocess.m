@@ -21,7 +21,8 @@ function [database] = ccep_data_preprocess(database, top_path)
 % - Removing annotated artifacts from data
 % - Bad channel rejection
 % - Does not include re-referencing
-% - Splits epochs into 2.5s before and 2.5s after stimulation
+% - Splits epochs into 2.5s before and 2.5s after stimulation (5s in
+%   total)
 % - Adds data, events, electrodes and channels files and filenames to
 %       datastucture
 % - Adds data, epoched data, averaged epoched data and stimulated pairs to
@@ -131,7 +132,7 @@ for subj = 1:length(database)
         
         % set epoch parameters
         epoch_length = 5; % in seconds, -2.5:2.5
-        epoch_prestim = 2.5;
+        epoch_prestim_length = 2.5; % in seconds
         
         % count how much stimulations there are
         total_stim_count = sum(strcmp(ccep_events.trial_type,'electrical_stimulation'));
@@ -140,7 +141,7 @@ for subj = 1:length(database)
         data_epoch = zeros(size(data,1),total_stim_count,round(epoch_length*data_hdr.Fs));
         
         % define time vector for all epochs (for plotting and knowing when tt==0 for onset stimulation)
-        tt = [1:epoch_length*data_hdr.Fs]/data_hdr.Fs - epoch_prestim;
+        tt = [1:epoch_length*data_hdr.Fs]/data_hdr.Fs - epoch_prestim_length;
         
         % create cc_events_onlystims, which makes table of only the
         % stimulations and not e.g. artifact data
@@ -161,8 +162,8 @@ for subj = 1:length(database)
                 if sum(isnan(data_epoch(elec,ll,(tt>-1 & tt<.5)))) > 0
                     data_epoch(elec,ll,:) = NaN;
                 else
-                    data_epoch(elec,ll,:) = data(elec,ccep_events_onlystims.sample_start(ll)-round((epoch_prestim*data_hdr.Fs))+1 ...
-                    :ccep_events_onlystims.sample_start(ll)+round(((epoch_length-epoch_prestim)*data_hdr.Fs)));
+                    data_epoch(elec,ll,:) = data(elec,ccep_events_onlystims.sample_start(ll)-round((epoch_prestim_length*data_hdr.Fs))+1 ...
+                    :ccep_events_onlystims.sample_start(ll)+round(((epoch_length-epoch_prestim_length)*data_hdr.Fs)));
                 end
             end
         end
@@ -267,4 +268,11 @@ for subj = 1:length(database)
         database(subj).metadata(runs).epoched_data_avg = ccep_epoch_sorted_avg;
         
     end
+    
+    % write the epoch_length and prestim_length to the database structure
+    % because we need them later on. 
+    database(subj).epoch_length = epoch_length;
+    database(subj).epoch_prestim_length = epoch_prestim_length;
+
+ 
 end

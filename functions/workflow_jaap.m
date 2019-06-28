@@ -23,3 +23,11 @@ ft_defaults
 %% 
 
 database = ccep_data_preprocess(database, top_path);
+
+
+
+%% 
+amplitude_thresh = 2.8;   
+n1_peak_range = 70;
+
+[database] = ccep_detect_n1peak(database, amplitude_thresh, n1_peak_range);
