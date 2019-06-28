@@ -20,14 +20,16 @@ top_path = '/Fridge/users/jaap/ccep/dataBIDS/';
 addpath('/Fridge/users/dora/github/fieldtrip/')
 ft_defaults
 
-%% 
+%% Run preprocess data function
 
 database = ccep_data_preprocess(database, top_path);
 
+%% Set parameters for n1 peak detection
 
-
-%% 
 amplitude_thresh = 2.8;   
 n1_peak_range = 70;
 
-[database] = ccep_detect_n1peak(database, amplitude_thresh, n1_peak_range);
+
+%% Run detect n1 peaks function
+
+database = ccep_detect_n1peak(database, amplitude_thresh, n1_peak_range);
