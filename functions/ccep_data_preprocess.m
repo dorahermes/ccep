@@ -39,7 +39,7 @@ function [database] = ccep_data_preprocess(database, top_path)
 
 
 % iterate over all subjects in database
-for subj = 1:length(database)
+for subj = 8:length(database)
     % iterate over all their runs
     for runs = 1:length(database(subj).metadata)
         
@@ -161,6 +161,11 @@ for subj = 1:length(database)
                 % consider that epoch as unreliable and change epoch to NaN's
                 if sum(isnan(data_epoch(elec,ll,(tt>-1 & tt<.5)))) > 0
                     data_epoch(elec,ll,:) = NaN;
+                elseif ccep_events_onlystims.sample_start(ll)+round(((epoch_length-epoch_prestim_length)*data_hdr.Fs)) > ...
+                        size(data,2)
+                    data_epoch(elec,ll,:) = NaN;
+                elseif ccep_events_onlystims.sample_start(ll)-round((epoch_prestim_length*data_hdr.Fs))+1 <= 0
+                    data_epoch(elec,ll,:) = NaN;
                 else
                     data_epoch(elec,ll,:) = data(elec,ccep_events_onlystims.sample_start(ll)-round((epoch_prestim_length*data_hdr.Fs))+1 ...
                     :ccep_events_onlystims.sample_start(ll)+round(((epoch_length-epoch_prestim_length)*data_hdr.Fs)));
@@ -238,7 +243,7 @@ for subj = 1:length(database)
         
         % add data file name and data to database struct
         database(subj).metadata(runs).ieeg_filename = ieeg_name;
-        database(subj).metadata(runs).data = data;
+%         database(subj).metadata(runs).data = data;
         database(subj).metadata(runs).data_hdr = data_hdr;
         
         % add events file name and events to database struct
@@ -257,7 +262,7 @@ for subj = 1:length(database)
         database(subj).metadata(runs).channels = channel_table;
 
         % add epoched data to the database structure
-        database(subj).metadata(runs).epoched_data = data_epoch;
+%         database(subj).metadata(runs).epoched_data = data_epoch;
 
         % add stimulation pairs and amount of stimulation of those pairs to
         % database structure
