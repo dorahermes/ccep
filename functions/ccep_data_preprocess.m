@@ -284,7 +284,7 @@ for subj = 1:length(database)
         
         % add data file name and data to database struct
         database(subj).metadata(runs).ieeg_filename = ieeg_name;
-        %database(subj).metadata(runs).data = data;
+        database(subj).metadata(runs).data = data;
         database(subj).metadata(runs).data_hdr = data_hdr;
         
         % add events file name and events to database struct
@@ -303,12 +303,15 @@ for subj = 1:length(database)
         database(subj).metadata(runs).channels = channel_table;
 
         % add epoched data to the database structure
-        %database(subj).metadata(runs).epoched_data = data_epoch;
+        database(subj).metadata(runs).epoched_data = data_epoch;
 
         % add stimulation pairs and amount of stimulation of those pairs to
         % database structure
         database(subj).metadata(runs).stimulated_pairs = ccep_stimsets;
         database(subj).metadata(runs).stimulated_nroftimes = ccep_nroftimes;
+        
+        database(subj).metadata(runs).epoch_length = epoch_length; 
+        database(subj).metadata(runs).epoch_prestim_length = epoch_prestim_length;
         
         % add averaged epochs to database structure
         database(subj).metadata(runs).epoched_data_avg = ccep_epoch_sorted_avg;

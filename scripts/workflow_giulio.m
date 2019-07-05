@@ -12,8 +12,6 @@ top_path = '/Fridge/users/giulio/ccep/dataBIDS/';
 
 database = ccep_load_database(subjects, top_path);
 
-stim_status = 2; % 1 for monophasic, 2 for biphasic
- 
 %% Add paths for preprocess 
 
 top_path = '/Fridge/users/giulio/ccep/dataBIDS/';
@@ -21,9 +19,13 @@ addpath('/Fridge/users/dora/github/fieldtrip/')
 ft_defaults
 
 %% Run preprocess function
+stim_status = 2; % 1 for monophasic, 2 for biphasic
+
 database = ccep_data_preprocess(database, top_path, stim_status);
-amplitude_thresh = 2.8; 
-n1_peak_range = 70; 
+
 % Run detect N1 function 
-database = ccep_detect_N1peak(database, amplitude_thresh, n1_peak_range); 
+amplitude_thresh = 2.8; 
+n1_peak_range = 70; % Detected N1 only range between 10 and n1_peak_range (10-70ms after stimulation)
+
+database = ccep_detect_n1peak(database, amplitude_thresh, n1_peak_range); 
 
