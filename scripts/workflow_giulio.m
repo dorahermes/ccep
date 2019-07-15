@@ -19,7 +19,7 @@ addpath('/Fridge/users/dora/github/fieldtrip/')
 ft_defaults
 
 %% Run preprocess function
-stim_status = 2; % 1 for monophasic, 2 for biphasic
+stim_status = 1; % 1 for monophasic, 2 for biphasic
 
 database = ccep_data_preprocess(database, top_path, stim_status);
 
