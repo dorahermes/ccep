@@ -142,8 +142,9 @@ for th = 1:length(thresh)
             end
         end
     
-        class_1_visual = reshape(validation_matrix(:,:,1),1,size(cc_epoch_sorted_avg,1)*size(cc_epoch_sorted_avg,2));
-        class_2_code = reshape(temp_mat(:,:),1,size(cc_epoch_sorted_avg,1)*size(cc_epoch_sorted_avg,2));
+        class_1_visual = reshape(validation_matrix(:,:,1),1,size(validation_matrix(:,:,1),1)*size(validation_matrix(:,:,1),2));
+        class_2_code = reshape(temp_mat(1:81,1:37),1, ...
+           size(validation_matrix(:,:,1),1)*size(validation_matrix(:,:,1),2));
         
         
         TP = length(find(class_1_visual == 1 & class_2_code == 1));
@@ -167,12 +168,12 @@ toc;
 
 % write parameters_optimalization.mat to folder
 working_dir = fullfile('/Fridge','users','jaap','ccep','dataBIDS');
-if ~exist(fullfile(working_dir,['sub-' subj],['ses-' ses_label],'ieeg',...
+if ~exist(fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
     ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_parameters_optimalization.mat']))
     disp('writing output parameters_optimalize_mat.mat')
     save([fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
     ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_parameters_optimalization.mat'])],...
-    'parameters_optimalize_mat')
+    'parameters_optimalize_mat_0458')
 else
     disp(['ERROR: can not overwrite, output file already exists '])
 end
@@ -213,6 +214,10 @@ ylabel('time end (s)')
 
 % The validation_matrix and parameters_optimalize_mat of all validated data
 % are loaded (the variables in the mat-files are renamed so they do not overwrite)
+load(fullfile(working_dir,'validation', 'sub-RESP0458_ses-1_run-011714_parameters_optimalization.mat'))
+load(fullfile(working_dir,'validation', 'sub-RESP0458_ses-1_run-011714_validation_matrix.mat'))
+load(fullfile(working_dir,'validation', 'sub-RESP0468_ses-1_run-031729_parameters_optimalization.mat'))
+load(fullfile(working_dir,'validation', 'sub-RESP0468_ses-1_run-031729_validation_matrix.mat'))
 load(fullfile(working_dir,'validation', 'sub-RESP0621_ses-1_run-021147_parameters_optimalization.mat'))
 load(fullfile(working_dir,'validation', 'sub-RESP0621_ses-1_run-021147_validation_matrix.mat'))
 load(fullfile(working_dir,'validation', 'sub-RESP0706_ses-1_run-041501_parameters_optimalization.mat'))
@@ -222,16 +227,24 @@ load(fullfile(working_dir,'validation', 'sub-RESP0733_ses-1b_run-050941_validati
 load(fullfile(working_dir,'validation', 'sub-RESP0768_ses-1_run-021704_parameters_optimalization.mat'))
 load(fullfile(working_dir,'validation', 'sub-RESP0768_ses-1_run-021704_validation_matrix.mat'))
 
+
+
 % The scores of the different datasets are based on a different amount of averaged epochs
 % To calculate the average scores, it first needs recalculation.
 
 % Calculate total amount of epochs over all datasets
-total_validated_epochs = (size(validation_matrix_0621,1)*size(validation_matrix_0621,2)) ...
+total_validated_epochs = (size(validation_matrix_0458,1)*size(validation_matrix_0458,2)) ...
+    + (size(validation_matrix_0468,1)*size(validation_matrix_0468,2)) ...
+    + (size(validation_matrix_0621,1)*size(validation_matrix_0621,2)) ...
     + (size(validation_matrix_0706,1)*size(validation_matrix_0706,2)) ...
     + (size(validation_matrix_0733,1)*size(validation_matrix_0733,2)) ... 
     + (size(validation_matrix_0768,1)*size(validation_matrix_0768,2));
 
 % multiply each parameters_optimalize_mat by the fraction on total epochs
+parameters_optimalize_mat_0458 = parameters_optimalize_mat_0458 * ...
+    (size(validation_matrix_0458,1)*size(validation_matrix_0458,2)/total_validated_epochs);
+parameters_optimalize_mat_0468 = parameters_optimalize_mat_0468 * ...
+    (size(validation_matrix_0468,1)*size(validation_matrix_0468,2)/total_validated_epochs);
 parameters_optimalize_mat_0621 = parameters_optimalize_mat_0621 * ...
     (size(validation_matrix_0621,1)*size(validation_matrix_0621,2)/total_validated_epochs);
 parameters_optimalize_mat_0706 = parameters_optimalize_mat_0706 * ...
@@ -241,9 +254,13 @@ parameters_optimalize_mat_0733 = parameters_optimalize_mat_0733 * ...
 parameters_optimalize_mat_0768 = parameters_optimalize_mat_0768 * ...
     (size(validation_matrix_0768,1)*size(validation_matrix_0768,2)/total_validated_epochs); 
 
+
+% NOTE TO SELF: add extra option in which there is no correction for the
+% amount of epochs per patient
+
 % add scores to get 1 averaged matrix with parameter scores
-averaged_parameter_scores = parameters_optimalize_mat_0621 + parameters_optimalize_mat_0706 ...
-    + parameters_optimalize_mat_0733 + parameters_optimalize_mat_0768;
+averaged_parameter_scores = parameters_optimalize_mat_0458 + parameters_optimalize_mat_0468 + parameters_optimalize_mat_0621 ...
+    + parameters_optimalize_mat_0706 + parameters_optimalize_mat_0733 + parameters_optimalize_mat_0768;
 
 figure
 subplot(1,4,1:3)

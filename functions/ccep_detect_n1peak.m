@@ -46,6 +46,7 @@ function [database] = ccep_detect_n1peak(database, amplitude_thresh, n1_peak_ran
 %   (9yrs - 12 yrs.) patients, while later validation is also done in older
 %   patients. Age seems to effect the characteristics of CCEPs and
 %   therefore also the detection. 
+% - look at peak range....
 
 % This version of the algorithm is validated in three patients (age 9, 21 and 50)
 % Validation done by comparing the performance of the code and visual
