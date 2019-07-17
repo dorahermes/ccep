@@ -13,19 +13,21 @@ addpath('/home/jaap/vistasoft/external/freesurfer');
 dataRootPath = '/Fridge/users/jaap/ccep/dataBIDS/';
 
 %%%% Subject information
-subjects = {'joure','chaam'};
-sessions = {'01','01'};
-hemi_cap = {'L','R'}; 
-hemi_small = {'l','r'};
-s = 2;
+subjects = {'RESP0621'};
+sessions = {'1'};
+hemi_cap = {'R'}; 
+hemi_small = 'r';
+run_label = '021147';
+s = 1;
 
 % get correct subject info
 subj = subjects{s};
 ses_label = sessions{s};
 
 % load electrode positions
-dataLocName = [dataRootPath 'sub-' subj '/ses-' ses_label '/ieeg/sub-' subj '_ses-' ses_label '_acq-clinicalprojected_electrodes.tsv'];
-loc_info = readtable(dataLocName,'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'});
+dataLocName = [dataRootPath 'sub-' subj '/ses-' ses_label '/ieeg/sub-' subj '_ses-' ses_label '_electrodes.tsv'];
+% dataLocName = '/Fridge/users/jaap/ccep/dataBIDS/sub-RESP0706/ses-1/ieeg/sub-RESP0706_ses-1_task-SPESclin_run-041501_electrodes.tsv';
+
 elecmatrix = [loc_info.x loc_info.y loc_info.z];
 
 % load gifti file for surface coordinates
@@ -38,7 +40,7 @@ g = gifti(dataGiiName);
 
 %%% LOAD ALL THE MAPS
 % load Destrieux map
-surface_labels_Destrieux = fullfile(dataRootPath,'derivatives','Freesurfer',['sub-' subj],'label',...
+surface_labels_Destrieux = fullfile(dataRootPath,'derivatives','freesurfer',['sub-' subj],'label',...
     [hemi_small{s} 'h.aparc.a2009s.annot']);
 [vertices, label, colortable_Destrieux] = read_annotation(surface_labels_Destrieux);
 vert_label = label; % these labels are strange and do not go from 1:76, but need to be mapped to the colortable
@@ -50,8 +52,8 @@ vert_label_Destrieux = vert_label;
 clear vertices label 
 
 % load DKT map
-surface_labels_DKT = fullfile(dataRootPath,'derivatives','Freesurfer',['sub-' subj],'label',...
-[hemi_small{s} 'h.aparc.DKTatlas40.annot']);
+surface_labels_DKT = fullfile(dataRootPath,'derivatives','freesurfer',['sub-' subj],'label',...
+[hemi_small{s} 'h.aparc.DKTatlas.annot']);
 [vertices, label, colortable_DKT] = read_annotation(surface_labels_DKT);
 vert_label_DKT = label; % these labels are strange and do not go from 1:76, but need to be mapped to the colortable
 % mapping labels to colortable
@@ -81,14 +83,17 @@ for elec = 1:size(elecmatrix,1) % loop across electrodes
     localized_electrodes = mode(vert_label_Destrieux(find(b<electrode_to_vertex_dist))); 
     % put the labels (vert_label) back in the matrix
     Destrieux_label(elec,1) =  localized_electrodes;
-    Destrieux_label_text{elec,1} = colortable_Destrieux.struct_names{Destrieux_label(elec,1)};
-    
-    %%%% DKT:
-    % take the mode of the labels within 3 mm
-    localized_electrodes = mode(vert_label_DKT(find(b<electrode_to_vertex_dist))); 
-    % put the labels (vert_label) back in the matrix
-    DKTatlas_label(elec,1) =  localized_electrodes;
-    DKTatlas_label_text{elec,1} = colortable_DKT.struct_names{DKTatlas_label(elec,1)};
+    if ~isnan(Destrieux_label(elec,1))
+        Destrieux_label_text{elec,1} = colortable_Destrieux.struct_names{Destrieux_label(elec,1)};
+    else 
+        Destrieux_label_text{elec,1} = NaN;
+    end
+%     %%%% DKT:
+%     % take the mode of the labels within 3 mm
+%     localized_electrodes = mode(vert_label_DKT(find(b<electrode_to_vertex_dist))); 
+%     % put the labels (vert_label) back in the matrix
+%     DKTatlas_label(elec,1) =  localized_electrodes;
+%     DKTatlas_label_text{elec,1} = colortable_DKT.struct_names{DKTatlas_label(elec,1)};
     
 end
 %% Integrating electrode positions with TSV-file of coordinates
@@ -99,7 +104,7 @@ y = loc_info.y;
 z = loc_info.z;
 size = loc_info.size;
 group = loc_info.group;
-hemisphere = loc_info.hemisphere;
+hemisphere = hemi_small;
 DKTatlas_label = DKTatlas_label;
 DKTatlas_name = DKTatlas_label_text;
 Destrieux_label = Destrieux_label; 
@@ -112,7 +117,8 @@ Destrieux_name = Destrieux_label_text;
 % Wang_label = 
 % Wang_name =
 
-t = table(name,x,y,z,size,group,hemisphere,DKTatlas_label,DKTatlas_name,Destrieux_label,Destrieux_name); % add variables in here if adding above
+t = table(name,x,y,z,size,group,DKTatlas_label,DKTatlas_name,Destrieux_label,Destrieux_name); % add variables in here if adding above
+% t = table(name,x,y,z,size,group,hemisphere,DKTatlas_label,DKTatlas_name,Destrieux_label,Destrieux_name); % add variables in here if adding above
 
 electrodes_tsv_name ='electrode_positions_fouratlases.tsv';
 

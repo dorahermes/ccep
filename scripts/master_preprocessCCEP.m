@@ -6,7 +6,7 @@
 
 clear all
 
-addpath(genpath('/Fridge/users/dora/github/ccep/'))
+addpath(genpath('/Fridge/users/jaap/github/ccep/'))
 addpath('/Fridge/users/dora/github/fieldtrip/')
 ft_defaults
 
@@ -25,10 +25,10 @@ ft_defaults
 dataRootPath = '/Fridge/CCEP/';
 
 % Subject information
-subjects = {'RESP0706'}; % subject number
+subjects = {'RESP0458'}; % subject number
 sessions = {'1'}; % session number
 task_labels = {'SPESclin'};
-run_labels = {'041501'};
+run_labels = {'011714'};
 data_nr = 1; % dataset number in the above cell array
 
 sub_label = subjects{data_nr};
@@ -164,30 +164,30 @@ xlabel('time(s)')
 ylabel('amplitude(uV)')
 %% Averaging the epochs - assuming F01-F02 is different from F02-F01
 
-%%%% First assume that F01-F02 is different from F02-F01
-% get the unique number of stimulated pairs:
-[cc_stimsets,IA,IC] =  unique(cc_events_onlystims.electrical_stimulation_site, 'stable');
-% run through these and see how many there are
-cc_nroftimes = zeros(length(cc_stimsets),1); % number of times each pair is stimulated
-for kk = 1:length(cc_stimsets)
-    cc_nroftimes(kk) = sum(ismember(cc_events_onlystims.electrical_stimulation_site,cc_stimsets{kk}));
-end
-
-% check whether there is consistent stimulations, if all stimulations pairs
-% are done 5 times. 
-if cc_nroftimes == 5*(ones(round(height(cc_events_onlystims)/5),1))
-    disp('All stimulations are done 5 times')
-    % cc_epoch_sorted_if_all5 = squeeze(mean(reshape(data_epoch,size(data_epoch,1),
-    % max_amount_same_stimulation,(size(cc_events,1)/amount_same_stimulation),size(data_epoch,3)),2));
-else
-    disp('Caution: not all stimulations are done 5 times')
-    for ll = 1:length(cc_nroftimes)
-        if cc_nroftimes(ll) ~= 5
-            xx = [cc_stimsets(ll),' is stimulated ',cc_nroftimes(ll), ' times.'];
-            disp(xx)
-        end
-    end
-end
+% %%%% First assume that F01-F02 is different from F02-F01
+% % get the unique number of stimulated pairs:
+% [cc_stimsets,IA,IC] =  unique(cc_events_onlystims.electrical_stimulation_site, 'stable');
+% % run through these and see how many there are
+% cc_nroftimes = zeros(length(cc_stimsets),1); % number of times each pair is stimulated
+% for kk = 1:length(cc_stimsets)
+%     cc_nroftimes(kk) = sum(ismember(cc_events_onlystims.electrical_stimulation_site,cc_stimsets{kk}));
+% end
+% 
+% % check whether there is consistent stimulations, if all stimulations pairs
+% % are done 5 times. 
+% if cc_nroftimes == 5*(ones(round(height(cc_events_onlystims)/5),1))
+%     disp('All stimulations are done 5 times')
+%     % cc_epoch_sorted_if_all5 = squeeze(mean(reshape(data_epoch,size(data_epoch,1),
+%     % max_amount_same_stimulation,(size(cc_events,1)/amount_same_stimulation),size(data_epoch,3)),2));
+% else
+%     disp('Caution: not all stimulations are done 5 times')
+%     for ll = 1:length(cc_nroftimes)
+%         if cc_nroftimes(ll) ~= 5
+%             xx = [cc_stimsets(ll),' is stimulated ',cc_nroftimes(ll), ' times.'];
+%             disp(xx)
+%         end
+%     end
+% end
 
 %% Averaging the epochs - assuming F01-F02 is the same as F02-F01
 
@@ -241,8 +241,11 @@ cc_epoch_sorted_avg = squeeze(nanmean(cc_epoch_sorted,2));
 %% plot averaged epochs
 stim_pair_nr = 1;
 ccep_elec = 3;
-figure
-plot(tt,squeeze(cc_epoch_sorted_avg(ccep_elec,stim_pair_nr,:)))
+figure()
+plot(tt(tt>-1 & tt<1),zeros(size(tt(tt>-1 & tt<1))),'Color',[.5 .5 .5])
+
+%plot(tt,squeeze(cc_epoch_sorted_avg(ccep_elec,stim_pair_nr,:)))
+plot(tt(tt>-1 & tt<1),squeeze(cc_epoch_sorted_avg(ccep_elec,stim_pair_nr,(tt>-1 & tt<1))))
 xlabel('time(s)')
 % set(gca,'Ydir','reverse')
 ylabel('amplitude(uV)')

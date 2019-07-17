@@ -12,7 +12,7 @@ addpath('/Fridge/users/jaap/github/ccep/functions');
 %%
 
 % Subject information
-subjects = {'RESP0768'};
+subjects = {'RESP0621'};
 sessions = {'1'};
 hemi_cap = {'R'}; 
 hemi_small = {'r'};

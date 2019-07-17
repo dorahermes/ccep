@@ -11,6 +11,7 @@ addpath(genpath('/Users/dora/Documents/git/ccep/'))
 %% load data
 
 dataRootPath = '/Users/dora/Documents/data/ccep/';
+addpath('/Fridge/users/jaap/github/ccep/functions');
 
 sub_label = 'RESP0733';
 ses_label = '1day3x1149';
