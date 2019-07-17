@@ -39,7 +39,7 @@ function [database] = ccep_data_preprocess(database, top_path)
 
 
 % iterate over all subjects in database
-for subj = 8:length(database)
+for subj = 1:length(database)
     % iterate over all their runs
     for runs = 1:length(database(subj).metadata)
         
@@ -51,19 +51,6 @@ for subj = 8:length(database)
             '_task-' database(subj).metadata(runs).task '_run-' database(subj).metadata(runs).run '_ieeg.eeg']);
         data = ft_read_data(ieeg_name,'dataformat','brainvision_eeg');
         data_hdr = ft_read_header(ieeg_name,'dataformat','brainvision_eeg');
-
-        
-%         to do a quick check on how the data look, these lines of code
-%         plot some data for small visual assessment
-%         t = [1:size(data,2)]./data_hdr.Fs;
-%         figure
-%         plot(t,data(ii,:))
-%         axis([0, 1000, -4000, 4000])
-%         xlabel('time(s)')
-%         ylabel('amplitude(uV)')
-%         title(['sub: ' database(subj).metadata(runs).subject ' ses: ' database(subj).metadata(runs).session ...
-%             ' task: ' database(subj).metadata(runs).task ' run: ' database(subj).metadata(runs).run])
-
         
         % load the events.tsv
         events_name = fullfile(top_path,['sub-' database(subj).metadata(runs).subject], ...
@@ -223,21 +210,6 @@ for subj = 8:length(database)
         % Take mean of these stimulations and squeeze into 3D
         ccep_epoch_sorted_avg = squeeze(nanmean(ccep_epoch_sorted,2));
 
-         
-%         Option to plot and test the data:
-%         subj = 1;
-%         runs = 1;
-%         stim_pair_nr = 1;
-%         ccep_elec = 3;
-%         figure()
-%         plot(tt(tt>-1 & tt<1),zeros(size(tt(tt>-1 & tt<1))),'Color',[.5 .5 .5])
-%         plot(tt(tt>-1 & tt<1),squeeze(ccep_epoch_sorted_avg(ccep_elec,stim_pair_nr,(tt>-1 & tt<1))))
-%         xlabel('time(s)')
-%         ylabel('amplitude(uV)')
-%         title(['elec ' database(subj).metadata(runs).data_hdr.label{ccep_elec} ' for stimulation of ' ...
-%             database(subj).metadata(runs).data_hdr.label{ccep_stimsets(stim_pair_nr,1)} ...
-%             ' and ' database(subj).metadata(runs).data_hdr.label{ccep_stimsets(stim_pair_nr,2)} ])
-        
         % add data paths and data to the database structure:
         % not all might be necessary for further processing
         
@@ -281,3 +253,31 @@ for subj = 8:length(database)
 
  
 end
+
+%% Plot data of a channel - for quick check on how the data look
+
+%         plot some data for small visual assessment
+%         t = [1:size(data,2)]./data_hdr.Fs;
+%         figure
+%         plot(t,data(ii,:))
+%         axis([0, 1000, -4000, 4000])
+%         xlabel('time(s)')
+%         ylabel('amplitude(uV)')
+%         title(['sub: ' database(subj).metadata(runs).subject ' ses: ' database(subj).metadata(runs).session ...
+%             ' task: ' database(subj).metadata(runs).task ' run: ' database(subj).metadata(runs).run])
+
+%% Plot specific epochs
+
+%         subj = 1;
+%         runs = 1;
+%         stim_pair_nr = 1;
+%         ccep_elec = 3;
+%         figure()
+%         plot(tt(tt>-1 & tt<1),zeros(size(tt(tt>-1 & tt<1))),'Color',[.5 .5 .5])
+%         plot(tt(tt>-1 & tt<1),squeeze(ccep_epoch_sorted_avg(ccep_elec,stim_pair_nr,(tt>-1 & tt<1))))
+%         xlabel('time(s)')
+%         ylabel('amplitude(uV)')
+%         title(['elec ' database(subj).metadata(runs).data_hdr.label{ccep_elec} ' for stimulation of ' ...
+%             database(subj).metadata(runs).data_hdr.label{ccep_stimsets(stim_pair_nr,1)} ...
+%             ' and ' database(subj).metadata(runs).data_hdr.label{ccep_stimsets(stim_pair_nr,2)} ])
+        

@@ -1,6 +1,11 @@
-% This script is used to find the best threshold and range for the detectER
-% script. It does this by running through multiple values of the parameters
+% This script is used to find the best threshold and range for the
+% ccep_detect_N1peak function.
+% It does this by running through multiple values of the parameters
 % and compares their sensitivity, specificity, ROC-curve and total score.
+
+% J. van der Aar & D. van Blooijs, UMC Utrecht 2019
+
+
 
 %% parameters to investigate 
 

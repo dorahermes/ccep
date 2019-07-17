@@ -11,7 +11,7 @@ dataRootPath = '/Fridge/users/jaap/ccep/dataBIDS/';
 addpath('/Fridge/users/jaap/github/JSONio')
 %%
 %%%% Add subject and session
-subjects = {'RESP0768'};
+subjects = {'RESP0754'};
 sessions = {'1'};
 s = 1;
 

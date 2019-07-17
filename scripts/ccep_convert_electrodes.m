@@ -13,7 +13,7 @@ CCEP_dir = fullfile('/Fridge','CCEP');
 
 
 % Insert RESP and session
-sub_label = 'RESP0768';
+sub_label = 'RESP0754';
 ses_label = '1';
 
 
@@ -46,7 +46,7 @@ t_empty = t;
 t.x(1:64) = elecmatrix(1:64,1);
 t.x(65) = NaN;
 t.x(66:81) = elecmatrix(65:80,1);
-t.x(82:133) = NaN;
+t.x(65:133) = NaN;
 
 % add electrode Y positions
 t.y(1:64) = elecmatrix(1:64,2);
@@ -63,6 +63,7 @@ t.z(82:133) = NaN;
 if ~isequal(t.x,t_empty.x) 
     disp('electrodes are placed in table')
     disp('double check "t" if elecmatrix could not be place 1-on-1 in table')
+    t
 end
 
 % Add path of bids_tsv_nan2na.m function and run
