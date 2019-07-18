@@ -21,7 +21,7 @@
 dataRootPath = fullfile('/Fridge','users','jaap','ccep','dataBIDS');
 
 % add folder with functions and scripts
-addpath('/Fridge/users/jaap/github/ccep/')
+addpath(fullfile('/Fridge','users','jaap','github','ccep'))
 
 % add subject(s) information
 subjects = {'RESP0754'};
@@ -39,13 +39,13 @@ hemi_cap = hemi_caps{s};
 %% STEP 0: preperations
 
 % add ecogBasicCode to path
-addpath('/Fridge/users/jaap/github/ecogBasicCode/') 
+addpath(fullfile('/Fridge','users','jaap','github','ecogBasicCode')) 
 
 
 %% STEP 2: fill in JSON file
 
 % be sure the JSONio toolbox is added to the path
-addpath('/Fridge/users/jaap/github/JSONio')
+addpath(fullfile('Fridge','users,','jaap','github','JSONio'))
 
 ccep_write_coordsystemJSON(dataRootPath, subj, ses)
 

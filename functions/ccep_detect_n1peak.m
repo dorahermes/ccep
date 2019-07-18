@@ -56,9 +56,9 @@ function [database] = ccep_detect_n1peak(database, amplitude_thresh, n1_peak_ran
 % For a conservative algorithm (high specificity of at least 95%), the following 
 % parameters are advised: (see validation matrices for performances with
 % other parameters e.g. if you want a very sensitive algorithm)
-% - amplitude threshold of 140 uV (minSD * threshold = 50 uV * 2.8)
+% - amplitude threshold of 170 uV (minSD * threshold = 50 uV * 3.4)
 %   recommended
-% - N1 peak range of (10 to) 70 ms is recommended
+% - N1 peak range of (10 to) 90 ms is recommended
 
 % FIXED PARAMETERS (that are validated by both van Blooijs & van der Aar):
 % - sel = 20, which is how many samples around peak not considered as another peak

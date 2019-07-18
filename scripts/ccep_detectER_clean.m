@@ -197,9 +197,9 @@ end
 p1_samples_start = find(tt>0.002,1);
 p1_samples_end = find(tt>0.02,1);
 
-% N1 peak: 10 and 70 ms
+% N1 peak: 10 and 90 ms
 n1_samples_start = find(tt>0.01,1);
-n1_samples_end = find(tt>0.07,1);
+n1_samples_end = find(tt>0.09,1);
 
 % P2/N2 onset: 50 and 150 ms
 p2_samples_start = find(tt>0.05,1);
