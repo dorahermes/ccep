@@ -6,7 +6,7 @@ addpath(genpath('/Fridge/users/giulio/github/ccep/'))
 
 %% load database structure 
 
-subjects = {'RESP0315','RESP0751','RESP0401','RESP0405','RESP0306'};
+subjects = {'RESP0315','RESP0751','RESP0401','RESP0405','RESP0306', 'RESP0703'};
 
 top_path = '/Fridge/users/giulio/ccep/dataBIDS/';
 
@@ -19,7 +19,7 @@ addpath('/Fridge/users/dora/github/fieldtrip/')
 ft_defaults
 
 %% Run preprocess function
-stim_status = 1; % 1 for monophasic, 2 for biphasic
+stim_status = 2; % 1 for monophasic, 2 for biphasic
 
 database = ccep_data_preprocess(database, top_path, stim_status);
 

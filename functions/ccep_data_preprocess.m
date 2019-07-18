@@ -79,7 +79,7 @@ for subj = 1:length(database)
             ['ses-' database(subj).metadata(runs).session],'ieeg',...
             ['sub-' database(subj).metadata(runs).subject '_ses-' database(subj).metadata(runs).session ...
             '_electrode_positions_fouratlases.tsv']);
-        electrodes_table = readtable(electrodes_name,'Filetype','text','Delimiter','\t');
+        electrodes_table = readtable(electrodes_name,'Filetype','text','Delimiter','\t', 'ReadVariableNames', true);
 
         
         % might want to add a check here if the stimulations are not closer than 5
