@@ -195,4 +195,4 @@ for ss = 1:length(subjects)
 end
 
 % then you can put in this struct whatever you want e.g. avg epochs
-% dataBase(ss).metaData(runs).test = avg_epoch;
+ dataBase(ss).metaData(runs).test = avg_epoch

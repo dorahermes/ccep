@@ -7,8 +7,8 @@
 % to get all necessary variables
 
 
-% By J. van der Aar & D. Hermes, UMC Utrech 05-2019
-% inspired by code and paper of D. van Blooijs (2018)
+% By J. van der Aar, D. Hermes, D. van Blooijs UMC Utrecht 05-2019
+% based on algortihm and code of D. van Blooijs (2018)
 %% load in peakfinder
 addpath(genpath('/Fridge/users/jaap/github/ccep/functions')) 
 
@@ -19,7 +19,7 @@ addpath(genpath('/Fridge/users/jaap/github/ccep/functions'))
 thresh = 2.5;   %
 minSD = 50;     % in microV: minimum standard deviation of prestimulus baseline in case actual std of prestim baseline is too small
 sel = 20;       % how many samples around peak not considered as another peak
-extrasamps = 5; % set to 5 now, to read properties of N1 onset
+extrasamps = 0; % set to 5 now, to read properties of N1 onset
 SDfactor=[];
 SD = [];
 
@@ -51,12 +51,7 @@ n2_samples_end = find(tt>0.3,1);
 % n1 amplitude, p2 sample, p2 amplitude, n2 sample, n2 amplitude]
 output_ER_all = NaN(size(cc_epoch_sorted_avg,1),size(cc_epoch_sorted_avg,2),8);
 
-validation_matrix = NaN(size(cc_epoch_sorted_avg,1),size(cc_epoch_sorted_avg,2),2);
-
-
-%% set size of the matrix to ensure to not run over a lot of NaNs
-% idealy this variable would not be necessary 
-size_elecmatrix = 64;
+validation_matrix = NaN(81,size(cc_epoch_sorted_avg,2),2);
 
 
 %%
@@ -139,6 +134,7 @@ for jj = 1:size(cc_epoch_sorted_avg,2)
                 % otherwise give the amplitude the value NaN
             elseif isempty(temp_n1_peaks_samp)
                 n1_peak_amplitude = NaN;
+                n1_peak_sample = NaN;
             end
             
             % if N1 exceeds positive threshold, it is deleted
@@ -247,7 +243,7 @@ for jj = 1:size(cc_epoch_sorted_avg,2)
         xlabel('time(s)')
         ylabel('amplitude(uV)')
         title(['elec ' data_hdr.label{ii} ' for stimulation of ' data_hdr.label{cc_stimsets(jj,1)} ' and ' data_hdr.label{cc_stimsets(jj,2)} ])
-        ylim([-2000 2000])
+        ylim([-3000 3000])
         
         % plot(tt(output_ER_all(ii,jj,1)),output_ER_all(ii,jj,2),'b*')
         % plot(tt(output_ER_all(ii,jj,3)),output_ER_all(ii,jj,4),'r*')
@@ -279,19 +275,24 @@ for jj = 1:size(cc_epoch_sorted_avg,2)
         
     end 
     
-    % all stimulations of a channel, save data, so continuing later is
-    % possible
     working_dir = fullfile('/Fridge','users','jaap','ccep','dataBIDS');
-    if ~exist(fullfile(working_dir,['sub-' subj],['ses-' ses_label],'ieeg',...
+    disp('writing output validation_matrix.mat')
+    save([fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
+        ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_validation_matrix.mat'])],...
+        'validation_matrix_0458')
+end
+
+% all stimulations of a channel, save data, so continuing later is
+% possible
+working_dir = fullfile('/Fridge','users','jaap','ccep','dataBIDS');
+if ~exist(fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
         ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_validation_matrix.mat']))
-        disp('writing output validation_matrix.mat')
-        save([fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
+    disp('writing output validation_matrix.mat')
+    save([fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
         ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_validation_matrix.mat'])],...
         'validation_matrix')
-    else
-        disp(['ERROR: can not overwrite, output file already exists '])
-    end
-    
+else
+    disp(['ERROR: can not overwrite, output file already exists '])
 end
 %% Another option to visualise validator, with subplots
 

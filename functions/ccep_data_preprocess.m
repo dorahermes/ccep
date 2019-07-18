@@ -22,10 +22,11 @@ function [database] = ccep_data_preprocess(database, top_path, stim_status)
 % - Removing annotated artifacts from data
 % - Bad channel rejection
 % - Does not include re-referencing
-% - Splits epochs into 2.5s before and 2.5s after stimulation
+% - Splits epochs into 2.5s before and 2.5s after stimulation (5s in
+%   total)
 % - Adds data, events, electrodes and channels files and filenames to
 %       datastucture
-% - Adds epoched data, averaged epoched data and stimulated pairs to
+% - Adds data, epoched data, averaged epoched data and stimulated pairs to
 %       datastructure
 % - Possibility to choose between biphasic and monophasic stimulations
 
@@ -52,19 +53,6 @@ for subj = 1:length(database)
             '_task-' database(subj).metadata(runs).task '_run-' database(subj).metadata(runs).run '_ieeg.eeg']);
         data = ft_read_data(ieeg_name,'dataformat','brainvision_eeg');
         data_hdr = ft_read_header(ieeg_name,'dataformat','brainvision_eeg');
-
-        
-        % to do a quick check on how the data look, these lines of code
-        % plot some data for small visual assessment
-%         t = [1:size(data,2)]./data_hdr.Fs;
-%         figure
-%         plot(t,data(ii,:))
-%         axis([0, 1000, -4000, 4000])
-%         xlabel('time(s)')
-%         ylabel('amplitude(uV)')
-%         title(['sub: ' database(subj).metadata(runs).subject ' ses: ' database(subj).metadata(runs).session ...
-%             ' task: ' database(subj).metadata(runs).task ' run: ' database(subj).metadata(runs).run])
-
         
         % load the events.tsv
         events_name = fullfile(top_path,['sub-' database(subj).metadata(runs).subject], ...
@@ -93,7 +81,8 @@ for subj = 1:length(database)
                 data(:,(ccep_events.sample_start(qq):str2double(ccep_events.sample_end(qq)))) = NaN;
                 % if artefact is only in specific channels.
                 % WARNING: it might be possible that there are channel specific
-                % artifacts with the same onset but another offset. Therefore, there is
+                % artifacts with the same onset but another offset (or any other 
+                % problems that are currently not so. Therefore, there is
                 % an extra 'else' included that will capture this problem if a
                 % participant has this. Then this can be fixed in this loop. Same for
                 % multiple channel specific artifacts at the same time
@@ -132,7 +121,11 @@ for subj = 1:length(database)
         
         % set epoch parameters
         epoch_length = 5; % in seconds, -2.5:2.5
+<<<<<<< HEAD
         epoch_prestim_length = 2.5;
+=======
+        epoch_prestim_length = 2.5; % in seconds
+>>>>>>> upstream/master
         
         % count how much stimulations there are
         total_stim_count = sum(strcmp(ccep_events.trial_type,'electrical_stimulation'));
@@ -265,26 +258,12 @@ for subj = 1:length(database)
         % Take mean of these stimulations and squeeze into 3D
         ccep_epoch_sorted_avg = squeeze(nanmean(cc_epoch_sorted,2));
 
-        
-        % Option to plot and test the data:      
-%         stim_pair_nr = 1;
-%         ccep_elec = 3;
-%         figure()
-%         plot(tt(tt>-1 & tt<1),zeros(size(tt(tt>-1 & tt<1))),'Color',[.5 .5 .5]) 
-%         plot(tt(tt>-1 & tt<1),squeeze(ccep_epoch_sorted_avg(ccep_elec,stim_pair_nr,(tt>-1 & tt<1))))
-%         xlabel('time(s)')
-%         ylabel('amplitude(uV)')
-%         title(['elec ' database(subj).metadata(runs).data_hdr.label{ccep_elec} ' for stimulation of ' ...
-%             database(subj).metadata(runs).data_hdr.label{ccep_stimsets(stim_pair_nr,1)} ...
-%             ' and ' database(subj).metadata(runs).data_hdr.label{ccep_stimsets(stim_pair_nr,2)} ])
-          
-        
         % add data paths and data to the database structure:
         % not all might be necessary for further processing
         
         % add data file name and data to database struct
         database(subj).metadata(runs).ieeg_filename = ieeg_name;
-        database(subj).metadata(runs).data = data;
+%         database(subj).metadata(runs).data = data;
         database(subj).metadata(runs).data_hdr = data_hdr;
         
         % add events file name and events to database struct
@@ -303,7 +282,7 @@ for subj = 1:length(database)
         database(subj).metadata(runs).channels = channel_table;
 
         % add epoched data to the database structure
-        database(subj).metadata(runs).epoched_data = data_epoch;
+%         database(subj).metadata(runs).epoched_data = data_epoch;
 
         % add stimulation pairs and amount of stimulation of those pairs to
         % database structure
@@ -317,9 +296,39 @@ for subj = 1:length(database)
         database(subj).metadata(runs).epoched_data_avg = ccep_epoch_sorted_avg;
         
     end
+    
+    % write the epoch_length and prestim_length to the database structure
+    % because we need them later on. 
+    database(subj).epoch_length = epoch_length;
+    database(subj).epoch_prestim_length = epoch_prestim_length;
+
+ 
 end
 
+%% Plot data of a channel - for quick check on how the data look
 
+%         plot some data for small visual assessment
+%         t = [1:size(data,2)]./data_hdr.Fs;
+%         figure
+%         plot(t,data(ii,:))
+%         axis([0, 1000, -4000, 4000])
+%         xlabel('time(s)')
+%         ylabel('amplitude(uV)')
+%         title(['sub: ' database(subj).metadata(runs).subject ' ses: ' database(subj).metadata(runs).session ...
+%             ' task: ' database(subj).metadata(runs).task ' run: ' database(subj).metadata(runs).run])
 
+%% Plot specific epochs
 
-
+%         subj = 1;
+%         runs = 1;
+%         stim_pair_nr = 1;
+%         ccep_elec = 3;
+%         figure()
+%         plot(tt(tt>-1 & tt<1),zeros(size(tt(tt>-1 & tt<1))),'Color',[.5 .5 .5])
+%         plot(tt(tt>-1 & tt<1),squeeze(ccep_epoch_sorted_avg(ccep_elec,stim_pair_nr,(tt>-1 & tt<1))))
+%         xlabel('time(s)')
+%         ylabel('amplitude(uV)')
+%         title(['elec ' database(subj).metadata(runs).data_hdr.label{ccep_elec} ' for stimulation of ' ...
+%             database(subj).metadata(runs).data_hdr.label{ccep_stimsets(stim_pair_nr,1)} ...
+%             ' and ' database(subj).metadata(runs).data_hdr.label{ccep_stimsets(stim_pair_nr,2)} ])
+        

@@ -1,5 +1,5 @@
 function [electrodes_tableWithlabels] = ...
-    ccep_lookupAtlases(g,electrodes_tsv,freesurfer_dir,dataRootPath,hemi_small,output_file,electrode_to_vertex_dist, subj, ses_label, s)
+    ccep_lookupAtlases(g, electrodes_tsv, subj, ses, freesurfer_dir, dataRootPath, hemi_small, output_file, electrode_to_vertex_dist)
 %
 % This function looks up several atlas labels for electrodes in a
 % _electrodes.tsv file
@@ -7,12 +7,16 @@ function [electrodes_tableWithlabels] = ...
 % and extracts the labels from the corresponding atlas.
 %
 % Inputs:
-% g: a gifti file with vertices in the same space as the electrode positions
-% electrodes_tsv: electrodes.tsv file (BIDS format)
-% freesurfer_dir: directory with freesurfer output + Benson & Kastner maps
-% hemi_small: hemisphere to look up labels (smaller case: l or h)
-% output_file: file name to save the new _electrodes.tsv file with labels
+% subj:             subject(s) number
+% ses:              sessios(s) number
+% s:                amount of subjects/sessios
+% g:                a gifti file with vertices in the same space as the electrode positions
+% electrodes_tsv:   electrodes.tsv file (BIDS format)
+% freesurfer_dir:   directory with freesurfer output + Benson & Kastner maps
+% hemi_small:       hemisphere to look up labels (smaller case: l or h)
+% output_file:      file name to save the new _electrodes.tsv file with labels
 % electrode_to_vertex_dist: how far from each electrode to search (default 3 mm)
+
 %
 % Output:
 % electrode_tsv table with labels added for every electrode
@@ -27,7 +31,7 @@ elecmatrix = [loc_info.x loc_info.y loc_info.z];
 
 % load Destrieux map
 surface_labels_Destrieux = fullfile(freesurfer_dir,'label',...
-    [hemi_small{s} 'h.aparc.a2009s.annot']);
+    [hemi_small 'h.aparc.a2009s.annot']);
 [vertices, label, colortable_Destrieux] = read_annotation(surface_labels_Destrieux);
 vert_label_Destrieux = label; % these labels are strange and do not go from 1:76, but need to be mapped to the colortable
 % mapping labels to colortable
@@ -187,11 +191,11 @@ electrodes_tableWithlabels = horzcat(loc_info,t);
 
 electrodes_tableWithlabels = bids_tsv_nan2na(electrodes_tableWithlabels);
 
-if ~exist(fullfile(dataRootPath,['sub-' subj],['ses-' ses_label],'ieeg',...
-    ['sub-' subj '_ses-' ses_label '_' output_file]),'file')
+if ~exist(fullfile(dataRootPath,['sub-' subj],['ses-' ses],'ieeg',...
+    ['sub-' subj '_ses-' ses '_' output_file]),'file')
     disp(['writing output ' output_file])
-    writetable(electrodes_tableWithlabels,fullfile(dataRootPath,['sub-' subj],['ses-' ses_label],'ieeg',...
-    ['sub-' subj '_ses-' ses_label '_' output_file]),'FileType','text','Delimiter','\t');
+    writetable(electrodes_tableWithlabels,fullfile(dataRootPath,['sub-' subj],['ses-' ses],'ieeg',...
+    ['sub-' subj '_ses-' ses '_' output_file]),'FileType','text','Delimiter','\t');
 else
     disp(['ERROR: can not overwrite, output file already exists ' output_file])
 end

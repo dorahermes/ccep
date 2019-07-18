@@ -56,9 +56,15 @@ function [database] = ccep_detect_n1peak(database, amplitude_thresh, n1_peak_ran
 % For a conservative algorithm (high specificity of at least 95%), the following 
 % parameters are advised: (see validation matrices for performances with
 % other parameters e.g. if you want a very sensitive algorithm)
+<<<<<<< HEAD
 % - amplitude threshold of 140 uV (minSD * threshold = 50 uV * 2.8)
 %   recommended
 % - N1 peak range of (10 to) 70 ms is recommended
+=======
+% - amplitude threshold of 170 uV (minSD * threshold = 50 uV * 3.4)
+%   recommended
+% - N1 peak range of (10 to) 90 ms is recommended
+>>>>>>> upstream/master
 
 % FIXED PARAMETERS (that are validated by both van Blooijs & van der Aar):
 % - sel = 20, which is how many samples around peak not considered as another peak
@@ -86,8 +92,13 @@ for subj = 1:length(database)
             for ii = 1:size(database(subj).metadata(runs).epoched_data_avg,1)
 
                 % create time struct 
+<<<<<<< HEAD
                 tt = [1:database(subj).metadata(runs).epoch_length*database(subj).metadata(runs).data_hdr.Fs] / ...
                     database(subj).metadata(runs).data_hdr.Fs - database(subj).metadata(runs).epoch_prestim_length;
+=======
+                tt = [1:database(subj).epoch_length*database(subj).metadata(runs).data_hdr.Fs] / ...
+                    database(subj).metadata(runs).data_hdr.Fs - database(subj).epoch_prestim_length;
+>>>>>>> upstream/master
                 
                 % baseline subtraction: take median of part of the averaged signal for
                 % this stimulation pair before stimulation, which is the half of the
