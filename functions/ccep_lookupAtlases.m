@@ -1,27 +1,31 @@
 function [electrodes_tableWithlabels] = ...
-    ccep_lookupAtlases(g, electrodes_tsv, subj, ses, freesurfer_dir, dataRootPath, hemi_small, output_file, electrode_to_vertex_dist)
+    ccep_lookupAtlases(dataRootPath, subj, ses, freesurfer_dir, hemi_small, hemi_cap)
 %
-% This function looks up several atlas labels for electrodes in a
-% _electrodes.tsv file
+% This function looks up DKT and Destrieux atlas labels for electrodes and 
+% writes them to the _electrodes.tsv file
 % for every electrode, it looks up the gifti vertices within mm_distance
-% and extracts the labels from the corresponding atlas.
+% and extracts the labels from the corresponding atlas. It takes the most
+% represented brain area within 3 mm. 
 %
 % Inputs:
+% dataRootPath
 % subj:             subject(s) number
 % ses:              sessios(s) number
-% s:                amount of subjects/sessios
-% g:                a gifti file with vertices in the same space as the electrode positions
-% electrodes_tsv:   electrodes.tsv file (BIDS format)
 % freesurfer_dir:   directory with freesurfer output + Benson & Kastner maps
 % hemi_small:       hemisphere to look up labels (smaller case: l or h)
-% output_file:      file name to save the new _electrodes.tsv file with labels
-% electrode_to_vertex_dist: how far from each electrode to search (default 3 mm)
-
 %
 % Output:
 % electrode_tsv table with labels added for every electrode
 %
 % D Hermes, G Castegnaro and J van der Aar, UMC Utrecht, 2019
+
+% load gifti file and electrodes.tsv file
+g = gifti(fullfile(dataRootPath,'derivatives','surfaces',['sub-' subj],...
+    ['sub-' subj '_T1w_pial.' hemi_cap '.surf.gii'])); 
+electrodes_tsv = [dataRootPath '/sub-' subj '/ses-' ses '/ieeg/sub-' subj '_ses-' ses '_electrodes.tsv'];
+
+% define name output file
+output_file = 'electrode_positions_fouratlases.tsv';
 
 % load the electrodes.tsv file:
 loc_info = readtable(electrodes_tsv,'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'});
@@ -42,7 +46,7 @@ clear vertices label
 
 % load DKT map
 surface_labels_DKT = fullfile(freesurfer_dir,'label',...
-[hemi_small{s} 'h.aparc.DKTatlas.annot']);
+[hemi_small 'h.aparc.DKTatlas.annot']);
 [vertices, label, colortable_DKT] = read_annotation(surface_labels_DKT);
 vert_label_DKT = label; % these labels are strange and do not go from 1:76, but need to be mapped to the colortable
 % mapping labels to colortable
@@ -57,32 +61,32 @@ Wang_ROI_Names = {...
     'TO2' 'TO1' 'LO2' 'LO1' 'V3B' 'V3A' 'IPS0' 'IPS1' 'IPS2' 'IPS3' 'IPS4' ...
     'IPS5' 'SPL1' 'FEF'};
 surface_labels_name = fullfile(freesurfer_dir,'surf',...
-    [hemi_small{s} 'h.wang15_mplbl.mgz']);
+    [hemi_small 'h.wang15_mplbl.mgz']);
 surface_labels = MRIread(surface_labels_name);
 vert_label_Wang = surface_labels.vol(:);
 
 %load Benson map
 Benson_Area_Names = {'V1','V2','V3','hV4','V01','V02','L01','L02','T01','T02','V3b','V3a'};
 surface_labels_name = fullfile(freesurfer_dir,'surf',...
-[hemi_small{s} 'h.benson14_varea.mgz']);
+[hemi_small 'h.benson14_varea.mgz']);
 surface_labels_B = MRIread(surface_labels_name);
 vert_label_Benson = surface_labels_B.vol(:);
 
 % load Benson Eccen
 surface_labels_name = fullfile(freesurfer_dir,'surf',...
-    [hemi_small{s} 'h.benson14_eccen.mgz']);
+    [hemi_small 'h.benson14_eccen.mgz']);
 surface_labels = MRIread(surface_labels_name);
 vert_eccen_label = surface_labels.vol(:);
 clear surface_labels surface_labels_name
 %load Benson Angle
 surface_labels_name = fullfile(freesurfer_dir,'surf',...
-    [hemi_small{s} 'h.benson14_angle.mgz']);
+    [hemi_small 'h.benson14_angle.mgz']);
 surface_labels = MRIread(surface_labels_name);
 vert_angle_label = surface_labels.vol(:);
 clear surface_labels surface_labels_name
 % load Benson Sigma
 surface_labels_name = fullfile(freesurfer_dir,'surf',...
-    [hemi_small{s} 'h.benson14_sigma.mgz']);
+    [hemi_small 'h.benson14_sigma.mgz']);
 surface_labels = MRIread(surface_labels_name);
 vert_sigma_label = surface_labels.vol(:);
 clear surface_labels surface_labels_name
@@ -101,6 +105,12 @@ Benson_polarangle = NaN(size(elecmatrix,1),1);
 Benson_sigma = NaN(size(elecmatrix,1),1);
 
 %%% LOOP THROUGH ELECTRODES AND ASSIGN LABELS
+
+% define the range in which the code searches for the most represented
+% area. So in this case it will look within 3 mm how which brain regions
+% are found most, it takes the most represented one
+electrode_to_vertex_dist = 3; % in mm
+
 
 for elec = 1:size(elecmatrix,1) % loop across electrodes
     
@@ -191,12 +201,14 @@ electrodes_tableWithlabels = horzcat(loc_info,t);
 
 electrodes_tableWithlabels = bids_tsv_nan2na(electrodes_tableWithlabels);
 
-if ~exist(fullfile(dataRootPath,['sub-' subj],['ses-' ses],'ieeg',...
-    ['sub-' subj '_ses-' ses '_' output_file]),'file')
+% write table
+if ~exist(fullfile(dataRootPath,['sub-' subj],['ses-' ses],'ieeg', ...
+        ['sub-' subj '_ses-' ses '_' output_file]),'file')
     disp(['writing output ' output_file])
-    writetable(electrodes_tableWithlabels,fullfile(dataRootPath,['sub-' subj],['ses-' ses],'ieeg',...
-    ['sub-' subj '_ses-' ses '_' output_file]),'FileType','text','Delimiter','\t');
+    writetable(electrodes_tableWithlabels, ...
+        fullfile(dataRootPath,['sub-' subj],['ses-' ses],'ieeg', ...
+        ['sub-' subj '_ses-' ses '_' output_file]),...
+        'Filetype','text','Delimiter','\t'); 
 else
     disp(['ERROR: can not overwrite, output file already exists ' output_file])
 end
-
