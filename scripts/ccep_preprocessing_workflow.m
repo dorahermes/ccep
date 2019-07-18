@@ -26,8 +26,8 @@ addpath(fullfile('/Fridge','users','jaap','github','ccep'))
 % add subject(s) information
 subjects = {'RESP0754'};
 sessions = {'1'};
-hemi_smalls = {'r'};
-hemi_caps = {'R'};
+hemi_smalls = {'l'};
+hemi_caps = {'L'};
 % s gives the possibility to add more then 1 subjects, or multiple sessions
 % in once. Wrap functions into [ss = 1:size(s) ... end] to iterate over subject data cells
 s = 1;
@@ -45,7 +45,7 @@ addpath(fullfile('/Fridge','users','jaap','github','ecogBasicCode'))
 %% STEP 2: fill in JSON file
 
 % be sure the JSONio toolbox is added to the path
-addpath(fullfile('Fridge','users,','jaap','github','JSONio'))
+addpath(fullfile('/Fridge','users','jaap','github','JSONio'))
 
 ccep_write_coordsystemJSON(dataRootPath, subj, ses)
 
@@ -61,7 +61,7 @@ ccep_write_coordsystemJSON(dataRootPath, subj, ses)
 % GUI to select the file containing the projected electrodes matrix
 % prints empty electrodes table and elecmatrix, and their size, for next
 % step. GUI currently set to username/ccep/dataBIDS/sub-<>/-ses-<>/ieeg/
-ccep_write_coordinates_1(dataRootPath, subj, ses)
+[t, t_empty, elecmatrix, proj_elec_filename] = ccep_write_coordinates_1(dataRootPath, subj, ses);
 
 %% STEP 6.2: write coordinates to electrodes TSV-file - manually adding
 
@@ -88,18 +88,17 @@ t.z(65:133) = NaN;
 % make sure the bids_tsv_nan2na.m function is in the path. This function
 % writes NaN's to n/a's. It can be found in the ccep/functions folder. 
 % write table to electrodes.tsv, and saves the elecmatrix for later check
-ccep_write_coordinates_2(dataRootPath, subj, ses, t, t_empty)
+ccep_write_coordinates_2(dataRootPath, subj, ses, t, t_empty, elecmatrix, proj_elec_filename)
 
 %% STEP 7: write atlases labels to electrodes TSV-file
 
-g = gifti(fullfile(dataRootPath,'derivatives','surfaces',['sub-' subj],...
-    ['sub-' subj '_T1w_pial.' hemi_cap '.surf.gii'])); 
-electrodes_tsv = [dataRootPath 'sub-' subj '/ses-' ses '/ieeg/sub-' subj '_ses-' ses '_electrodes.tsv'];
+% set Freesurfer directory
 freesurfer_dir = fullfile(dataRootPath, 'derivatives', 'freesurfer', ['sub-' subj]);
-output_file = 'electrode_positions_fouratlases.tsv';
-electrode_to_vertex_dist = 3; % in mm
 
-ccep_lookupAtlases(g,electrodes_tsv, subj, ses, freesurfer_dir,dataRootPath,hemi_small,output_file,electrode_to_vertex_dist)
+% Run the lookup function. Use DKTandDestrieux for only those two altases,
+% change to ccep_lookupAtlases to also include the visual Benson & Wang
+% altases.
+ccep_lookupDKTandDestrieux(dataRootPath, subj, ses, freesurfer_dir, hemi_small, hemi_cap);
 
 
 

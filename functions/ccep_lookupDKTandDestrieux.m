@@ -1,23 +1,35 @@
 function [electrodes_tableWithlabels] = ...
-    ccep_lookupDKTandDestrieux(g,electrodes_tsv,freesurfer_dir,hemi_small,output_file,electrode_to_vertex_dist)
+    ccep_lookupDKTandDestrieux(dataRootPath, subj, ses, freesurfer_dir, hemi_small, hemi_cap)
 %
-% This function looks up several atlas labels for electrodes in a
-% _electrodes.tsv file
+% This function looks up DKT and Destrieux atlas labels for electrodes and 
+% writes them to the _electrodes.tsv file
 % for every electrode, it looks up the gifti vertices within mm_distance
-% and extracts the labels from the corresponding atlas.
+% and extracts the labels from the corresponding atlas. It takes the most
+% represented brain area within 3 mm. 
 %
 % Inputs:
-% g: a giti file with vertices in the same space as the electrode positions
-% electrodes_tsv: electrodes.tsv file (BIDS format)
-% freesurer_dir: directory with freesurfer output + Benson & Kastner maps
-% hemi_small: hemisphere to look up labels (smaller case: l or h)
-% output_file: file name to save the new _electrodes.tsv file with labels
-% electrode_to_vertex_dist: how far from each electrode to search (default 3 mm)
-%
+% dataRootPath
+% subj:             subject(s) number
+% ses:              sessios(s) number
+% freesurfer_dir:   directory with freesurfer output + Benson & Kastner maps
+% hemi_small:       hemisphere to look up labels (smaller case: l or h)
+
+
 % Output:
 % electrode_tsv table with labels added for every electrode
-%
+
+% Same function as ccep_lookupDKTandDestrieux, but without the Benson &
+% Wang atlases
+
 % D Hermes, G Castegnaro and J van der Aar, UMC Utrecht, 2019
+
+% load gifti file and electrodes.tsv file
+g = gifti(fullfile(dataRootPath,'derivatives','surfaces',['sub-' subj],...
+    ['sub-' subj '_T1w_pial.' hemi_cap '.surf.gii'])); 
+electrodes_tsv = [dataRootPath '/sub-' subj '/ses-' ses '/ieeg/sub-' subj '_ses-' ses '_electrodes.tsv'];
+
+% define name output file
+output_file = 'electrode_positions_fouratlases.tsv';
 
 % load the electrodes.tsv file:
 loc_info = readtable(electrodes_tsv,'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'});
@@ -46,13 +58,17 @@ for kk = 1:size(colortable_DKT.table,1)
     vert_label_DKT(label==colortable_DKT.table(kk,5)) = kk; % I don't get this line of code
 end
 clear vertices label 
-
-     
+   
 %%% DEFINE THE OUTPUT
 DKTatlas_label = NaN(size(elecmatrix,1),1);
 DKTatlas_label_text = cell(size(elecmatrix,1),1);
 Destrieux_label = NaN(size(elecmatrix,1),1);
 Destrieux_label_text = cell(size(elecmatrix,1),1);
+
+% define the range in which the code searches for the most represented
+% area. So in this case it will look within 3 mm how which brain regions
+% are found most, it takes the most represented one
+electrode_to_vertex_dist = 3; % in mm
 
 %%% LOOP THROUGH ELECTRODES AND ASSIGN LABELS
 
@@ -96,9 +112,14 @@ t = table(...
 % concatenate the table to what is already in loc_info
 electrodes_tableWithlabels = horzcat(loc_info,t);
 
-if ~exist(output_file,'file')
+
+% write table
+if ~exist(fullfile(dataRootPath,['sub-' subj],['ses-' ses],'ieeg', ...
+        ['sub-' subj '_ses-' ses '_' output_file]),'file')
     disp(['writing output ' output_file])
-    writetable(electrodes_tableWithlabels,output_file,...
+    writetable(electrodes_tableWithlabels, ...
+        fullfile(dataRootPath,['sub-' subj],['ses-' ses],'ieeg', ...
+        ['sub-' subj '_ses-' ses '_' output_file]),...
         'Filetype','text','Delimiter','\t'); 
 else
     disp(['ERROR: can not overwrite, output file already exists ' output_file])
