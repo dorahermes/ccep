@@ -157,21 +157,31 @@ set(gcf,'PaperPositionMode','auto')
 [stim_region, rec_region] = find(connectivity_mat > 1000);
 rec_stim_regions = [rec_region stim_region];
 
-%% find ROIs with more then 2 electrode to measure within ROI
+%% to remove database fields if you want to try other ROI
 
+% clear these fields
+database = rmfield(database, 'ROI_within_coverage');
+database = rmfield(database, 'ROI_stimpairs_data');
+
+%% find ROIs with more then 2 electrode to measure within ROI
 
 runs = 1;
 ses = 1;
 % find in which patients those areas are represented
 % iterate over all subjects in database
 % in atlas ROI is 1 less then in the labels, so add 1 in code 
-ROI_destrieux = 4; 
+ROI_destrieux = 15; 
 
 for subj = 1:length(database)
 
-   
+   % use counter for writing data in the right row of the matrix
+   mat_row_counter = 1;
+    
     if sum(ismember(str2double(database(subj).metadata(runs).atlases_electrodes.Destrieux_label),ROI_destrieux + 1)) > 2
-        disp(['subject: ' database(subj).subject ' has at least 3 electrodes coverage of ROI' ]); 
+        
+        % print amount of electrodes
+        print_num = sprintf('%.f',  sum(ismember(str2double(database(subj).metadata(runs).atlases_electrodes.Destrieux_label),ROI_destrieux + 1)));    
+        disp(['subject: ' database(subj).subject ' has at least 3 electrodes coverage of ROI. It has: ' print_num ' electrodes']); 
         
         
         % next step: which electrodes are this within the subject
@@ -183,20 +193,15 @@ for subj = 1:length(database)
         
         
         % look in electrodes table which numbers correpond to these
-        % ROI_elec_names
-        
-
-        
-        % create array in which the numbers of the electrodes can be
-        % written
+        % ROI_elec_names. Create array in which the numbers of the 
+        % electrodes can be written
         ROI_array = NaN(1,length(database(subj).ROI_within_coverage));  
         
         % for every stimulated electrode in ROI
         for ROI_elec_stim = 1:length(database(subj).ROI_within_coverage)
             
             % find the number that corresponds with the name
-            ROI_array(1,ROI_elec_stim) = find(strcmp(database(subj).metadata(runs).atlases_electrodes.name,ROI_elec_name(ROI_elec_stim)));
-            
+            ROI_array(1,ROI_elec_stim) = find(strcmp(database(subj).metadata(runs).atlases_electrodes.name,ROI_elec_name(ROI_elec_stim)));       
             
         end
         
@@ -207,64 +212,71 @@ for subj = 1:length(database)
 
             % find in which stimulation pair combination these electrodes
             % are
-            test = find(database(subj).metadata(runs).stimulated_pairs(:,1) == (ROI_array(zz))); 
+            ROI_stim_pair = find(database(subj).metadata(runs).stimulated_pairs(:,1) == (ROI_array(zz))); 
             
             % if the other electrode of the stimulated pair is also on the
             % ROI, and they are an actual combination of stimulations (this 
             % is only when the second electrodes is one higher than the first)
             % then this electrode pair is part of analysis
-            if sum(ismember(ROI_array,database(subj).metadata(runs).stimulated_pairs(test,2))) >= 1 ...
-                    && abs(database(subj).metadata(runs).stimulated_pairs(test,2) - ROI_array(zz)) == 1
-            
-                % stim_pairs = IS test and if(sum(ismember.....)
-                % So look this stimulation up in events, and save the data
-                % of the channels in the matrix. 
-                database(subj).ROI_stimpairs_data(zz,1) = database(subj).metadata(runs).stimulated_pairs(test,1);
-                database(subj).ROI_stimpairs_data(zz,2) = database(subj).metadata(runs).stimulated_pairs(test,2);
-                % database(subj).ROI_stimpairs_data(zz,3) = test; % stim pair
-                database(subj).ROI_stimpairs_data(zz,3) = nan(length(length(ROI_array) - 2), 3) 
-                database(subj).ROI_stimpairs_data(zz,4) = % latency
-                database(subj).ROI_stimpairs_data(zz,5) = % ampli
-            
-            
-            
-            
-            end
-            
-            
-        end
+            if sum(ismember(ROI_array,database(subj).metadata(runs).stimulated_pairs(ROI_stim_pair,2))) >= 1 ...
+                    && abs(database(subj).metadata(runs).stimulated_pairs(ROI_stim_pair,2) - ROI_array(zz)) == 1
 
-     
-    end
-    
+                % iterate over all other electrodes in ROI that are not stim_pair
+                % to find the latency and amplitude in those electrodes
+                for qq = 1:length(ROI_array)
+                    
+                    % if an electrode in the ROI_array in not part of the
+                    % stimulation, these data can be used. 
+                    if sum(ismember(database(subj).metadata(runs).stimulated_pairs(ROI_stim_pair,:),ROI_array(qq))) == 0
+                        
+                        
+                        % to ensure this combination of electrodes
+                        % stimulation actually happened 
+                        if ROI_array <= size(database(subj).all_spesclin_latency,2)
+                            
+                            % save stim_pair under ROI_stimparis_data
+                            
+                            % save stim_pair in first column
+                            database(subj).ROI_stimpairs_data(mat_row_counter,1) = ROI_stim_pair;
+                            % save measured elec in second column
+                            database(subj).ROI_stimpairs_data(mat_row_counter,2) = ROI_array(qq);
+                            % save latency in third column
+                            database(subj).ROI_stimpairs_data(mat_row_counter,3) = database(subj).all_spesclin_latency(ROI_stim_pair,ROI_array(qq));
+                            % save amplitude in fourth column
+                            database(subj).ROI_stimpairs_data(mat_row_counter,4) = database(subj).all_spesclin_amplitude(ROI_stim_pair,ROI_array(qq));
+                            
+                            % add one to counter to ensure no overwriting
+                            mat_row_counter =  mat_row_counter + 1;
+                        end
+                    end
+                end                         
+            end          
+        end
+    end   
 end
 
-%% notes
+%% Plot latencies within ROI
+
+figure(5), hold on 
+
+% iterate over all subjects in database 
+for subj = 1:length(database)
+    
+    % create age-vector for plotting
+    age_vector(1,subj) = database(subj).age_ses1;
+    
+    % for every row in the ROI matrix
+    for aa = 1:size(database(subj).ROI_stimpairs_data,1)
         
-%         % create matrix with the size of the ROIs per subject
-%         database(subj).ROI_matrix = NaN(length(database(subj).ROI_within_coverage));
-        
-
-        % find amount of combinations of stimulations by taking the
-        % facorial, but because it is biphasic, divide by 2
-        factorial(length(database(subj).ROI_within_coverage)) / 2;
-
-        stim_pairs = combnk(1:3,2)
+        scatter(age_vector(1,subj),database(subj).ROI_stimpairs_data(aa,3))
         
         
-                    
-            find(database(ses).metadata(runs).stimulated_pairs(:,2) == (20)) 
-            
-            (database(ses).metadata(runs).stimulated_pairs(20)) 
-            
-            % create all possible combinations of stimulations
-            stim_pairs = combnk([ROI_array],2);
-            
-%% analyse latency ROIs within 
+    end 
+end
+
+xlabel('age subject')
+ylabel('latency in ms')
+title('latency within ROI')
 
 
 
-
-% for every elec in the cell 
-
-% find latency in every ROI 
