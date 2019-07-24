@@ -157,7 +157,8 @@ set(gcf,'PaperPositionMode','auto')
 [stim_region, rec_region] = find(connectivity_mat > 1000);
 rec_stim_regions = [rec_region stim_region];
 
-%% find ROIs with > 1000 epochs and more then 1 electrode to measure within ROI
+%% find ROIs with more then 2 electrode to measure within ROI
+
 
 runs = 1;
 ses = 1;
@@ -169,8 +170,8 @@ ROI_destrieux = 4;
 for subj = 1:length(database)
 
    
-    if sum(ismember(str2double(database(subj).metadata(runs).atlases_electrodes.Destrieux_label),ROI_destrieux + 1)) > 1
-        disp(['subject: ' database(subj).subject ' has coverage' ]); 
+    if sum(ismember(str2double(database(subj).metadata(runs).atlases_electrodes.Destrieux_label),ROI_destrieux + 1)) > 2
+        disp(['subject: ' database(subj).subject ' has at least 3 electrodes coverage of ROI' ]); 
         
         
         % next step: which electrodes are this within the subject
@@ -194,11 +195,11 @@ for subj = 1:length(database)
         for ROI_elec_stim = 1:length(database(subj).ROI_within_coverage)
             
             % find the number that corresponds with the name
-            ROI_array(1,ROI_elec_stim) = find(strcmp(database(subj).metadata(runs).electrodes.name,ROI_elec_name(ROI_elec_stim)));
+            ROI_array(1,ROI_elec_stim) = find(strcmp(database(subj).metadata(runs).atlases_electrodes.name,ROI_elec_name(ROI_elec_stim)));
             
             
         end
-            
+        
         % iterate over the ROI array to find if the electrodes are in a 
         % stimulation pair of which the other electrode is also in the
         % pair. 
@@ -206,11 +207,28 @@ for subj = 1:length(database)
 
             % find in which stimulation pair combination these electrodes
             % are
-            test = find(database(ses).metadata(runs).stimulated_pairs(:,1) == (ROI_array(zz))); 
+            test = find(database(subj).metadata(runs).stimulated_pairs(:,1) == (ROI_array(zz))); 
             
-            if sum(ismember(ROI_array,database(ses).metadata(runs).stimulated_pairs(test,2))) >= 1
+            % if the other electrode of the stimulated pair is also on the
+            % ROI, and they are an actual combination of stimulations (this 
+            % is only when the second electrodes is one higher than the first)
+            % then this electrode pair is part of analysis
+            if sum(ismember(ROI_array,database(subj).metadata(runs).stimulated_pairs(test,2))) >= 1 ...
+                    && abs(database(subj).metadata(runs).stimulated_pairs(test,2) - ROI_array(zz)) == 1
             
                 % stim_pairs = IS test and if(sum(ismember.....)
+                % So look this stimulation up in events, and save the data
+                % of the channels in the matrix. 
+                database(subj).ROI_stimpairs_data(zz,1) = database(subj).metadata(runs).stimulated_pairs(test,1);
+                database(subj).ROI_stimpairs_data(zz,2) = database(subj).metadata(runs).stimulated_pairs(test,2);
+                % database(subj).ROI_stimpairs_data(zz,3) = test; % stim pair
+                database(subj).ROI_stimpairs_data(zz,3) = nan(length(length(ROI_array) - 2), 3) 
+                database(subj).ROI_stimpairs_data(zz,4) = % latency
+                database(subj).ROI_stimpairs_data(zz,5) = % ampli
+            
+            
+            
+            
             end
             
             
