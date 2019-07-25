@@ -11,10 +11,9 @@ addpath(genpath('/Fridge/users/jaap/github/ccep/'))
 subjects = {'RESP0621', 'RESP0706', 'RESP0733', 'RESP0768', 'RESP0294', 'RESP0306', ...
     'RESP0315', 'RESP0348', 'RESP0368', 'RESP0369', 'RESP0400', 'RESP0401', 'RESP0405', ...
     'RESP0435', 'RESP0449', 'RESP0450', 'RESP0458', 'RESP0467', 'RESP0468', 'RESP0477', ...
-    'RESP0478', 'RESP0501', 'RESP0502', 'RESP0703', 'RESP0724', 'RESP0754'}; %RESP0295-1
+    'RESP0478', 'RESP0501', 'RESP0502', 'RESP0703', 'RESP0724', 'RESP0754', 'RESP0295'}; %RESP0295-1
 
 
-subjects = {'RESP0621'}
 
 % create top path in which the subjects can be found (and their data within
 % the folders)
@@ -51,4 +50,4 @@ database = ccep_detect_n1peak(database, amplitude_thresh, n1_peak_range);
 
 %% Save
 
-save('dbstruct_dora_240719','database', '-v7.3')
+save('dbstruct_jaap_250719','database', '-v7.3')
