@@ -11,7 +11,10 @@ addpath(genpath('/Fridge/users/jaap/github/ccep/'))
 subjects = {'RESP0621', 'RESP0706', 'RESP0733', 'RESP0768', 'RESP0294', 'RESP0306', ...
     'RESP0315', 'RESP0348', 'RESP0368', 'RESP0369', 'RESP0400', 'RESP0401', 'RESP0405', ...
     'RESP0435', 'RESP0449', 'RESP0450', 'RESP0458', 'RESP0467', 'RESP0468', 'RESP0477', ...
-    'RESP0478', 'RESP0501', 'RESP0502', 'RESP0703', 'RESP0724'};
+    'RESP0478', 'RESP0501', 'RESP0502', 'RESP0703', 'RESP0724', 'RESP0754'}; %RESP0295-1
+
+
+subjects = {'RESP0621'}
 
 % create top path in which the subjects can be found (and their data within
 % the folders)
@@ -31,8 +34,9 @@ ft_defaults
 
 %% Run preprocess data function
 
+stim_status = 2; % biphasic analysis
 % takes at least a few hours for all subj, so only do once. 
-database = ccep_data_preprocess(database, top_path);
+database = ccep_data_preprocess(database, top_path, stim_status);
 
 %% Set parameters for n1 peak detection
 
@@ -47,4 +51,4 @@ database = ccep_detect_n1peak(database, amplitude_thresh, n1_peak_range);
 
 %% Save
 
-save('dbstruct160719','database', '-v7.3')
+save('dbstruct_dora_240719','database', '-v7.3')
