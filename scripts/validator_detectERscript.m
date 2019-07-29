@@ -51,7 +51,7 @@ n2_samples_end = find(tt>0.3,1);
 % n1 amplitude, p2 sample, p2 amplitude, n2 sample, n2 amplitude]
 output_ER_all = NaN(size(cc_epoch_sorted_avg,1),size(cc_epoch_sorted_avg,2),8);
 
-validation_matrix = NaN(81,size(cc_epoch_sorted_avg,2),2);
+validation_matrix = NaN(66,size(cc_epoch_sorted_avg,2),2);
 
 
 %%
@@ -275,16 +275,16 @@ for jj = 1:size(cc_epoch_sorted_avg,2)
         
     end 
     
-    working_dir = fullfile('/Fridge','users','jaap','ccep','dataBIDS');
+    working_dir = fullfile('/Fridge','users','giulio','ccep','dataBIDS');
     disp('writing output validation_matrix.mat')
     save([fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
         ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_validation_matrix.mat'])],...
-        'validation_matrix_0458')
+        'validation_matrix')
 end
 
 % all stimulations of a channel, save data, so continuing later is
 % possible
-working_dir = fullfile('/Fridge','users','jaap','ccep','dataBIDS');
+working_dir = fullfile('/Fridge','users','giulio','ccep','dataBIDS');
 if ~exist(fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
         ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_validation_matrix.mat']))
     disp('writing output validation_matrix.mat')

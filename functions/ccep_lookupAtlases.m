@@ -71,24 +71,25 @@ surface_labels_name = fullfile(freesurfer_dir,'surf',...
 [hemi_small 'h.benson14_varea.mgz']);
 surface_labels_B = MRIread(surface_labels_name);
 vert_label_Benson = surface_labels_B.vol(:);
+clear surface_labels_name
 
 % load Benson Eccen
 surface_labels_name = fullfile(freesurfer_dir,'surf',...
     [hemi_small 'h.benson14_eccen.mgz']);
-surface_labels = MRIread(surface_labels_name);
-vert_eccen_label = surface_labels.vol(:);
+surface_labels_B = MRIread(surface_labels_name);
+vert_eccen_label = surface_labels_B.vol(:);
 clear surface_labels surface_labels_name
 %load Benson Angle
 surface_labels_name = fullfile(freesurfer_dir,'surf',...
     [hemi_small 'h.benson14_angle.mgz']);
-surface_labels = MRIread(surface_labels_name);
-vert_angle_label = surface_labels.vol(:);
+surface_labels_B = MRIread(surface_labels_name);
+vert_angle_label_B = surface_labels_B.vol(:);
 clear surface_labels surface_labels_name
 % load Benson Sigma
 surface_labels_name = fullfile(freesurfer_dir,'surf',...
     [hemi_small 'h.benson14_sigma.mgz']);
-surface_labels = MRIread(surface_labels_name);
-vert_sigma_label = surface_labels.vol(:);
+surface_labels_B = MRIread(surface_labels_name);
+vert_sigma_label = surface_labels_B.vol(:);
 clear surface_labels surface_labels_name
      
 %%% DEFINE THE OUTPUT
@@ -173,7 +174,7 @@ for elec = 1:size(elecmatrix,1) % loop across electrodes
 
         %%%% BENSON ANGLE:
         % take the mean of the polar angle within 3 mm
-        angle_of_electrode = mean(vert_angle_label(find(b<electrode_to_vertex_dist)));     
+        angle_of_electrode = mean(vert_angle_label_B(find(b<electrode_to_vertex_dist)));     
         %put the labels (polar angle) back in the matrix 
         Benson_polarangle(elec,1) = angle_of_electrode; 
 

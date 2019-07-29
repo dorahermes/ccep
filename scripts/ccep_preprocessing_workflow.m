@@ -18,16 +18,16 @@
 %% Metadata: fill in yourself
 
 % set rootpath
-dataRootPath = fullfile('/Fridge','users','jaap','ccep','dataBIDS');
+dataRootPath = fullfile('/Fridge','users','giulio','ccep','dataBIDS');
 
 % add folder with functions and scripts
-addpath(fullfile('/Fridge','users','jaap','github','ccep'))
+addpath(fullfile('/Fridge','users','giulio','github','ccep'))
 
 % add subject(s) information
-subjects = {'RESP0754'};
+subjects = {'RESP0751'};
 sessions = {'1'};
-hemi_smalls = {'l'};
-hemi_caps = {'L'};
+hemi_smalls = {'r'};
+hemi_caps = {'R'};
 % s gives the possibility to add more then 1 subjects, or multiple sessions
 % in once. Wrap functions into [ss = 1:size(s) ... end] to iterate over subject data cells
 s = 1;
@@ -72,8 +72,8 @@ ccep_write_coordsystemJSON(dataRootPath, subj, ses)
 % done manually. 
 
 % add electrode X positions
-t.x(1:64) = elecmatrix(1:64,1);
-t.x(65:133) = NaN;
+t.x(1:88) = elecmatrix(1:88,1);
+t.x(89:96) = NaN;
 
 % add electrode Y positions
 t.y(1:64) = elecmatrix(1:64,2);
@@ -98,7 +98,7 @@ freesurfer_dir = fullfile(dataRootPath, 'derivatives', 'freesurfer', ['sub-' sub
 % Run the lookup function. Use DKTandDestrieux for only those two altases,
 % change to ccep_lookupAtlases to also include the visual Benson & Wang
 % altases.
-ccep_lookupDKTandDestrieux(dataRootPath, subj, ses, freesurfer_dir, hemi_small, hemi_cap);
+ccep_lookupAtlases(dataRootPath, subj, ses, freesurfer_dir, hemi_small, hemi_cap);
 
 
 

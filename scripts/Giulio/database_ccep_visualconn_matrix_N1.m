@@ -1,5 +1,4 @@
-%% 
-%This script has been created to create and plot a matrix in which possible
+%This script created and plotd a matrix in which possible
 %connections are shown. Afterwards another matrix shows the areas that show
 %an early response after a stimulation in the source areas. 
 %The first part of the script is useful to integrate Benson and
@@ -8,38 +7,44 @@
 
 %for subjects 0315, 0405, 0306 we need to change the class of the data from
 %cell array to double 
-for subj = [1 4 5 6]  
-    for runs = 1:length(database(subj).metadata)
-        if iscell(database(subj).metadata(runs).electrodes.Benson_label) 
-            database(subj).metadata(runs).electrodes.Benson_label = str2double(database(subj).metadata(runs).electrodes.Benson_label)
+for subj = [1 4 5 6];  
+    for runs = 1:length(database(subj).metadata);
+        if iscell(database(subj).metadata(runs).electrodes.Benson_label); 
+            database(subj).metadata(runs).electrodes.Benson_label = str2double(database(subj).metadata(runs).electrodes.Benson_label);
         end 
-        if iscell(database(subj).metadata(runs).electrodes.Benson_polarangle) 
-           database(subj).metadata(runs).electrodes.Benson_polarangle = str2double(database(subj).metadata(runs).electrodes.Benson_polarangle)
+        if iscell(database(subj).metadata(runs).electrodes.Benson_polarangle); 
+           database(subj).metadata(runs).electrodes.Benson_polarangle = str2double(database(subj).metadata(runs).electrodes.Benson_polarangle);
         end
-    end
-end  
+        if iscell(database(subj).metadata(runs).electrodes.Wang_label); 
+           database(subj).metadata(runs).electrodes.Wang_label= str2double(database(subj).metadata(runs).electrodes.Wang_label);
+        end
+    end 
+end
+
+runs = 1; %[1:length(database(subj).metadata)] %(this is partially right, because it loops around the rows of the metadata, not specifically on the runs columns
 
 % select subjects/iterate over all subjects in database
-for subj = 6%1:length(subjects) 
-% iterate over all their runs
-    for runs = 2:3%1:length(database(subj).metadata) %(this is partially right, because it loops around the rows of the metadata, not specifically on the runs columns
+
+for subj = 1
     % we need to make a matrix of size Atlas areas X Atlas areas
     % integrate Wang and Benson maps to gte th best of both
     new_label = NaN(size(database(subj).metadata(runs).electrodes.name,1),1);
         for kk = 1:length(new_label)
             % is an electrode Benson V1-2-3?
-            if ismember(database(subj).metadata(runs).electrodes.Benson_label(kk),[1 2 3]);
+            if ismember(database(subj).metadata(runs).electrodes.Benson_label(kk),[1 2 3]) && database(subj).metadata(runs).electrodes.Wang_label(kk) ~= 0  ;
                 % check ventral/dorsal?
-                if database(subj).metadata(runs).electrodes.Benson_polarangle(kk)< 90 % upper hemifield -->ventral electrode
-                    new_label(kk) = database(subj).metadata(runs).electrodes.Benson_label(kk)*2-1;
-                elseif database(subj).metadata(runs).electrodes.Benson_polarangle(kk)>=90
-                    new_label(kk) = database(subj).metadata(runs).electrodes.Benson_label(kk)*2;
-                end
-            elseif database(subj).metadata(runs).electrodes.Benson_label(kk)== 4
+                %if database(subj).metadata(runs).electrodes.Benson_polarangle(kk) < 90 % upper hemifield -->ventral electrode
+                    %new_label(kk) = database(subj).metadata(runs).electrodes.Benson_label(kk)*2-1;
+                %elseif database(subj).metadata(runs).electrodes.Benson_polarangle(kk)>=90
+                    %new_label(kk) = database(subj).metadata(runs).electrodes.Benson_label(kk)*2;
+                %polar angle is not added to the electrode file, so we have
+                %to find another way, for now we simply take the wang areas 
+                new_label(kk) = database(subj).metadata(runs).electrodes.Wang_label(kk);
+            elseif database(subj).metadata(runs).electrodes.Benson_label(kk)== 4 %hV4
                 new_label(kk) = 7;
-            elseif database(subj).metadata(runs).electrodes.Benson_label(kk)== 5
+            elseif database(subj).metadata(runs).electrodes.Benson_label(kk)== 5 %VO1
                 new_label(kk) = 8;
-            elseif database(subj).metadata(runs).electrodes.Benson_label(kk)== 6
+            elseif database(subj).metadata(runs).electrodes.Benson_label(kk)== 6 %Vo2
                 new_label(kk) = 9;
             elseif database(subj).metadata(runs).electrodes.Benson_label(kk)== 7 %LO1
                 new_label(kk) = 15;
@@ -53,8 +58,8 @@ for subj = 6%1:length(subjects)
                 new_label(kk) = 16;
             elseif database(subj).metadata(runs).electrodes.Benson_label(kk)== 12 %V3A
                 new_label(kk) = 17;
-            %elseif database.metadata(runs).electrodes.Benson_label(kk)== 0 && ismember(database.metadata(runs).electrodes.Benson_label(kk),database.metadata(runs).electrodes.Wang_label(kk)) % areas: IPS/PHC/SPL/FEF
-                %new_label(kk) = database.metadata(runs).electrodes.Wang_label(kk)+100;
+            elseif database(subj).metadata(runs).electrodes.Benson_label(kk)== 0 && ismember(database(subj).metadata(runs).electrodes.Wang_label(kk),[1:25])  % areas: IPS/PHC/SPL/FEF
+                new_label(kk) = database(subj).metadata(runs).electrodes.Wang_label(kk);
             end
         end
 
@@ -63,21 +68,22 @@ for subj = 6%1:length(subjects)
         'V1v' 'V1d' 'V2v' 'V2d' 'V3v' 'V3d' 'hV4' 'VO1' 'VO2' 'PHC1' 'PHC2' ...
         'TO2' 'TO1' 'LO2' 'LO1' 'V3B' 'V3A' 'IPS0' 'IPS1' 'IPS2' 'IPS3' 'IPS4' ...
         'IPS5' 'SPL1' 'FEF'};
+    
+    %% plot how many electrodes are on every area 
+    elec_on_area = (1:length(Wang_ROI_Names))';
+    elec_on_area(:,2) = histc(new_label(:),elec_on_area);
+    elec_on_area_array = num2cell(elec_on_area(:,1:2)); 
+    elec_on_area_array(1:25,1) = Wang_ROI_Names;
+    database(subj).metadata(runs).areas_elec = elec_on_area_array; % adding the array to the database
+
+
     %Highlighting the VOF (hV4-VO1 ventrally, V3A/B dorsally) 
     Wang_ROI_Names{7} = ['\color{red}' Wang_ROI_Names{7}];
     Wang_ROI_Names{8} = ['\color{red}' Wang_ROI_Names{8}];
     Wang_ROI_Names{17} = ['\color{green}' Wang_ROI_Names{17}];
     Wang_ROI_Names{16} = ['\color{green}' Wang_ROI_Names{16}];
-    %% plot how many electrodes are on every area 
-    elec_on_area = (1:length(Wang_ROI_Names))';
-    elec_on_area(:,2) = histc(new_label(:),elec_on_area);
-    
-    %elec_on_area_array = num2cell(elec_on_area) 
-    %elec_on_area_array(1:25) = Wang_ROI_Names
-
     %% make a matrix with the connections electrodes can measure 
-    % we put 1 when electrodes cover source and target regions (just based on
-    % atlases and electrode locations)
+
 
     % 1) we want to have the labels of the measured channels (each
     % corresponds to an electrode)
@@ -121,23 +127,23 @@ for subj = 6%1:length(subjects)
         end
     end
 
-    %%
+    %% Plot the possible connections matrix 
+    database(subj).metadata(runs).possible_mat = measured_connection_matrix;
     figure('Position',[0 0 800 800])
-    ax = imagesc(measured_connection_matrix,[0 max(measured_connection_matrix(:))])
+    imagesc(measured_connection_matrix,[0 max(measured_connection_matrix(:))])
     axis square
     xlabel('Target Visual Area'),ylabel('Source Visual Area')
     set(gca,'XTick',[1:25],'YTick',[1:25],'FontName','Lato','FontSize',12,...
         'XDir','normal', 'XTickLabel', Wang_ROI_Names, 'YTickLabel', Wang_ROI_Names);
     xtickangle(90)
     cm = jet(max(measured_connection_matrix(:)));
-    cm = [0 0 0; cm];
-    colormap(cm)
+    cm = [1 1 1; cm];
+    colormap(cm);
     hcb = colorbar;
     title(hcb,'# of stimulations per area')
     set(gcf,'PaperPositionMode','auto')
     % print('-dpng','-r300','/home/giulio/figures/measured_connections_matrix')
     title(['POSSIBLE MATRIX Subject: ' database(subj).subject ' - Run: ' database(subj).metadata(runs).run ])
-
     %% create a matrix starting from the ccep data (ccep_detect_onlyN1)
     %on the y axis all the stimulation pairs, on the x axis all the target
     %areas (electrodes). If CCEP is significant then 1, if not then 0. 
@@ -199,219 +205,102 @@ for subj = 6%1:length(subjects)
     end
 
 
-    % adding a NaN on areas that are not covered
-    measured_N1_matrix(measured_connection_matrix==0) = NaN;
-    % Blocking the script if the absolute matrix does not show any ccep
-    if isempty(measured_N1_matrix(measured_N1_matrix > 0))
-        writ = ['The absolute matrix for subject ' database(subj).subject '-Run' database(subj).metadata(runs).run ' run ' runs ' does not show any activation for none of the selected areas.'];
-        disp(writ)
-        break 
-    end 
-    
-       
+    % adding a -1 on areas that are not covered
+    measured_N1_matrix(database(subj).metadata(runs).possible_mat==0) = -1;
 
-    %%
-    % absolute number of N1 responses 
+    %measured_N1_matrix(isnan(measured_N1_matrix)) = -1 %making nans become -1 (Non covered areas) 
+
+    %     %Blocking the script if the absolute matrix does not show any ccep
+    %     if isempty(measured_N1_matrix(measured_N1_matrix > 0))
+    %         writ = ['The absolute matrix for subject ' database(subj).subject '-Run' database(subj).metadata(runs).run ' run ' num2str(runs) ' does not show any activation for none of the selected areas.'];
+    %         disp(writ)
+    %         break 
+    %     end 
+
+
+
+    %% plot absolute ccep connections matrix 
+    database(subj).metadata(runs).absolute_mat = measured_N1_matrix; % adding the matrix to the database
+
     figure('Position',[0 0 800 800])
-    imagesc(measured_N1_matrix,[0 max(measured_N1_matrix(:))])
+    imagesc(measured_N1_matrix,[-1 max(measured_N1_matrix(:))])
     axis square
     xlabel('Recorded Visual Area'),ylabel('Stimulated Visual Area')
     set(gca,'XTick',[1:25],'YTick',[1:25],'FontName','Lato','FontSize',12,...
         'XDir','normal', 'XTickLabel', Wang_ROI_Names, 'YTickLabel', Wang_ROI_Names);
     xtickangle(90)
 
-    cm = summer(max(measured_N1_matrix(:)));
-    cm = [1 1 1; cm];
+    cm = parula(max(measured_N1_matrix(:)));
+    cm = [0 0 0; cm]; % connection showing 0 ccep white
+    cm = [1 1 1; cm]; % make area not stimulated as white 
+
     colormap(cm)
     hcb = colorbar;%('TicksMode','manual', 'Ticks',[-1 0 1],'TickLabels', {'not recorded', 'no response', 'Early response(CCEP)'});
     title(hcb,'# CCEP')
     set(gcf,'PaperPositionMode','auto')
     % print('-dpng','-r300','/home/giulio/figures/measured_N1_matrix')
     title(['ABSOLUTE MATRIX Subject: ' database(subj).subject ' - Run: ' database(subj).metadata(runs).run ])
+    database(subj).metadata(runs).absolute_mat = measured_N1_matrix; % adding the matrix to the database
 
-    %% relative number of N1 responses
+    %% plot relative ccep connection matrix 
     % we could have measured all connections in measured_connection_matrix
     % which percentage of these potential connections did we find?
-    relative_N1_matrix = measured_N1_matrix./measured_connection_matrix
-    relative_N1_matrix(measured_connection_matrix==0) = NaN;
-    
+    relative_N1_matrix = measured_N1_matrix./measured_connection_matrix;
+    relative_N1_matrix(database(subj).metadata(runs).absolute_mat==-1) = -1; % making nans become -1 (Non covered areas)
+
     figure('Position',[0 0 800 800])
-    imagesc(relative_N1_matrix,[0 1])
+    imagesc(relative_N1_matrix,[-1 1])
     axis square
 
     xlabel('Recording Visual Area'),ylabel('Stimulated Visual Area')
     set(gca,'XTick',[1:25],'YTick',[1:25],'FontName','Lato','FontSize',12,...
         'XDir','normal', 'XTickLabel', Wang_ROI_Names, 'YTickLabel', Wang_ROI_Names);
     xtickangle(90)
-    cm = summer(100);
-    cm = [0 0 0; cm];
+    cm = summer(21);
+    A = ones(10,3)
+    cm(1:10,:) = A  % making -1 black 
+    cm(11,:) = [0 0 0] %making 0 white (not showing any ccep) 
     colormap(cm)
-    hcb = colorbar;%('TicksMode','manual', 'Ticks',[-1 0 1],'TickLabels', {'not recorded', 'no response', 'Early response(CCEP)'});
-    hcb.TickLabels = arrayfun( @(x) [num2str(x) '%'], hcb.Ticks * 100, 'UniformOutput', false );
+    hcb = colorbar('TicksMode','manual', 'Ticks',[-1 0 1],'TickLabels', {'not recorded', 'no response', 'Early response(CCEP)'});
+    %hcb.TickLabels = arrayfun( @(x) [num2str(x) '%'], hcb.Ticks * 100, 'UniformOutput', false );
     set(gcf,'PaperPositionMode','auto')
     %print('-dpng','-r300','/home/giulio/figures/relative_N1_matrix')
-%   saveas(relative_N1_matrix,sprintf('relative_matrix %d.png',subj)); % will create FIG1, FIG2,...
-%   hold on 
-    title(['RELATIVE MATRIX Subject: ' database(subj).subject ' - Run: ' database(subj).metadata(runs).run ])
+    %   saveas(relative_N1_matrix,sprintf('relative_matrix %d.png',subj)); % will create FIG1, FIG2,...
+    %   hold on 
+    title(['RELATIVE MATRIX Subject: ' database(subj).subject ' - Run: ' database(subj).metadata(runs).run '(' num2str(runs) ')' ])
     %add the matrix to the database for plotting together 
-    database(subj).metadata(runs).relative_mat = relative_N1_matrix;    
+    database(subj).metadata(runs).relative_mat = relative_N1_matrix; % adding the matrix to the database
 
-    end 
 end 
-%% Add code to distinguish in the last two matrices the electrodes that are stimulated and do not show activation from those who are not stimulated 
-
-%% Add code to merge the two runs of the five subjects in the matrices 
-
-%% Add code to make a plot with subplots of all the different relative matrices of all the selected patients 
-runs = 1 
-figure('Position',[0 0 10000 10000])
-
-subplot(2,3,1); 
-imagesc(database(1).metadata(runs).relative_mat,[0 1])
-axis square
-xlabel('Recording Visual Area'),ylabel('Stimulated Visual Area')
-set(gca,'XTick',[1:25],'YTick',[1:25],'FontName','Lato','FontSize',8,...
-    'XDir','normal', 'XTickLabel', Wang_ROI_Names, 'YTickLabel', Wang_ROI_Names);
-xtickangle(90)
-cm = summer(100);
-cm = [0 0 0; cm];
-colormap(cm)
-set(gcf,'PaperPositionMode','auto')
-title(['RELATIVE MATRIX Subject: ' database(1).subject ' - Run: ' database(1).metadata(runs).run ])
-
-subplot(2,3,2);
-imagesc(database(2).metadata(runs).relative_mat,[0 1])
-axis square
-xlabel('Recording Visual Area'),ylabel('Stimulated Visual Area')
-set(gca,'XTick',[1:25],'YTick',[1:25],'FontName','Lato','FontSize',8,...
-    'XDir','normal', 'XTickLabel', Wang_ROI_Names, 'YTickLabel', Wang_ROI_Names);
-xtickangle(90)
-cm = summer(100);
-cm = [0 0 0; cm];
-colormap(cm)
-set(gcf,'PaperPositionMode','auto')
-title(['RELATIVE MATRIX Subject: ' database(2).subject ' - Run: ' database(2).metadata(runs).run ])
-
-subplot(2,3,3); axis square
-imagesc(database(3).metadata(runs).relative_mat,[0 1])
-axis square
-xlabel('Recording Visual Area'),ylabel('Stimulated Visual Area')
-set(gca,'XTick',[1:25],'YTick',[1:25],'FontName','Lato','FontSize',8,...
-    'XDir','normal', 'XTickLabel', Wang_ROI_Names, 'YTickLabel', Wang_ROI_Names);
-xtickangle(90)
-cm = summer(100);
-cm = [0 0 0; cm];
-colormap(cm)
-
-set(gcf,'PaperPositionMode','auto')
-title(['RELATIVE MATRIX Subject: ' database(3).subject ' - Run: ' database(3).metadata(runs).run ])
-subplot(2,3,4); 
-imagesc(database(4).metadata(runs).relative_mat,[0 1])
-axis square
-xlabel('Recording Visual Area'),ylabel('Stimulated Visual Area')
-set(gca,'XTick',[1:25],'YTick',[1:25],'FontName','Lato','FontSize',8,...
-    'XDir','normal', 'XTickLabel', Wang_ROI_Names, 'YTickLabel', Wang_ROI_Names);
-xtickangle(90)
-cm = summer(100);
-cm = [0 0 0; cm];
-colormap(cm)
-
-set(gcf,'PaperPositionMode','auto')
-title(['RELATIVE MATRIX Subject: ' database(4).subject ' - Run: ' database(4).metadata(runs).run ])
-
-hold on
-subplot(2,3,5);
-imagesc(database(5).metadata(runs).relative_mat,[0 1])
-axis square
-xlabel('Recording Visual Area'),ylabel('Stimulated Visual Area')
-set(gca,'XTick',[1:25],'YTick',[1:25],'FontName','Lato','FontSize',8,...
-    'XDir','normal', 'XTickLabel', Wang_ROI_Names, 'YTickLabel', Wang_ROI_Names);
-xtickangle(90)
-cm = summer(100);
-cm = [0 0 0; cm];
-colormap(cm)
-set(gcf,'PaperPositionMode','auto')
-title(['RELATIVE MATRIX Subject: ' database(5).subject ' - Run: ' database(5).metadata(runs).run ])
-
-subplot(2,3,6);
-imagesc(database(6).metadata(runs).relative_mat,[0 1])
-axis square
-xlabel('Recording Visual Area'),ylabel('Stimulated Visual Area')
-set(gca,'XTick',[1:25],'YTick',[1:25],'FontName','Lato','FontSize',8,...
-    'XDir','normal', 'XTickLabel', Wang_ROI_Names, 'YTickLabel', Wang_ROI_Names);
-xtickangle(90)
-cm = summer(100);
-cm = [0 0 0; cm];
-colormap(cm)
-set(gcf,'PaperPositionMode','auto')
-title(['RELATIVE MATRIX Subject: ' database(6).subject ' - Run: ' database(6).metadata(runs).run ])
-
-hcb = colorbar;
-hcb.TickLabels = arrayfun( @(x) [num2str(x) '%'], hcb.Ticks * 100, 'UniformOutput', false ); 
-
-%% Assessing the reciprocity of the network 
+    
+%% Assessing the reciprocity of the network
 % Reciprocity index = reciprocal connections/all connections 
-all_conn = [];
-for xx = 1:size(relative_N1_matrix,1) 
-    for yy = 1:size(relative_N1_matrix,2)
-        if relative_N1_matrix(xx,yy) > 0.01 
-            all_conn(end+1,1:2) = ([xx yy]);
+
+
+for subj = 1%:length(database)
+    database(subj).metadata(runs).all_conn = [];
+    database(subj).metadata(runs).reciprocal_conn = [];
+    for xx = 1:size(database(subj).metadata(runs).relative_mat,1) 
+        for yy = 1:size(database(subj).metadata(runs).relative_mat,2)
+            if database(subj).metadata(runs).relative_mat(xx,yy) > 0.01 
+                database(subj).metadata(runs).all_conn(end+1,1:2) = ([xx yy]);
+            end
         end
     end
-end
 
 %creating an array with reciprocal conections
-reciprocal_conn = [];
-for xx = 1:size(relative_N1_matrix,1) 
-    for yy = 1:size(relative_N1_matrix,2) 
-        if relative_N1_matrix(xx,yy)>0 && relative_N1_matrix(yy,xx) && xx ~= yy 
-            reciprocal_conn(end+1,1:2) = ([xx yy]);
+    for xx = 1:size(database(subj).metadata(runs).relative_mat,1) 
+        for yy = 1:size(database(subj).metadata(runs).relative_mat,2) 
+            if database(subj).metadata(runs).relative_mat(xx,yy)>0 && database(subj).metadata(runs).relative_mat(yy,xx) && xx ~= yy 
+                database(subj).metadata(runs).reciprocal_conn(end+1,1:2) = ([xx yy]);
+            end 
         end 
     end 
+database(subj).metadata(runs).reciprocity_index = size(database(subj).metadata(runs).reciprocal_conn,1)./size(database(subj).metadata(runs).all_conn,1);
 end 
 
-reciprocity_index = size(reciprocal_conn,1)./size(all_conn,1);
-
-     
-
-
-%% lets try 
-
-figure('Position',[0 0 10000 10000])
-
-for subj = 1:length(subjects)
-    runs = length(database(subj).metadata)
-    subplot(3,2,subj);
-    if runs > 1 
-        for runs = 1:length(database(subj).metadata)
-            subplot(1,2,runs);
-            imagesc(database(subj).metadata(runs).relative_mat,[0 1])
-            axis square
-            xlabel('Recording Visual Area'),ylabel('Stimulated Visual Area')
-            set(gca,'XTick',[1:25],'YTick',[1:25],'FontName','Lato','FontSize',8,...
-                'XDir','normal', 'XTickLabel', Wang_ROI_Names, 'YTickLabel', Wang_ROI_Names);
-            xtickangle(90)
-            cm = summer(100);
-            cm = [0 0 0; cm];
-            colormap(cm)
-            set(gcf,'PaperPositionMode','auto')
-            title(['RELATIVE MATRIX Subject: ' database(subj).subject ' - Run: ' database(subj).metadata(runs).run ])
-        end 
-    elseif runs == 1
-        subplot(3,3,subj);
-        imagesc(database(subj).metadata(runs).relative_mat,[0 1])
-        axis square
-        xlabel('Recording Visual Area'),ylabel('Stimulated Visual Area')
-        set(gca,'XTick',[1:25],'YTick',[1:25],'FontName','Lato','FontSize',8,...
-            'XDir','normal', 'XTickLabel', Wang_ROI_Names, 'YTickLabel', Wang_ROI_Names);
-        xtickangle(90)
-        cm = summer(100);
-        cm = [0 0 0; cm];
-        colormap(cm)
-        set(gcf,'PaperPositionMode','auto')
-        title(['RELATIVE MATRIX Subject: ' database(subj).subject ' - Run: ' database(subj).metadata(runs).run ])        
-    end 
+all_reciprocities = ['RESP0315'; 'RESP0751'; 'RESP0401'; 'RESP0405'; 'RESP0306'; {'RESP0703'}];
+for subj = 1%:length(database)
+    all_reciprocities(subj,2) = num2cell(database(subj).metadata(runs).reciprocity_index); 
 end 
-
-            
 
