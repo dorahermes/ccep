@@ -23,7 +23,7 @@ elecmatrix = el.elecmatrix;
 % print both and their sizes to see where to implement the elecmatrix
 t = readtable(fullfile(dataRootPath,['sub-' subj],['ses-' ses],'ieeg',...
     ['sub-' subj '_ses-' ses '_electrodes.tsv']),...
-    'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'},'ReadVariableNames', 'true')
+    'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'})
 elecmatrix
 size_table = size(t)
 size_elecmatrix = size(elecmatrix)
