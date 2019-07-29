@@ -279,13 +279,14 @@ end
 xlim([0 50]),ylim([10 90])
 xlabel('age subject')
 ylabel('latency in ms')
-print_label = sprintf('%.f', ROI_destrieux(destrieux_array));
-title(['latency within Destieux ROI: ' print_label])
+title('latency within Destieux ROI: 15, 26 & 38')
+% print_label = sprintf('%.f', ROI_destrieux(destrieux_array));
+% title(['latency within Destieux ROI: ' print_label])
 hold off
 
 %% Plot latencies in two groups: 18- and 18+
 
-figure(100+ROI_destrieux), hold on
+figure(), hold on
 
 for gg = 1:length(age_vector)
     if age_vector(gg) <= 18
@@ -303,17 +304,17 @@ end
 % - ROI_within_plot_matrix_all  
 
 % variable/ROI to plot
-ROI_within_plot = ROI_within_plot_matrix_all;
+ROI_within_plot = ROI_plot_matrix_15;
 
-boxplot(ROI_within_plot,age_group)
+boxplot(ROI_within_plot,age_group,'Notch', 'on','Labels',{'18-','18+'})
 
 
 xlabel('age subject')
 ylabel('latency in ms')
-title('age-effect on latency two groups, 18- and 18+')
+title('age-effect on latency two groups, 18- and 18+, ROI 15, 26 & 38')
 hold off
 
-summed_cceps = (sum(~isnan(ROI_plot_matrix)));
+summed_cceps = (sum(~isnan(ROI_within_plot)));
 
 CCEPs_18min = 0;
 for aa = find(age_group == 1)
@@ -329,27 +330,5 @@ end
 CCEPs_18min
 CCEPs_18plus
 
-%% Scatterplot percentages of CCEPs within ROI - for 1 ROI
-
-figure(), hold on
-
-
-for subj = 1:length(database)
-    
-    if ~isempty(database(subj).ROI_stimpairs_data)
-        
-        % scatterplot the age by the relative percentage of CCEPs found
-        relative_cceps = (sum(~isnan(ROI_plot_matrix(:,subj))) / length(database(subj).ROI_stimpairs_data));
-        scatter(age_vector(1,subj),relative_cceps,50,[0 0 0])
-        
-        
-    end
-end
-
-xlim([0 50])%,ylim([0 1])
-xlabel('age subject')
-ylabel('percentage CCEPs')
-title('age-effect on percentage of CCEPs in all electrodes')
-hold off
 
 
