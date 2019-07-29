@@ -1,6 +1,8 @@
-
+% Possibility to load saved database (it is stored in /home/giulio
+load('database_visual_22719')
 
 %% Add paths for database
+clear all
 
 addpath(genpath('/Fridge/users/giulio/github/ccep/'))
 
@@ -29,3 +31,7 @@ n1_peak_range = 70; % Detected N1 only range between 10 and n1_peak_range (10-70
 
 database = ccep_detect_n1peak(database, amplitude_thresh, n1_peak_range); 
 
+%% Save the variables for later faster use 
+
+save('database_visual_23719', '-v7.3')
+ 
