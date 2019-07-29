@@ -3,7 +3,7 @@
 subjects = {'RESP0621', 'RESP0706', 'RESP0733', 'RESP0768', 'RESP0294', 'RESP0306', ...
     'RESP0315', 'RESP0348', 'RESP0368', 'RESP0369', 'RESP0400', 'RESP0401', 'RESP0405', ...
     'RESP0435', 'RESP0449', 'RESP0450', 'RESP0458', 'RESP0467', 'RESP0468', 'RESP0477', ...
-    'RESP0478', 'RESP0501', 'RESP0502', 'RESP0703', 'RESP0724'}; % 0754 and 0295-1
+    'RESP0478', 'RESP0501', 'RESP0502', 'RESP0703', 'RESP0724', 'RESP0754', 'RESP0295'}; % 0754 and 0295-1
 
 % RESP0621 
 database(1).c_grid = (1:64);
@@ -130,6 +130,15 @@ database(25).c_grid = [];
 database(25).total_grid = (1:89);
 database(25).age_ses1 = 15;
 
+% RESP0754 
+database(26).c_grid = (33:64);
+database(26).total_grid = (1:64); 
+database(26).age_ses1 = 33;
+
+% RESP0295 
+database(27).c_grid = (1:48);
+database(27).total_grid = (1:73); 
+database(27).age_ses1 = 25;
 %% averaged latency per run per subj
 
 % iterate over all subjects in database
@@ -217,7 +226,7 @@ xlim([0 50]), set(gca,'XTick',[0:50])
 
 %% boxplot for all electrodes and stims
 
-matrix_reshape_all = NaN(12000,25);
+matrix_reshape_all = NaN(12000,length(subjects));
 % iterate over all subjects in database
 for subj = 1:length(database)
     
