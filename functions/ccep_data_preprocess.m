@@ -121,11 +121,7 @@ for subj = 1:length(database)
         
         % set epoch parameters
         epoch_length = 5; % in seconds, -2.5:2.5
-<<<<<<< HEAD
-        epoch_prestim_length = 2.5;
-=======
         epoch_prestim_length = 2.5; % in seconds
->>>>>>> upstream/master
         
         % count how much stimulations there are
         total_stim_count = sum(strcmp(ccep_events.trial_type,'electrical_stimulation'));

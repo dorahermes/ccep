@@ -242,8 +242,10 @@ for subj = 1:length(subjects)
             'XDir','normal', 'XTickLabel', Wang_ROI_Names, 'YTickLabel', Wang_ROI_Names);
         xtickangle(90)
         cm = summer(100);
+       
         cm = [0 0 0; cm];
         colormap(cm)
+        
         hcb = colorbar;%('TicksMode','manual', 'Ticks',[-1 0 1],'TickLabels', {'not recorded', 'no response', 'Early response(CCEP)'});
         hcb.TickLabels = arrayfun( @(x) [num2str(x) '%'], hcb.Ticks * 100, 'UniformOutput', false );
         set(gcf,'PaperPositionMode','auto')
@@ -253,7 +255,7 @@ for subj = 1:length(subjects)
         title(['RELATIVE MATRIX Subject: ' database(subj).subject ' - Run: ' database(subj).metadata(runs).run '(' num2str(runs) ')' ])
         %add the matrix to the database for plotting together 
         database(subj).metadata(runs).relative_mat = relative_N1_matrix;
-        
+        % assign a different color to NaN
     end 
 end  
  
@@ -261,33 +263,41 @@ end
 
 %% Assessing the reciprocity of the network 
 % Reciprocity index = reciprocal connections/all connections 
-all_conn = [];
-for xx = 1:size(relative_N1_matrix,1) 
-    for yy = 1:size(relative_N1_matrix,2)
-        if relative_N1_matrix(xx,yy) > 0.01 
-            all_conn(end+1,1:2) = ([xx yy]);
+for subj = 1:length(subjects)
+    runs = 1
+    all_conn = [];
+    for xx = 1:size(database(subj).metadata(runs).relative_mat,1) 
+        for yy = 1:size(database(subj).metadata(runs).relative_mat,2)
+            if database(subj).metadata(runs).relative_mat(xx,yy) > 0.01 
+                all_conn(end+1,1:2) = ([xx yy]);
+            end
         end
     end
-end
 
-%creating an array with reciprocal conections
-reciprocal_conn = [];
-for xx = 1:size(relative_N1_matrix,1) 
-    for yy = 1:size(relative_N1_matrix,2) 
-        if relative_N1_matrix(xx,yy)>0 && relative_N1_matrix(yy,xx) && xx ~= yy 
-            reciprocal_conn(end+1,1:2) = ([xx yy]);
+    %creating an array with reciprocal conections
+    reciprocal_conn = [];
+    for xx = 1:size(database(subj).metadata(runs).relative_mat,1) 
+        for yy = 1:size(database(subj).metadata(runs).relative_mat,2) 
+            if database(subj).metadata(runs).relative_mat(xx,yy)>0 && database(subj).metadata(runs).relative_mat(yy,xx) && xx ~= yy 
+                reciprocal_conn(end+1,1:2) = ([xx yy]);
+            end 
         end 
-    end 
+    end
+    index = cell(1,1);
+    index {subj} = size(reciprocal_conn,1)./size(all_conn,1);
+    
+    reciprocity_index = cell(6,2);
+    reciprocity_index(:,1) = subjects; 
+    reciprocity_index{subj,2} = index{subj};
 end 
-
-reciprocity_index = size(reciprocal_conn,1)./size(all_conn,1);
 
 %% building a loop to display all the relative matrices together 
 % currently working with all the subjects, but not with all the runs 
 figure('Position',[0 0 1000 1000])
-%runs = 1; %runs = length(database(subj).metadata)
-for runs = 1:length(database(subj).metadata)
-    for subj = 1:length(subjects)
+suptitle ('RELATIVE MATRIX')
+
+for subj = 1:length(subjects)
+    %for runs = 1:length(database(subj).metadata)
         subplot(3,2,subj);
         imagesc(database(subj).metadata(runs).relative_mat,[0 1])
         axis square
@@ -299,8 +309,8 @@ for runs = 1:length(database(subj).metadata)
         cm = [0 0 0; cm];
         colormap(cm)
         set(gcf,'PaperPositionMode','auto')
-        title(['RELATIVE MATRIX Subject: ' database(subj).subject ' - Run: ' database(subj).metadata(runs).run '(' num2str(runs) ')']);        
-    end 
+        title(['Subject: ' database(subj).subject ' - Run: ' database(subj).metadata(runs).run '(' num2str(runs) ')']);        
+    %end 
 end 
 
 hcb = colorbar;
