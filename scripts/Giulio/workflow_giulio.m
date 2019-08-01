@@ -1,5 +1,6 @@
 % Possibility to load saved database (it is stored in /home/giulio
-load('database_visual_22719')
+bbbbb%!! Attention, database3172019 is without subject 0405 which is now
+%excluded(in database 3172019)
 
 %% Add paths for database
 clear all
@@ -8,7 +9,7 @@ addpath(genpath('/Fridge/users/giulio/github/ccep/'))
 
 %% load database structure 
 
-subjects = {'RESP0315','RESP0751','RESP0401','RESP0405','RESP0306', 'RESP0703'};
+subjects = {'RESP0315','RESP0751','RESP0401','RESP0306', 'RESP0703'};
 
 top_path = '/Fridge/users/giulio/ccep/dataBIDS/';
 
@@ -33,5 +34,5 @@ database = ccep_detect_n1peak(database, amplitude_thresh, n1_peak_range);
 
 %% Save the variables for later faster use 
 
-save('database_visual_23719', '-v7.3')
+save('database_visual_31719', '-v7.3') %this database is without 0405!!!
  
