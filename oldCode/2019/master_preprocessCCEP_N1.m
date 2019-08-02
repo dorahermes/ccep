@@ -7,7 +7,7 @@
 clear all
 
 addpath(genpath('/Fridge/users/giulio/github/ccep/'))
-addpath('/Fridge/users/dora/github/fieldtrip/')
+addpath('/Fridge/users/giulio/github/fieldtrip/')
 ft_defaults
 
 
@@ -44,16 +44,16 @@ data = ft_read_data(ieeg_name,'dataformat','brainvision_eeg');
 data_hdr = ft_read_header(ieeg_name,'dataformat','brainvision_eeg');
 
 %% look at the signal from one channel
-% make a time vector t
-t = [1:size(data,2)]./data_hdr.Fs;
-for ii = 1
-    figure
-    plot(t,data(ii,:))
-    axis([0, 1000, -4000, 4000])
-    xlabel('time(s)')
-    ylabel('amplitude(uV)')
-    
-end
+% % make a time vector t
+% t = [1:size(data,2)]./data_hdr.Fs;
+% for ii = 1
+%     figure
+%     plot(t,data(ii,:))
+%     axis([0, 1000, -4000, 4000])
+%     xlabel('time(s)')
+%     ylabel('amplitude(uV)')
+%     
+% end
 %% re-reference (if we want)
 
 %% epoch into channel X epoch X time
@@ -163,72 +163,72 @@ plot(tt,squeeze(data_epoch(3,1,:)))
 xlabel('time(s)')
 ylabel('amplitude(uV)')
 
-%% Averaging the epochs - assuming F01-F02 is different from F02-F01
-%%%% First assume that F01-F02 is different from F02-F01
-% get the unique number of stimulated pairs:
-[cc_stimsets,IA,IC] =  unique(cc_events_onlystims.electrical_stimulation_site, 'stable');
-% run through these and see how many there are
-cc_nroftimes = zeros(length(cc_stimsets),1); % number of times each pair is stimulated
-for kk = 1:length(cc_stimsets)
-    cc_nroftimes(kk) = sum(ismember(cc_events_onlystims.electrical_stimulation_site,cc_stimsets{kk}));
-end
-
-
-% check whether there is consistent stimulations, if all stimulations pairs
-% are done 5 times. 
-if cc_nroftimes == 5*(ones(round(height(cc_events_onlystims)/5),1))
-    disp('All stimulations are done 5 times')
-    % cc_epoch_sorted_if_all5 = squeeze(mean(reshape(data_epoch,size(data_epoch,1),
-    % max_amount_same_stimulation,(size(cc_events,1)/amount_same_stimulation),size(data_epoch,3)),2));
-else
-    disp('Caution: not all stimulations are done 5 times')
-    for ll = 1:length(cc_nroftimes)
-        if cc_nroftimes(ll) ~= 5
-            xx = [cc_stimsets(ll),' is stimulated ',cc_nroftimes(ll), ' times.'];
-            disp(xx)
-        end
-    end
-end
-%% Averaging the epochs - assuming F01-F02 is different as F02-F01 - different method - now with a double of electrodes number as output 
-elecpair =  unique(cc_events_onlystims.electrical_stimulation_site, 'stable'); 
-
-
-% first extract stimulation sites from the cc_events_onlystims
-% for all rows in the table
-for ee = 1:size(cc_events_onlystims,1)
-    % extract the first stimulation site and add as column
-    cc_events_onlystims.electrical_stimulation_site_num_1(ee) = str2double(extractBefore(cc_events_onlystims.electrical_stimulation_site_num(ee),'  '));
-    % extract the second stimulation site and add as column
-    cc_events_onlystims.electrical_stimulation_site_num_2(ee) = str2double(extractAfter(cc_events_onlystims.electrical_stimulation_site_num(ee),'  '));
-end
-
-%%%% Assume that F01-F02 is DIFFERENT than F02-F01
-
-% get the unique number of stimulated pairs, but now it is a cell array 
-[C,IA,IC] =  unique(cc_events_onlystims.electrical_stimulation_site_num, 'stable'); %C pairs of stimulated electrodes, represented by number 
-
-CC = split(C);
-cc_stimsets = str2double(CC); % now we have a stimsets in which E1-E2 is different than E2-E1
-
-%count how many times a stimulation is performed 
-cc_nroftimes = accumarray (IC,1); % how many times the stim is performed 
-%value_counts = [C, stim_counts] %trying to display which stimulation is performed for how many times
-
-% check whether there is consistent stimulations, if all stimulations pairs
-% are done 5 times. 
-if cc_nroftimes == 5*(ones(round(height(cc_events_onlystims)/5),1))
-    disp('All stimulations are done 5 times')
-    % cc_epoch_sorted_if_all5 = squeeze(mean(reshape(data_epoch,size(data_epoch,1),
-    % max_amount_same_stimulation,(size(cc_events,1)/amount_same_stimulation),size(data_epoch,3)),2));
-else
-    disp('Caution: not all stimulations are done 5 times')
-    for ll = 1:length(cc_nroftimes)
-        if cc_nroftimes(ll) ~= 5
-            xx = ['The pair ' cc_stimsets(ll,:),' is stimulated ',cc_nroftimes(ll), ' times.'];
-            disp(xx)
-        end
-    end
-end
+% %% Averaging the epochs - assuming F01-F02 is different from F02-F01
+% %%%% First assume that F01-F02 is different from F02-F01
+% % get the unique number of stimulated pairs:
+% [cc_stimsets,IA,IC] =  unique(cc_events_onlystims.electrical_stimulation_site, 'stable');
+% % run through these and see how many there are
+% cc_nroftimes = zeros(length(cc_stimsets),1); % number of times each pair is stimulated
+% for kk = 1:length(cc_stimsets)
+%     cc_nroftimes(kk) = sum(ismember(cc_events_onlystims.electrical_stimulation_site,cc_stimsets{kk}));
+% end
+% 
+% 
+% % check whether there is consistent stimulations, if all stimulations pairs
+% % are done 5 times. 
+% if cc_nroftimes == 5*(ones(round(height(cc_events_onlystims)/5),1))
+%     disp('All stimulations are done 5 times')
+%     % cc_epoch_sorted_if_all5 = squeeze(mean(reshape(data_epoch,size(data_epoch,1),
+%     % max_amount_same_stimulation,(size(cc_events,1)/amount_same_stimulation),size(data_epoch,3)),2));
+% else
+%     disp('Caution: not all stimulations are done 5 times')
+%     for ll = 1:length(cc_nroftimes)
+%         if cc_nroftimes(ll) ~= 5
+%             xx = [cc_stimsets(ll),' is stimulated ',cc_nroftimes(ll), ' times.'];
+%             disp(xx)
+%         end
+%     end
+% end
+% %% Averaging the epochs - assuming F01-F02 is different as F02-F01 - different method - now with a double of electrodes number as output 
+% elecpair =  unique(cc_events_onlystims.electrical_stimulation_site, 'stable'); 
+% 
+% 
+% % first extract stimulation sites from the cc_events_onlystims
+% % for all rows in the table
+% for ee = 1:size(cc_events_onlystims,1)
+%     % extract the first stimulation site and add as column
+%     cc_events_onlystims.electrical_stimulation_site_num_1(ee) = str2double(extractBefore(cc_events_onlystims.electrical_stimulation_site_num(ee),'  '));
+%     % extract the second stimulation site and add as column
+%     cc_events_onlystims.electrical_stimulation_site_num_2(ee) = str2double(extractAfter(cc_events_onlystims.electrical_stimulation_site_num(ee),'  '));
+% end
+% 
+% %%%% Assume that F01-F02 is DIFFERENT than F02-F01
+% 
+% % get the unique number of stimulated pairs, but now it is a cell array 
+% [C,IA,IC] =  unique(cc_events_onlystims.electrical_stimulation_site_num, 'stable'); %C pairs of stimulated electrodes, represented by number 
+% 
+% CC = split(C);
+% cc_stimsets = str2double(CC); % now we have a stimsets in which E1-E2 is different than E2-E1
+% 
+% %count how many times a stimulation is performed 
+% cc_nroftimes = accumarray (IC,1); % how many times the stim is performed 
+% %value_counts = [C, stim_counts] %trying to display which stimulation is performed for how many times
+% 
+% % check whether there is consistent stimulations, if all stimulations pairs
+% % are done 5 times. 
+% if cc_nroftimes == 5*(ones(round(height(cc_events_onlystims)/5),1))
+%     disp('All stimulations are done 5 times')
+%     % cc_epoch_sorted_if_all5 = squeeze(mean(reshape(data_epoch,size(data_epoch,1),
+%     % max_amount_same_stimulation,(size(cc_events,1)/amount_same_stimulation),size(data_epoch,3)),2));
+% else
+%     disp('Caution: not all stimulations are done 5 times')
+%     for ll = 1:length(cc_nroftimes)
+%         if cc_nroftimes(ll) ~= 5
+%             xx = ['The pair ' cc_stimsets(ll,:),' is stimulated ',cc_nroftimes(ll), ' times.'];
+%             disp(xx)
+%         end
+%     end
+% end
 
 %% Averaging the epochs - assuming F01-F02 is the same as F02-F01
 

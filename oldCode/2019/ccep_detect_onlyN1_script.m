@@ -184,11 +184,11 @@ suptitle(['Electrode by electrode analysis of the stimulation of' {cc_stimsets(j
 
 % plot all measured channels
 nr_column = 10;
-nr_rows = ceil(length(channel_info.name)/nr_column);
+nr_rows = ceil(length(channel_table.name)/nr_column);
 
 % makes it possible to plot multiple CCEPs to check
-for ii = 1:length(channel_info.name)
-    if isequal(channel_info.type{ii},'ECOG')
+for ii = 1:length(channel_table.name)
+    if isequal(channel_table.type{ii},'ECOG')
         subplot(nr_rows,nr_column,ii),hold on
         % recalculate new_signal for this ii and jj to plot
         signal_median = median(cc_epoch_sorted_avg(ii,jj,baseline_tt),3);
@@ -203,7 +203,7 @@ for ii = 1:length(channel_info.name)
 end
 
 
-elecpair (jj,:) %to see exactly which electrodes are stimulated 
+%elecpair (jj,:) %to see exactly which electrodes are stimulated 
 
 %% render brain + effects
 
@@ -264,7 +264,10 @@ end
 v_dirs = [45 0]; %;90 0;90 -60;270 -60;0 0];
 % make a colormap for the labelss
 cmap = lines(max(vert_label));
-    
+Wang_ROI_Names = {...
+        'V1v' 'V1d' 'V2v' 'V2d' 'V3v' 'V3d' 'hV4' 'VO1' 'VO2' 'PHC1' 'PHC2' ...
+        'TO2' 'TO1' 'LO2' 'LO1' 'V3B' 'V3A' 'IPS0' 'IPS1' 'IPS2' 'IPS3' 'IPS4' ...
+        'IPS5' 'SPL1' 'FEF'};    
 for stim_pair = 39
     
     % select significant peaks in the other channels
@@ -280,23 +283,23 @@ for stim_pair = 39
         figure
         ecog_RenderGiftiLabels(g,vert_label,cmap,Wang_ROI_Names)
         ecog_ViewLight(v_d(1),v_d(2)) % change viewing angle     
+        title(['stimulation of ' data_hdr.label{cc_stimsets(stim_pair,1)} ' and ' data_hdr.label{cc_stimsets(stim_pair,2)}])
 
         % make sure electrodes pop out
         a_offset = .1*max(abs(elecmatrix(:,1)))*[cosd(v_d(1)-90)*cosd(v_d(2)) sind(v_d(1)-90)*cosd(v_d(2)) sind(v_d(2))];
         els = elecmatrix+repmat(a_offset,size(elecmatrix,1),1);
 
 
-         ecog_Label(els) % add electrode positions
+        ecog_Label(els, 30,0.0001) % add electrode positions
         % add electrodes
-        ccep_el_add(els,[0.1 0.1 0.1],20)
+        ccep_el_add(els,[1 1 1 ])
         % give stimulated electrodes other color
-        ccep_el_add(els(cc_stimsets(stim_pair,1:2),:),[1 0 0],30)
+        ccep_el_add(els(cc_stimsets(stim_pair,1:2),:),[0 0 0],50)
         % set size and color of channels with significant peak 
         % based on sample (from stimulation on, so -5120) and the amplitude
         % color = latency, size = amplitude
         % minus N1 --> the more negative the bigger the circle
-        ccep_el_add_size_and_color(els,-n1_plot(:,2),(n1_plot(:,1)-5120),500,50)
-        title(['stimulation of ' data_hdr.label{cc_stimsets(stim_pair,1)} ' and ' data_hdr.label{cc_stimsets(stim_pair,2)}])
+        ccep_el_add_size_and_color(els,-n1_plot(:,2),(n1_plot(:,1)-5120),500,35)
 
         set(gcf,'PaperPositionMode','auto')
         % print('-dpng','-r300',fullfile(dataRootPath,'derivatives','render',...

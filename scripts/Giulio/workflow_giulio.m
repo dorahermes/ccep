@@ -1,5 +1,8 @@
+
+load('database_visual_31719.mat')
+
 % Possibility to load saved database (it is stored in /home/giulio
-bbbbb%!! Attention, database3172019 is without subject 0405 which is now
+%!! Attention, database3172019 is without subject 0405 which is now
 %excluded(in database 3172019)
 
 %% Add paths for database

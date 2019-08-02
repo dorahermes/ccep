@@ -5,7 +5,7 @@
 %Wang & Kastner visual atlases.
 % D. Hermes and G. Castegnaro, 2019, UMC Utrecht
 
-%for subjects 0315, 0405, 0306 we need to change the class of the data from
+%for subjects 0315, 0405, 0306,0703 we need to change the class of the data from
 %cell array to double 
 %Today 31.7 I decided to exclude 0405 from analysis so RESP0703 is now n.5
 %and RESP0401 is n.4 
@@ -23,7 +23,7 @@ for subj = [1 4 5];
     end 
 end
 
-%% Concatenating runs that are following each other (!! do not run more than once!) 
+%% Concatenating runs that are following each other (!! do not run more than once!) It erases run n.2
 for subj = [1 4 5] 
     database(subj).metadata(1).events = [database(subj).metadata(1).events; database(subj).metadata(2).events];   
     database(subj).metadata(1).events_onlystims = [database(subj).metadata(1).events_onlystims; database(subj).metadata(2).events_onlystims];   
@@ -31,14 +31,15 @@ for subj = [1 4 5]
     database(subj).metadata(1).epoched_data_avg = cat(2,database(subj).metadata(1).epoched_data_avg,database(subj).metadata(2).epoched_data_avg);  
     database(subj).metadata(1).stimulated_pairs = [database(subj).metadata(1).stimulated_pairs; database(subj).metadata(2).stimulated_pairs]; 
     database(subj).metadata(1).n1_peak_amplitude = cat(2,database(subj).metadata(1).n1_peak_amplitude, database(subj).metadata(2).n1_peak_amplitude); 
+    database(subj).metadata(2) = [];
 end 
-% now for subjects 1 and 5 we have runs 1 and 2 in run 1 
+% now for subjects 1,4 and 5 we have runs 1 and 2 in run 1 
 
 runs = 1; %[1:length(database(subj).metadata)] %(this is partially right, because it loops around the rows of the metadata, not specifically on the runs columns
 
 % select subjects/iterate over all subjects in database
 
-for subj = 1:length(database)
+for subj = 1:5
     % we need to make a matrix of size Atlas areas X Atlas areas
     % integrate Wang and Benson maps to gte th best of both
     new_label = NaN(size(database(subj).metadata(runs).electrodes.name,1),1);
@@ -87,6 +88,9 @@ for subj = 1:length(database)
         'V1v' 'V1d' 'V2v' 'V2d' 'V3v' 'V3d' 'hV4' 'VO1' 'VO2' 'PHC1' 'PHC2' ...
         'TO2' 'TO1' 'LO2' 'LO1' 'V3B' 'V3A' 'IPS0' 'IPS1' 'IPS2' 'IPS3' 'IPS4' ...
         'IPS5' 'SPL1' 'FEF'};
+    
+    database(subj).metadata(runs).new_label = new_label; % adding the matrix to the database
+
     
     %% plot how many electrodes are on every area 
     elec_on_area = (1:length(Wang_ROI_Names))';
@@ -190,6 +194,7 @@ for subj = 1:length(database)
     for kk = 1:size(database(subj).metadata(runs).stimulated_pairs,1)
         labeled_stimsets(kk,1:2) = channel_labels(database(subj).metadata(runs).stimulated_pairs(kk,1:2));
     end
+    database(subj).metadata(runs).labeled_stimsets = labeled_stimsets;
 
     % we have: 
     % output_ER:        channels X Nstimpairs X amplitude & latency
