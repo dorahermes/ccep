@@ -8,12 +8,12 @@ addpath('/Fridge/users/dora/github/ecogBasicCode/render/')
 
 
 %% Render plain with used electrodes
-dataRootPath = '/Fridge/users/dora/ccep/dataBIDS/';
-subjects = {'chaam'};
+dataRootPath = '/Fridge/users/giulio/ccep/dataBIDS/';
+subjects = {'RESP0751'};
 hemi_cap = {'R'};
 
 % pick a viewing angle:
-v_dirs = [270 0];%;90 0;90 -60;270 -60;0 0];
+v_dirs = [90 0];%;90 0;90 -60;270 -60;0 0];
 
 for s = 1%1:length(subjects)
     % subject code
@@ -26,12 +26,12 @@ for s = 1%1:length(subjects)
     g = gifti(dataGiiName);
     
 %     % electrode locations name:
-%     dataLocName = fullfile(dataRootPath,'soc_bids',['/sub-' subj],'/ses-01/','ieeg',...
-%         ['sub-' subj '_ses-01_acq-corrected_electrodes.tsv']);
+     dataLocName = fullfile(dataRootPath,['/sub-' subj],'/ses-1/','ieeg',...
+         ['sub-' subj '_ses-1_electrode_positions_fouratlases.tsv']);
 
 %     % load electrode locations
-%     loc_info = readtable(dataLocName,'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'});
-%     elecmatrix = [loc_info.x loc_info.y loc_info.z];
+     loc_info = readtable(dataLocName,'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'});
+     elecmatrix = [loc_info.x loc_info.y loc_info.z];
     
     % figure with rendering for different viewing angles
     for k = 1:size(v_dirs,1) % loop across viewing angles
@@ -42,10 +42,10 @@ for s = 1%1:length(subjects)
         ecog_ViewLight(v_d(1),v_d(2)) % change viewing angle   
         
 %         % make sure electrodes pop out
-%         a_offset = .1*max(abs(elecmatrix(:,1)))*[cosd(v_d(1)-90)*cosd(v_d(2)) sind(v_d(1)-90)*cosd(v_d(2)) sind(v_d(2))];
-%         els = elecmatrix+repmat(a_offset,size(elecmatrix,1),1);
-%         ecog_Label(els,30,12) % add electrode positions
-%         el_add(els(els_NBF{s},:),'k',30) % add electrode positions
+         a_offset = .1*max(abs(elecmatrix(:,1)))*[cosd(v_d(1)-90)*cosd(v_d(2)) sind(v_d(1)-90)*cosd(v_d(2)) sind(v_d(2))];
+         els = elecmatrix+repmat(a_offset,size(elecmatrix,1),1);
+         ecog_Label(els,30,12) % add electrode positions
+         el_add(els(els_NBF{s},:),'k',30) % add electrode positions
         
         set(gcf,'PaperPositionMode','auto')
 %         print('-dpng','-r300',fullfile(dataRootPath,'derivatives','render',...
@@ -57,14 +57,14 @@ end
 
 %% Render Wang/Kastner with electrodes
 
-clear all
-dataRootPath = '/Fridge/users/dora/ccep/dataBIDS/';
+%clear all
+dataRootPath = '/Fridge/users/giulio/ccep/dataBIDS/';
 
-subjects = {'chaam','chaam'};
-hemi_cap = {'R','L'};
-hemi_small = {'r','l'};
+subjects = {'RESP0751'};
+hemi_cap = {'R','R'};
+hemi_small = {'r','r'};
 
-v_dirs = [270 0];%;90 0;90 -60;270 -60;0 0];
+v_dirs = [45 0];%;90 0;90 -60;270 -60;0 0];
 
 Wang_ROI_Names = {...
     'V1v' 'V1d' 'V2v' 'V2d' 'V3v' 'V3d' 'hV4' 'VO1' 'VO2' 'PHC1' 'PHC2' ...
@@ -79,7 +79,7 @@ for s = 1%1:length(subjects)
     dataGiiName = fullfile(dataRootPath,'derivatives','surfaces',['sub-' subj],...
         ['sub-' subj '_T1w_pial.' hemi_cap{s} '.surf.gii']);
     % surface labels 
-    surface_labels_name = fullfile(dataRootPath,'derivatives','Freesurfer',['sub-' subj],'surf',...
+    surface_labels_name = fullfile(dataRootPath,'derivatives','freesurfer',['sub-' subj],'surf',...
         [hemi_small{s} 'h.wang15_mplbl.mgz']);
     surface_labels = MRIread(surface_labels_name);
     vert_label = surface_labels.vol(:);
@@ -88,10 +88,11 @@ for s = 1%1:length(subjects)
     cmap = lines(max(vert_label));
     
     % electrode locations name:
-%     dataLocName = [dataRootPath '/sub-' subj '/ses-01/ieeg/sub-' subj '_ses-01_acq-corrected_electrodes.tsv'];
-%     % load electrode locations
-%     loc_info = readtable(dataLocName,'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'});
-%     elecmatrix = [loc_info.x loc_info.y loc_info.z];
+     dataLocName = fullfile(dataRootPath,['/sub-' subj],'/ses-1/','ieeg',...
+         ['sub-' subj '_ses-1_electrode_positions_fouratlases.tsv']);    
+     % load electrode locations
+     loc_info = readtable(dataLocName,'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'});
+     elecmatrix = [loc_info.x loc_info.y loc_info.z];
 
     % load gifti:
     g = gifti(dataGiiName);
@@ -105,9 +106,9 @@ for s = 1%1:length(subjects)
         ecog_ViewLight(v_d(1),v_d(2)) % change viewing angle   
         
 %         % make sure electrodes pop out
-%         a_offset = .1*max(abs(elecmatrix(:,1)))*[cosd(v_d(1)-90)*cosd(v_d(2)) sind(v_d(1)-90)*cosd(v_d(2)) sind(v_d(2))];
-%         els = elecmatrix+repmat(a_offset,size(elecmatrix,1),1);      
-%         ecog_Label(els,30,12) % add electrode positions
+         a_offset = .1*max(abs(elecmatrix(:,1)))*[cosd(v_d(1)-90)*cosd(v_d(2)) sind(v_d(1)-90)*cosd(v_d(2)) sind(v_d(2))];
+         els = elecmatrix+repmat(a_offset,size(elecmatrix,1),1);      
+         ecog_Label(els,10,6) % add electrode positions
 
         set(gcf,'PaperPositionMode','auto')
 %         print('-dpng','-r300',['./figures/render/Wang_subj_' subj '_v' int2str(v_d(1)) '_' int2str(v_d(2))])
@@ -119,13 +120,13 @@ end
 %% Render Benson Areas with electrodes
 
 clear all
-dataRootPath = '/Fridge/users/dora/ccep/dataBIDS/';
+dataRootPath = '/Fridge/users/giulio/ccep/dataBIDS/';
 
-subjects = {'chaam','chaam'};
+subjects = {'RESP0751'};
 hemi_cap = {'R','L'};
 hemi_small = {'r','l'};
 
-v_dirs = [270 0;90 0;90 -60;270 -60;0 0];
+v_dirs = [270 0;0 0];
 
 Benson_Area_Names = {'V1','V2','V3','hV4','V01','V02','L01','L02','T01','T02','V3b','V3a'};
 
@@ -137,19 +138,22 @@ for s = 1%1:length(subjects)
     dataGiiName = fullfile(dataRootPath,'derivatives','surfaces',['sub-' subj],...
         ['sub-' subj '_T1w_pial.' hemi_cap{s} '.surf.gii']);
     % surface labels 
-    surface_labels_name = fullfile(dataRootPath,'derivatives','Freesurfer',['sub-' subj],'surf',...
+    surface_labels_name = fullfile(dataRootPath,'derivatives','freesurfer',['sub-' subj],'surf',...
         [hemi_small{s} 'h.benson14_varea.mgz']);
     surface_labels_B = MRIread(surface_labels_name);
     vert_label = surface_labels_B.vol(:);
 
     % create a colormap for the labels
     cmap = lines(max(vert_label));
+    cmap(1,:) = [0.4,0.447,0.7410];
+    cmap(3,:) = [0.7,0.694,0.125];
     
 %     % electrode locations name:
-%     dataLocName = [dataRootPath '/sub-' subj '/ses-01/ieeg/sub-' subj '_ses-01_acq-corrected_electrodes.tsv'];
-%     % load electrode locations
-%     loc_info = readtable(dataLocName,'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'});
-%     elecmatrix = [loc_info.x loc_info.y loc_info.z];
+     dataLocName = fullfile(dataRootPath,['/sub-' subj],'/ses-1/','ieeg',...
+         ['sub-' subj '_ses-1_electrode_positions_fouratlases.tsv']);
+     %     % load electrode locations
+     loc_info = readtable(dataLocName,'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'});
+     elecmatrix = [loc_info.x loc_info.y loc_info.z];
 
     % load gifti:
     g = gifti(dataGiiName);
@@ -163,9 +167,9 @@ for s = 1%1:length(subjects)
         ecog_ViewLight(v_d(1),v_d(2)) % change viewing angle   
 
 %         % make sure electrodes pop out
-%         a_offset = .1*max(abs(elecmatrix(:,1)))*[cosd(v_d(1)-90)*cosd(v_d(2)) sind(v_d(1)-90)*cosd(v_d(2)) sind(v_d(2))];
-%         els = elecmatrix+repmat(a_offset,size(elecmatrix,1),1);
-%         ecog_Label(els,30,12) % add electrode positions
+         a_offset = .1*max(abs(elecmatrix(:,1)))*[cosd(v_d(1)-90)*cosd(v_d(2)) sind(v_d(1)-90)*cosd(v_d(2)) sind(v_d(2))];
+         els = elecmatrix+repmat(a_offset,size(elecmatrix,1),1);
+         ecog_Label(els,30,12) % add electrode positions
 
         set(gcf,'PaperPositionMode','auto')
 %         print('-dpng','-r300',['./figures/render/BensonAreas_subj_' subj '_v' int2str(v_d(1)) '_' int2str(v_d(2))])

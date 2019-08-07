@@ -148,7 +148,7 @@ for th = 1:length(thresh)
         end
     
         class_1_visual = reshape(validation_matrix(:,:,1),1,size(validation_matrix(:,:,1),1)*size(validation_matrix(:,:,1),2));
-        class_2_code = reshape(temp_mat(1:81,1:37),1, ...
+        class_2_code = reshape(temp_mat(1:66,1:48),1, ...
            size(validation_matrix(:,:,1),1)*size(validation_matrix(:,:,1),2));
         
         
@@ -172,13 +172,13 @@ end
 toc;
 
 % write parameters_optimalization.mat to folder
-working_dir = fullfile('/Fridge','users','jaap','ccep','dataBIDS');
+working_dir = fullfile('/Fridge','users','giulio','ccep','dataBIDS');
 if ~exist(fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
     ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_parameters_optimalization.mat']))
     disp('writing output parameters_optimalize_mat.mat')
     save([fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
     ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_parameters_optimalization.mat'])],...
-    'parameters_optimalize_mat_0458')
+    'parameters_optimalize_mat_0751')
 else
     disp(['ERROR: can not overwrite, output file already exists '])
 end
