@@ -15,9 +15,14 @@ thresh = [1:.2:5];
 % default is 50, kept the same because already taken into account by thresh
 minSD = 50;   
 
+subj = 1;
+runs = 1;
+tt = [1:database(subj).metadata(runs).epoch_length*database(subj).metadata(runs).data_hdr.Fs] / ...
+    database(subj).metadata(runs).data_hdr.Fs - database(subj).metadata(runs).epoch_prestim_length;
+
 % N1 peak default is 10 and 50 ms. Also try 40, 50, 60, 70 and 80ms as end
 
-n1_samples_start = find(tt>0.01,1);
+n1_samples_start = find(tt>0.009,1);
 n1_samples_end = [find(tt>0.04,1), find(tt>0.05,1), find(tt>0.06,1), find(tt>0.07,1), find(tt>0.08,1), find(tt>0.09,1), find(tt>0.1,1), find(tt>0.11,1)]; % can be higher for RESP0768
 
 
@@ -80,21 +85,18 @@ for th = 1:length(thresh)
                     % amplitude.
                     % tt are the samples of the epoch based on the Fs and -2.5 to 2.5
                     % seconds sample of the total epoch
-                    % As tt use first sample after timepoint 0  (+ extra samples to not take artifact)
+                    % As tt use first sample after timepoint 0  
                     % till first sample after 0,5 seconds (rougly 1000 samples)
-                    [all_samppos, all_amplpos] = ccep_peakfinder(new_signal(find(tt>0,1)+extrasamps:find(tt>0.5,1)),sel,[],1);
-                    [all_sampneg, all_amplneg] = ccep_peakfinder(new_signal(find(tt>0,1)+extrasamps:find(tt>0.5,1)),sel,[],-1);
+                    % sel = 20 , which is how many samples around a peak not considered as another peak
+                    [all_sampneg, all_amplneg] = ccep_peakfinder(new_signal(find(tt>0,1):find(tt>0.5,1)),20,[],-1);
 
                     % If the first selected sample is a peak, this is not a real peak,
                     % so delete
-                    all_amplpos(all_samppos==1) = [];
-                    all_samppos(all_samppos==1) = [];
                     all_amplneg(all_sampneg==1) = [];
                     all_sampneg(all_sampneg==1) = [];
 
                     % convert back timepoints based on tt, substract 1 because before
                     % the first sample after stimulation is taken
-                    all_samppos = all_samppos + find(tt>0,1) + extrasamps -1;
                     all_sampneg = all_sampneg + find(tt>0,1) + extrasamps -1;
 
 
@@ -172,13 +174,13 @@ end
 toc;
 
 % write parameters_optimalization.mat to folder
-working_dir = fullfile('/Fridge','users','giulio','ccep','dataBIDS');
+working_dir = fullfile('/Fridge','users','jaap','ccep','dataBIDS');
 if ~exist(fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
     ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_parameters_optimalization.mat']))
     disp('writing output parameters_optimalize_mat.mat')
     save([fullfile(working_dir,['sub-' sub_label],['ses-' ses_label],'ieeg',...
     ['sub-' sub_label '_ses-' ses_label '_run-' run_label '_parameters_optimalization.mat'])],...
-    'parameters_optimalize_mat_0751')
+    'parameters_optimalize_mat_0458')
 else
     disp(['ERROR: can not overwrite, output file already exists '])
 end
@@ -219,18 +221,18 @@ ylabel('time end (s)')
 
 % The validation_matrix and parameters_optimalize_mat of all validated data
 % are loaded (the variables in the mat-files are renamed so they do not overwrite)
-load(fullfile(working_dir,'validation', 'sub-RESP0458_ses-1_run-011714_parameters_optimalization.mat'))
-load(fullfile(working_dir,'validation', 'sub-RESP0458_ses-1_run-011714_validation_matrix.mat'))
-load(fullfile(working_dir,'validation', 'sub-RESP0468_ses-1_run-031729_parameters_optimalization.mat'))
-load(fullfile(working_dir,'validation', 'sub-RESP0468_ses-1_run-031729_validation_matrix.mat'))
-load(fullfile(working_dir,'validation', 'sub-RESP0621_ses-1_run-021147_parameters_optimalization.mat'))
-load(fullfile(working_dir,'validation', 'sub-RESP0621_ses-1_run-021147_validation_matrix.mat'))
-load(fullfile(working_dir,'validation', 'sub-RESP0706_ses-1_run-041501_parameters_optimalization.mat'))
-load(fullfile(working_dir,'validation', 'sub-RESP0706_ses-1_run-041501_validation_matrix.mat'))
-load(fullfile(working_dir,'validation', 'sub-RESP0733_ses-1b_run-050941_parameters_optimalization.mat'))
-load(fullfile(working_dir,'validation', 'sub-RESP0733_ses-1b_run-050941_validation_matrix.mat'))
-load(fullfile(working_dir,'validation', 'sub-RESP0768_ses-1_run-021704_parameters_optimalization.mat'))
-load(fullfile(working_dir,'validation', 'sub-RESP0768_ses-1_run-021704_validation_matrix.mat'))
+load(fullfile(top_path,'validation', 'sub-RESP0458_ses-1_run-011714_parameters_optimalization.mat'))
+load(fullfile(top_path,'validation', 'sub-RESP0458_ses-1_run-011714_validation_matrix.mat'))
+load(fullfile(top_path,'validation', 'sub-RESP0468_ses-1_run-031729_parameters_optimalization.mat'))
+load(fullfile(top_path,'validation', 'sub-RESP0468_ses-1_run-031729_validation_matrix.mat'))
+load(fullfile(top_path,'validation', 'sub-RESP0621_ses-1_run-021147_parameters_optimalization.mat'))
+load(fullfile(top_path,'validation', 'sub-RESP0621_ses-1_run-021147_validation_matrix.mat'))
+load(fullfile(top_path,'validation', 'sub-RESP0706_ses-1_run-041501_parameters_optimalization.mat'))
+load(fullfile(top_path,'validation', 'sub-RESP0706_ses-1_run-041501_validation_matrix.mat'))
+load(fullfile(top_path,'validation', 'sub-RESP0733_ses-1b_run-050941_parameters_optimalization.mat'))
+load(fullfile(top_path,'validation', 'sub-RESP0733_ses-1b_run-050941_validation_matrix.mat'))
+load(fullfile(top_path,'validation', 'sub-RESP0768_ses-1_run-021704_parameters_optimalization.mat'))
+load(fullfile(top_path,'validation', 'sub-RESP0768_ses-1_run-021704_validation_matrix.mat'))
 
 
 
@@ -291,6 +293,7 @@ set(gca,'XTick',[0:.05:1],'YTick',[0:.05:1],'FontName','Arial','FontSize',10) % 
 % plot legenda for all ROCs
 time_end = tt(n1_samples_end);
 
+
 subplot(1,4,4),hold on
 for time_th = 1:size(averaged_parameter_scores,2)
     plot(0,time_end(time_th),'.','MarkerSize',20,'Color',my_colors(time_th,:))
@@ -343,106 +346,34 @@ ylabel('significant amplitude threshold (uV)')
 set(gcf,'PaperPositionMode','auto')
 print('-dpng','-r300','/Fridge/users/jaap/temp2')
 
-
-%% looking at total ROC without RESP0768
-
-% The validation_matrix and parameters_optimalize_mat of all validated data
-% are loaded (the variables in the mat-files are renamed so they do not overwrite)
-load(fullfile(working_dir,'validation', 'sub-RESP0621_ses-1_run-021147_parameters_optimalization.mat'))
-load(fullfile(working_dir,'validation', 'sub-RESP0621_ses-1_run-021147_validation_matrix.mat'))
-load(fullfile(working_dir,'validation', 'sub-RESP0706_ses-1_run-041501_parameters_optimalization.mat'))
-load(fullfile(working_dir,'validation', 'sub-RESP0706_ses-1_run-041501_validation_matrix.mat'))
-load(fullfile(working_dir,'validation', 'sub-RESP0733_ses-1b_run-050941_parameters_optimalization.mat'))
-load(fullfile(working_dir,'validation', 'sub-RESP0733_ses-1b_run-050941_validation_matrix.mat'))
-
-% The scores of the different datasets are based on a different amount of averaged epochs
-% To calculate the average scores, it first needs recalculation.
-
-% Calculate total amount of epochs over all datasets
-total_validated_epochs_corrected = (size(validation_matrix_0621,1)*size(validation_matrix_0621,2)) ...
-    + (size(validation_matrix_0706,1)*size(validation_matrix_0706,2)) ...
-    + (size(validation_matrix_0733,1)*size(validation_matrix_0733,2));
-
-% multiply each parameters_optimalize_mat by the fraction on total epochs
-parameters_optimalize_mat_0621 = parameters_optimalize_mat_0621 * ...
-    (size(validation_matrix_0621,1)*size(validation_matrix_0621,2)/total_validated_epochs_corrected);
-parameters_optimalize_mat_0706 = parameters_optimalize_mat_0706 * ...
-    (size(validation_matrix_0706,1)*size(validation_matrix_0706,2)/total_validated_epochs_corrected);
-parameters_optimalize_mat_0733 = parameters_optimalize_mat_0733 * ...
-    (size(validation_matrix_0733,1)*size(validation_matrix_0733,2)/total_validated_epochs_corrected); 
-
-% add scores to get 1 averaged matrix with parameter scores
-averaged_parameter_scores_corrected = parameters_optimalize_mat_0621 + parameters_optimalize_mat_0706 ...
-    + parameters_optimalize_mat_0733;
-
-figure
-subplot(1,4,1:3)
-% plot change level line
-plot([0 1],[0 1],'k'),hold on
-
-% use jet as colors
-my_colors = jet(size(averaged_parameter_scores_corrected,2));
-
-% for all different ranges plot a ROC- curve
-for time_th = 1:size(averaged_parameter_scores_corrected,2)
-
-    sens_plot = averaged_parameter_scores_corrected(:,time_th,1);
-    spes_plot = averaged_parameter_scores_corrected(:,time_th,2);
-
-    plot(1-spes_plot,sens_plot,'Color',my_colors(time_th,:))
-end
-xlabel('1-specificity')
-ylabel('sensitivity')
-xlim([0 1]),ylim([0 1])
-set(gca,'XTick',[0:.05:1],'YTick',[0:.05:1],'FontName','Arial','FontSize',10) % get(gca) to see properties to change
-
-% plot legenda for all ROCs
-time_end = tt(n1_samples_end);
-
-subplot(1,4,4),hold on
-for time_th = 1:size(averaged_parameter_scores_corrected,2)
-    plot(0,time_end(time_th),'.','MarkerSize',20,'Color',my_colors(time_th,:))
-end
-ylabel('time end (s)')
-
-working_dir = fullfile('/Fridge','users','jaap','ccep','dataBIDS');
-if ~exist(fullfile(working_dir,'validation', 'averaged_parameters_optimalization_corrected.mat'))
-    disp('writing output averaged_parameters_optimalization_corrected.mat')
-    save(fullfile(working_dir,'validation', 'averaged_parameters_optimalization_corrected.mat'),...
-    'averaged_parameter_scores_corrected')
-else
-    disp(['ERROR: can not overwrite, output file already exists '])
-end
-
 %% Finding optimal parameters
 
 
-% change all not-optimal endpoints to NaN (all but 70 and 80ms)
-averaged_parameter_scores_corrected(:,1:3,:) = NaN;
-averaged_parameter_scores_corrected(:,6:8,:) = NaN;
 
 
-% Set necessary specificity on 95%
-test = averaged_parameter_scores_corrected(:,:,2) >= 0.95;
+% Set necessary specificity on 90%
+test_mat = averaged_parameter_scores(:,:,2) >= 0.95;
+
+averaged_parameter_scores_opt = averaged_parameter_scores;
 
 % loop through results and change 
-for opt_len = 1:size(averaged_parameter_scores_corrected(:,:,2),1)
-    for opt_wid = 1:size(averaged_parameter_scores_corrected(:,:,2),2)
-        if test(opt_len,opt_wid) == 0 
-            averaged_parameter_scores_corrected(opt_len,opt_wid,:) = NaN;
+for opt_len = 1:size(averaged_parameter_scores_opt(:,:,2),1)
+    for opt_wid = 1:size(averaged_parameter_scores_opt(:,:,2),2)
+        if test_mat(opt_len,opt_wid) == 0 
+            averaged_parameter_scores_opt(opt_len,opt_wid,:) = NaN;
         end
     end
 end
 
 % find optimal sensitivity under condition of specificitity >= 95%
-optimal_sensi = max(max(averaged_parameter_scores_corrected(:,:,1)));
+optimal_sensi = max(max(averaged_parameter_scores_opt(:,:,1)));
 
 % find corresponding parameters location in matrix
-optimum_mat = find(averaged_parameter_scores_corrected(:,:,1)==optimal_sensi);
+optimum_mat = find(averaged_parameter_scores_opt(:,:,1)==optimal_sensi);
 
 
 % convert this position to the parameters
-optimum_mat_x = rem(optimum_mat,size(averaged_parameter_scores_corrected(:,:,1),1));
-optimum_mat_y = floor(optimum_mat/size(averaged_parameter_scores_corrected(:,:,1),1))+1;
+optimum_mat_x = rem(optimum_mat,size(averaged_parameter_scores_opt(:,:,1),1));
+optimum_mat_y = floor(optimum_mat/size(averaged_parameter_scores_opt(:,:,1),1))+1;
 optimum_threshold = thresh(optimum_mat_x);
 optimum_endpoint = tt(n1_samples_end(optimum_mat_y));

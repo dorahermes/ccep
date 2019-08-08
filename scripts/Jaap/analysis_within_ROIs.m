@@ -284,6 +284,9 @@ title('latency within Destieux ROI: 15, 26 & 38')
 % title(['latency within Destieux ROI: ' print_label])
 hold off
 
+
+
+
 %% Plot latencies in two groups: 18- and 18+
 
 figure(), hold on
@@ -304,7 +307,7 @@ end
 % - ROI_within_plot_matrix_all  
 
 % variable/ROI to plot
-ROI_within_plot = ROI_plot_matrix_15;
+ROI_within_plot = ROI_within_plot_matrix_all;
 
 boxplot(ROI_within_plot,age_group,'Notch', 'on','Labels',{'18-','18+'})
 

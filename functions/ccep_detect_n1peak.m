@@ -9,12 +9,12 @@ function [database] = ccep_detect_n1peak(database, amplitude_thresh, n1_peak_ran
 % - amplitude_thresh
 %   Threshold factor that needs to be exceeded to detect a peak as
 %   significant peak. This factor is multiplies the minimal pre simulation
-%   standard deviation of 50 uV. amplitude_thresh of 2.8 recommended for
-%   conservative algorithm (50 uV * 2.8 = 140 uV).
+%   standard deviation of 50 uV. amplitude_thresh of 3.4 recommended for
+%   conservative algorithm (50 uV * 3.4 = 170 uV).
 % - n1_peak_range
 %   End point (in ms) of the range in which the algorithm will search for the 
 %   peak of the N1. Algorithm will search between 10ms and the end point.
-%   End point of 70 ms recommended for conservative algorithm (80ms has
+%   End point of 90 ms recommended for conservative algorithm (80ms has
 %   similar performance.
 
 
@@ -142,12 +142,12 @@ for subj = 1:length(database)
                     all_sampneg = all_sampneg + find(tt>0,1) - 1;
 
                     % set the starting range in which the algorithm looks
-                    % for a peak. At least 19 samples are necessary because
+                    % for a peak. At least 18 samples are necessary because
                     % of the micromed amplifier does not record the
                     % stimulated electrode before this. Peak detection
-                    % start 10 ms after stimulation, which is 20/21 samples
+                    % start 9 ms after stimulation, which is 19 samples
                     % after stimulation
-                    n1_samples_start = find(tt>0.01,1);
+                    n1_samples_start = find(tt>0.009,1);
                     
                     % find first sample that corresponds with the given n1
                     % peak range

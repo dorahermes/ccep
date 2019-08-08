@@ -33,7 +33,7 @@ ft_defaults
 
 %% Run preprocess data function
 
-stim_status = 2; % biphasic analysis
+stim_status = 2; % alternating polarity
 % takes at least a few hours for all subj, so only do once. 
 database = ccep_data_preprocess(database, top_path, stim_status);
 
@@ -50,4 +50,4 @@ database = ccep_detect_n1peak(database, amplitude_thresh, n1_peak_range);
 
 %% Save
 
-save('dbstruct_jaap_290719','database', '-v7.3')
+save('dbstruct_jaap_070819','database', '-v7.3')

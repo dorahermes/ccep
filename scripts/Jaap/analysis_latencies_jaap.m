@@ -237,21 +237,51 @@ for subj = 1:length(database)
     
 end
 
-figure(3)
-boxplot(matrix_reshape_all,age_vector)
+% manipulate age_vector for plotting (if two 17yr olds, change one to 16.9
+% and 1 to 17.1)
+age_vector_scale = age_vector;
+age_vector_scale(6)= 16.9;
+age_vector_scale(18) = 17.1;
+age_vector_scale(7) = 9.9;
+age_vector_scale(11) = 10.1;
+age_vector_scale(15) = 10.9;
+age_vector_scale(20) = 11.1;
+age_vector_scale(9) = 12.9;
+age_vector_scale(21) = 13.1;
+age_vector_scale(8) = 14.6;
+age_vector_scale(12) = 14.8;
+age_vector_scale(24) = 15.2;
+age_vector_scale(25) = 15.4;
+
+figure('Position',[0 0 2000 700])
+
+boxplot(matrix_reshape_all, 'positions', age_vector_scale, 'labels', age_vector_scale,'Plotstyle', 'compact')
+
+% boxplot(matrix_reshape_all, age_vector)
+
 hold on
-xlabel('age subject')
+xlabel('age subject (yrs)')
 ylabel('latency in ms')
 title('age-effect on latency in all electrodes')
+
+set(gca,'XTick',[0:10:50],'FontName','arial','FontSize',16)
+
+xlim([0 55]),ylim([1 99])
+
+
+x = [6:1:50];
+y = (-0.6547 * x) + 39.4192; % for robust fit: y = b(2) * x + b(1);
+plot(x,y, 'r')
+
 hold off
 
 
 %% Age grouped latency
 
 for gg = 1:length(age_vector)
-    if age_vector(gg) <= 18
+    if age_vector(gg) < 18
         age_group(gg) = 1;
-    elseif age_vector(gg) > 18
+    elseif age_vector(gg) >= 18
         age_group(gg) = 2;
 
     end
