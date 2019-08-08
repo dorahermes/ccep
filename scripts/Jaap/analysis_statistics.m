@@ -1,13 +1,4 @@
 
-
-
-%%
-
-% why does this give all nan's? - should work for matrices as well 
-% [B,BINT,R,RINT,STATS] = regress(age_vector',ROI_within_plot_matrix_all') % ones(length(ROI_within_plot_matrix_all),1)]);
-
-
-
 %% Analysis for regressions
 % list of ROI_within matrices that can be used for plotting:
 % - ROI_plot_matrix_15
@@ -19,7 +10,8 @@
 % or for all found CCEPs
 % - matrix_reshape_all
 
-% FILL IN THE ROI HERE - CHOOSE FROM ABOVE
+
+% FILL IN THE ROI HERE (as variable for scatter_ROI) - CHOOSE FROM ABOVE
 scatter_ROI = matrix_reshape_all;
 
 % calculate means
@@ -64,11 +56,17 @@ title('latency between the three ROIs')
 
 x = [6:1:50];
 y = B(1) * x + B(2); % for robust fit: y = b(2) * x + b(1);
-plot(x,y)
+plot(x,y, 'r')
 hold off
 
 
+%%%% Anovan
 
+y = trendline_ROI';
+g1 = age_group; 
+g2 = age_vector; 
+
+p = anovan(y,{g2,g1},'varnames',{'age','subject nr'},'nested',[0 0; 1 0]) 
 
 %% group level analysis 
 
@@ -82,10 +80,10 @@ hold off
 % or for all found CCEPs
 % - matrix_reshape_all
 
-% FILL IN THE ROI HERE - CHOOSE FROM ABOVE
-grouped_scatter_ROI = matrix_reshape_all;
+% FILL IN THE ROI HERE (as variable for grouped_ROI) - CHOOSE FROM ABOVE
+grouped_ROI = ROI_between_plot_matrix;
 
-grouped_age_ROI = nanmean(grouped_scatter_ROI);
+grouped_age_ROI = nanmean(grouped_ROI);
 
 
 % normality tests - ALL NOT NORMALLY DISTRIBUTED
@@ -133,5 +131,59 @@ group_2_vec = group_2_vec(~isnan(group_2_vec))
 % calculate median + effect size for report
 median(group_1_vec)
 median(group_2_vec)
-r = stats.zval / (length(group_1_vec) + length(group_2_vec))
-% robust bootstrapping - also option 
+r = stats.zval / sqrt((length(group_1_vec) + length(group_2_vec))) % RECALCULATE!!!!
+
+
+
+% save('matfiles_for_dora','ROI_plot_matrix_15', 'ROI_plot_matrix_26','ROI_plot_matrix_38','ROI_within_plot_matrix_all','ROI_between_plot_matrix' ...
+%     ,'matrix_reshape_all','age_vector','-v7.3')
+
+
+%% ROI analysis 
+
+% create nan matrix to fill in single point calculated AUCs 
+AUC_singlepoint = nan(size(averaged_parameter_scores,1),size(averaged_parameter_scores,2));
+
+% for every row (amplitude threshold)
+for aa = 1:size(averaged_parameter_scores,1)
+    
+    % for every column (endpoints)
+    for bb = 1:size(averaged_parameter_scores,2)
+        
+        % calculate the singlepoint based AUC and put into AUC_singlepoint 
+        % matrix by calculating squared part + lower left triangle + upper 
+        % right triangle, using with 1 - specificity for x-coordinate
+        AUC_singlepoint(aa,bb) = (averaged_parameter_scores(aa,bb,1) * averaged_parameter_scores(aa,bb,2))  +  ...
+            (((1 - averaged_parameter_scores(aa,bb,2)) * averaged_parameter_scores(aa,bb,1)) / 2)  + ...
+            ((averaged_parameter_scores(aa,bb,2) * (1 - averaged_parameter_scores(aa,bb,1))) / 2);
+
+    end
+end
+
+% not normally distributed - which makes sense for ROC curve data
+for zz = 1:size(averaged_parameter_scores,2)
+    
+    [h_ks,p_ks,ksstat,cv] = kstest(AUC_singlepoint(:))
+    
+end    
+
+% first Friendman ANOVA to test whether there are differences,
+% there are differences between ROI curves, so with follow-up wilcoxon 
+% to test which curves differ significantly
+[p,tbl,stats] = friedman(AUC_singlepoint,1)
+
+% choose the column with the highest meanrank, which is colum 7, endpoint
+% of 100 ms
+
+% use Wilcoxon Signed Rank Test to see if this parameter is significantly
+% better than others. Now compared with the neighbouring parameters (90ms
+% and 110ms, but also significant for all other comparisons)
+[p,h,stats] = signrank(AUC_singlepoint(:,7)',AUC_singlepoint(:,8)','tail','right')
+
+r = stats.zval / sqrt((length(AUC_singlepoint) * 2))
+
+[p,h,stats] = signrank(AUC_singlepoint(:,7)',AUC_singlepoint(:,6)','tail','right')
+
+r = stats.zval / sqrt(length(AUC_singlepoint) * 2)
+
+

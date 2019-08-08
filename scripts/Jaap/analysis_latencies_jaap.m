@@ -253,17 +253,26 @@ age_vector_scale(12) = 14.8;
 age_vector_scale(24) = 15.2;
 age_vector_scale(25) = 15.4;
 
-figure(3)
+figure('Position',[0 0 2000 700])
 
-boxplot(matrix_reshape_all, 'positions', age_vector_scale, 'labels', age_vector_scale, 'Plotstyle', 'compact')
+boxplot(matrix_reshape_all, 'positions', age_vector_scale, 'labels', age_vector_scale,'Plotstyle', 'compact')
+
+% boxplot(matrix_reshape_all, age_vector)
+
 hold on
-xlabel('age subject')
+xlabel('age subject (yrs)')
 ylabel('latency in ms')
 title('age-effect on latency in all electrodes')
 
 set(gca,'XTick',[0:10:50],'FontName','arial','FontSize',16)
 
-xlim([0 55]),ylim([0 100])
+xlim([0 55]),ylim([1 99])
+
+
+x = [6:1:50];
+y = (-0.6547 * x) + 39.4192; % for robust fit: y = b(2) * x + b(1);
+plot(x,y, 'r')
+
 hold off
 
 
