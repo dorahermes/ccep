@@ -21,6 +21,17 @@ for subj = [1 4 5 6];
     end 
 end
 
+%% Concatenating runs that are following each other 
+for subj = [1 5] 
+    database(subj).metadata(1).events = [database(subj).metadata(1).events; database(subj).metadata(2).events]   
+    database(subj).metadata(1).events_onlystims = [database(subj).metadata(1).events_onlystims; database(subj).metadata(2).events_onlystims]   
+    database(subj).metadata(1).stimulated_nroftimes = [database(subj).metadata(1).stimulated_nroftimes; database(subj).metadata(2).stimulated_nroftimes]
+    database(subj).metadata(1).epoched_data_avg = cat(2,database(subj).metadata(1).epoched_data_avg,database(subj).metadata(2).epoched_data_avg);  
+    database(subj).metadata(1).stimulated_pairs = [database(subj).metadata(1).stimulated_pairs; database(subj).metadata(2).stimulated_pairs]; 
+    database(subj).metadata(1).n1_peak_amplitude = cat(2,database(subj).metadata(1).n1_peak_amplitude, database(subj).metadata(2).n1_peak_amplitude); 
+end 
+% now for subjects 1 and 5 we have runs 1 and 2 in run 1 
+
 runs = 1; %[1:length(database(subj).metadata)] %(this is partially right, because it loops around the rows of the metadata, not specifically on the runs columns
 
 % select subjects/iterate over all subjects in database
