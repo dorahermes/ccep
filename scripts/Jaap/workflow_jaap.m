@@ -39,8 +39,8 @@ database = ccep_data_preprocess(database, top_path, stim_status);
 
 %% Set parameters for n1 peak detection
 
-amplitude_thresh = 3.4;   
-n1_peak_range = 90;
+amplitude_thresh = 3.6;   
+n1_peak_range = 100;
 
 
 %% Run detect n1 peaks function
@@ -50,4 +50,4 @@ database = ccep_detect_n1peak(database, amplitude_thresh, n1_peak_range);
 
 %% Save
 
-save('dbstruct_jaap_070819','database', '-v7.3')
+save('dbstruct_jaap_130819','database', '-v7.3')

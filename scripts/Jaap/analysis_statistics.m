@@ -12,7 +12,7 @@
 
 
 % FILL IN THE ROI HERE (as variable for scatter_ROI) - CHOOSE FROM ABOVE
-scatter_ROI = matrix_reshape_all;
+scatter_ROI = ROI_plot_matrix_15;
 
 % calculate means
 trendline_ROI = nanmean(scatter_ROI);
@@ -62,12 +62,16 @@ hold off
 
 %%%% Anovan
 
-y = trendline_ROI';
-g1 = age_group; 
-g2 = age_vector; 
+% y = trendline_ROI';
+% g1 = age_group; 
+% g2 = age_vector; 
+% 
+% p = anovan(y,{g2,g1},'varnames',{'age','subject nr'},'nested',[0 0; 1 0]) 
 
-p = anovan(y,{g2,g1},'varnames',{'age','subject nr'},'nested',[0 0; 1 0]) 
-
+STATS(1) 
+STATS(2)
+STATS(3)
+df
 %% group level analysis 
 
 % list of ROI_within matrices that can be used for plotting:
@@ -91,16 +95,16 @@ H = histfit(grouped_age_ROI(:));
 [h_ks,p_ks,ksstat,cv] = kstest(grouped_age_ROI);
 
 for gg = 1:length(age_vector)
-    if age_vector(gg) <= 18
+    if age_vector(gg) < 18
         age_group(gg) = 1;
-    elseif age_vector(gg) > 18
+    elseif age_vector(gg) >= 18
         age_group(gg) = 2;
         
     end
 end
 
 % levene test for heterogeneity of variance - no sig results on means
-p_levene = vartestn(grouped_age_ROI',age_group','TestType','LeveneAbsolute')
+p_levene = vartestn(grouped_age_ROI',age_group','TestType','LeveneQuadratic')
 
 % create vector with data for both groups
 for qq = 1:length(age_group)
@@ -129,9 +133,9 @@ group_2_vec = group_2_vec(~isnan(group_2_vec))
 [p,h,stats] = ranksum(group_1_vec',group_2_vec','tail', 'right', 'method', 'approximate')
 
 % calculate median + effect size for report
-median(group_1_vec)
-median(group_2_vec)
-r = stats.zval / sqrt((length(group_1_vec) + length(group_2_vec))) % RECALCULATE!!!!
+median(group_1_vec,'omitnan')
+median(group_2_vec,'omitnan')
+r = stats.zval / sqrt((length(group_1_vec) + length(group_2_vec)))
 
 
 
@@ -186,4 +190,194 @@ r = stats.zval / sqrt((length(AUC_singlepoint) * 2))
 
 r = stats.zval / sqrt(length(AUC_singlepoint) * 2)
 
+%% analyzing the percentages of CCEPs - grouped for within and between
 
+rel_perc_cceps_within % percentages of CCEPs within ROIs
+rel_perc_cceps_between % percentages of CCEPs between ROIs
+
+% violation of normality assumptions
+H = histfit(rel_perc_cceps_within(:),10,'kernel');
+[h_ks,p_ks,ksstat,cv] = kstest(rel_perc_cceps_within)
+[h_ks,p_ks,ksstat,cv] = kstest(rel_perc_cceps_between)
+
+% no violation of heterogeinity
+p_levene = vartestn([rel_perc_cceps_within rel_perc_cceps_between]',[ones(1,27) ones(1,27)+1]','TestType','LeveneAbsolute')
+
+% rank-sum test
+[p,h,stats] = ranksum(rel_perc_cceps_within',rel_perc_cceps_between','tail', 'right' )
+
+% effect size
+r = stats.zval / sqrt((length(rel_perc_cceps_within) + length(rel_perc_cceps_between)))
+
+median(rel_perc_cceps_within,'omitnan') % check on other medians
+median(rel_perc_cceps_between,'omitnan') % check on other medians
+
+%% analyzing relative CCEPs - regression
+
+% do some recalculation to add within data and between data 
+for subj = 1:length(subjects)
+    
+     if ~isempty(database(subj).ROI_between_all)
+         
+         total_relative_cceps(subj) = ((database(subj).amount_cceps) + (sum(~isnan(database(subj).ROI_between_all(:,3))))) / ...
+             ((database(subj).total_stims) + (length(database(subj).ROI_between_all(:,3))));
+
+     elseif isempty(database(subj).ROI_between_all) 
+         
+         total_relative_cceps(subj) = (database(subj).amount_cceps) / (database(subj).total_stims);
+     end
+end
+
+total_relative_cceps
+
+% do regress analysis using age vector and the nanmeans latency
+% stats: R2 statistic, the F-statistic and its p-value, and an estimate of the error variance
+[B,BINT,R,RINT,STATS] = regress(age_vector',[total_relative_cceps' ones(length(total_relative_cceps),1)]);
+
+% Durbin-Watson test for independent errors, significant due to set up data
+% to do DW test, remove nan's from data
+total_relative_cceps_nonan = total_relative_cceps(~isnan(total_relative_cceps));  
+R_nonan = R(~isnan(R)); 
+% not significant test dw
+[p_dw, d_dw] = dwtest(R_nonan,[total_relative_cceps_nonan' ones(length(total_relative_cceps_nonan),1)])
+
+% degrees of freedom for regression
+df = [1  (length(total_relative_cceps_nonan)-2)];   
+
+
+
+figure(),hold on
+
+for subj = 1:length(database)
+    
+    scatter(age_vector(1,subj),rel_perc_cceps_within(subj),50,'MarkerEdgeColor',[0 0 1],'MarkerFaceColor',[0 0 1])
+    
+    
+end
+
+
+for subj = 1:length(subjects)
+    
+    scatter(age_vector(1,subj),rel_perc_cceps_between(subj),50,'MarkerEdgeColor',[1 0 0],'MarkerFaceColor',[1 0 0])
+    
+end
+xlim([0 50]), ylim([0 1])
+xlabel('age subject')
+ylabel('latency in ms')
+title('relative percentage cceps, 18- and 18+, within and between all ROIs')
+
+hold off
+
+
+%% relative CCEPs - grouped 18+ and 18- 
+
+total_relative_cceps
+
+
+% create vector with data for both groups
+for qq = 1:length(age_group)
+
+    if age_group(qq) == 1
+    
+        group_1_vec(qq) = total_relative_cceps(qq);
+        group_2_vec(qq) = NaN;
+     
+    elseif age_group(qq) == 2
+        
+        group_1_vec(qq) = NaN;
+        group_2_vec(qq) = total_relative_cceps(qq);
+        
+    end
+    
+end
+
+% delete nan's just to be sure
+group_1_vec = group_1_vec(~isnan(group_1_vec))
+group_2_vec = group_2_vec(~isnan(group_2_vec))
+
+[p,h,stats] = ranksum(group_1_vec',group_2_vec','tail', 'right')
+
+% calculate median + effect size for report
+median(group_1_vec)
+median(group_2_vec)
+r = stats.zval / sqrt((length(group_1_vec) + length(group_2_vec)))
+
+
+%% variance tests - scatter - Spearman correlation
+
+% list of ROI_within matrices that can be used for variance test:
+% - ROI_within_plot_matrix_all
+% or for between ROI analysis:
+% - ROI_between_plot_matrix
+% or for all found CCEPs
+% - matrix_reshape_all
+
+
+% put here which matrix you want to use for testing
+variance_test_mat = matrix_reshape_all;
+
+% test variance across subjects
+vartestn(variance_test_mat,'testtype','LeveneQuadratic');
+
+% find standard deviation for every subject 
+subj_std = nanstd(variance_test_mat,[],1);
+
+% change the std's of 0 to NaN due to lack of data and to ensure they are
+% not used in analysis
+for zz = 1:length(subj_std)
+    if subj_std(zz) == 0 
+        subj_std(zz) = NaN;
+    end
+end
+
+% not normally distributed, so used Spearman
+[h_ks,p_ks,ksstat,cv] = kstest(subj_std);
+
+% plot std as a function of age
+figure(), hold on
+plot(age_vector,subj_std,'.','MarkerSize',10)
+
+[RHO,PVAL] = corr(age_vector(~isnan(subj_std))',subj_std(~isnan(subj_std))','type','Spearman')
+
+% degrees of freedom for correlation
+df = [1  (length(subj_std(~isnan(subj_std)))-2)];   
+
+xlim([0 55]),ylim([0 30])
+xlabel('age subject')
+ylabel('standard deviation (in ms)')
+title('variance in latency per subject within ROIs')
+hold off
+
+%% variance tests - grouped - Wilcoxon rank sum correlation
+
+% list of ROI_within matrices that can be used for variance test:
+% - ROI_within_plot_matrix_all
+% or for between ROI analysis:
+% - ROI_between_plot_matrix
+% or for all found CCEPs
+% - matrix_reshape_all
+
+% put here which matrix you want to use for testing
+variance_grouped_mat = matrix_reshape_all;
+
+% find standard deviation for every subject 
+subj_std = nanstd(variance_grouped_mat,[],1);
+
+% change the std's of 0 to NaN due to lack of data and to ensure they are
+% not used in analysis
+for zz = 1:length(subj_std)
+    if subj_std(zz) == 0 
+        subj_std(zz) = NaN;
+    end
+end
+
+% Wilcoxon rank-sum/Mann-Whitney
+[p,h,stats] = ranksum(subj_std(age_group == 1)',subj_std(age_group == 2)', 'method', 'approximate')
+
+% calculate median + effect size and other things for report
+ans1 = median(subj_std(age_group == 1),'omitnan')
+ans2 = median(subj_std(age_group == 2),'omitnan')
+ans1 - ans2
+sum(~isnan(subj_std(age_group == 1)))
+sum(~isnan(subj_std(age_group == 2)))
+r = stats.zval / sqrt((sum(~isnan(subj_std(age_group == 1))) + sum(~isnan(subj_std(age_group == 2)))))

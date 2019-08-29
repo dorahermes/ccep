@@ -199,7 +199,7 @@ set(gca,'XTick',[0:.5:1],'YTick',[0:.5:1],'FontName','arial','FontSize',16)
 time_end = round(tt(n1_samples_end),2) * 1000;
 
 subplot(1,5,5),hold on
-for time_th = 1:size(parameters_optimalize_mat_0621,2)
+for time_th = 1:size(averaged_parameter_scores,2)
     for clrbar=1:75
         
         plot(clrbar,time_end(time_th),'.','MarkerSize',20,'Color',my_colors(time_th,:))
@@ -220,24 +220,24 @@ print('-dpng','-r300','/home/jaap/figures/ROCcurves_averages')
 figure()
 plot([0 1],[0 1],'k'),hold on
 % use jet as colors
-my_colors = jet(size(averaged_parameter_scores_corrected,2));
+my_colors = jet(size(averaged_parameter_scores,2));
 
 % for all different ranges plot a ROC- curve
-for time_th = 1:size(averaged_parameter_scores_corrected,2)
+for time_th = 1:size(averaged_parameter_scores,2)
 
-    sens_plot = averaged_parameter_scores_corrected(:,time_th,1);
-    spes_plot = averaged_parameter_scores_corrected(:,time_th,2);
+    sens_plot = averaged_parameter_scores(:,time_th,1);
+    spes_plot = averaged_parameter_scores(:,time_th,2);
 
     plot(1-spes_plot,sens_plot,'Color',my_colors(time_th,:))
 end
 
 %plot(1-averaged_parameter_scores_corrected(optimum_mat_x,optimum_mat_y,2),...
  %   averaged_parameter_scores_corrected(optimum_mat_x,optimum_mat_y,1),'k*','MarkerSize',10)
-title('Averaged ROC-curves')
-
-xlabel('1 - specificity')
-ylabel('sensitivity')
-xlim([0 1]),ylim([0 1])
+% title('Averaged ROC-curves')
+% 
+% xlabel('1 - specificity')
+% ylabel('sensitivity')
+xlim([0 .3]),ylim([0.7 1])
 axis square
 
 set(gcf,'PaperPositionMode','auto')

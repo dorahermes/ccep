@@ -262,9 +262,6 @@ parameters_optimalize_mat_0768 = parameters_optimalize_mat_0768 * ...
     (size(validation_matrix_0768,1)*size(validation_matrix_0768,2)/total_validated_epochs); 
 
 
-% NOTE TO SELF: add extra option in which there is no correction for the
-% amount of epochs per patient
-
 % add scores to get 1 averaged matrix with parameter scores
 averaged_parameter_scores = parameters_optimalize_mat_0458 + parameters_optimalize_mat_0468 + parameters_optimalize_mat_0621 ...
     + parameters_optimalize_mat_0706 + parameters_optimalize_mat_0733 + parameters_optimalize_mat_0768;
