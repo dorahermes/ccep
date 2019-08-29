@@ -240,33 +240,52 @@ end
 % manipulate age_vector for plotting (if two 17yr olds, change one to 16.9
 % and 1 to 17.1)
 age_vector_scale = age_vector;
-age_vector_scale(6)= 16.9;
-age_vector_scale(18) = 17.1;
-age_vector_scale(7) = 9.9;
-age_vector_scale(11) = 10.1;
-age_vector_scale(15) = 10.9;
-age_vector_scale(20) = 11.1;
-age_vector_scale(9) = 12.9;
-age_vector_scale(21) = 13.1;
-age_vector_scale(8) = 14.6;
-age_vector_scale(12) = 14.8;
-age_vector_scale(24) = 15.2;
-age_vector_scale(25) = 15.4;
+age_vector_scale(6)= 16.8;
+age_vector_scale(18) = 17.2;
+age_vector_scale(7) = 9.8;
+age_vector_scale(11) = 10.2;
+age_vector_scale(15) = 10.8;
+age_vector_scale(20) = 11.2;
+age_vector_scale(9) = 12.8;
+age_vector_scale(21) = 13.2;
+age_vector_scale(8) = 14.4;
+age_vector_scale(12) = 14.7;
+age_vector_scale(24) = 15.3;
+age_vector_scale(25) = 15.7;
 
-figure('Position',[0 0 2000 700])
+figure('Position',[0 0 2000 700]), hold on
 
-boxplot(matrix_reshape_all, 'positions', age_vector_scale, 'labels', age_vector_scale,'Plotstyle', 'compact')
-
-% boxplot(matrix_reshape_all, age_vector)
-
-hold on
+boxplot(matrix_reshape_all, 'positions', age_vector_scale, 'labels', age_vector_scale,'Plotstyle', 'compact', ...
+    'OutlierSize', 1, 'Symbol', 'x')
 xlabel('age subject (yrs)')
 ylabel('latency in ms')
 title('age-effect on latency in all electrodes')
 
 set(gca,'XTick',[0:10:50],'FontName','arial','FontSize',16)
 
-xlim([0 55]),ylim([1 99])
+xlim([0 55]),ylim([1 109])
+
+
+x = [6:1:50];
+y = (-0.6547 * x) + 39.4192; % for robust fit: y = b(2) * x + b(1);
+plot(x,y, 'r')
+
+hold off
+
+% scatterplot of all latencies
+figure('Position',[0 0 2000 700]), hold on
+for subj = 1:length(database)
+    scatter(repelem(age_vector(1,subj),length(matrix_reshape_all)),matrix_reshape_all(:,subj),50,[0 0 0])
+end
+
+
+xlabel('age subject (yrs)')
+ylabel('latency in ms')
+title('age-effect on latency in all electrodes')
+
+set(gca,'XTick',[0:10:50],'FontName','arial','FontSize',16)
+
+xlim([0 55]),ylim([1 109])
 
 
 x = [6:1:50];
@@ -310,7 +329,7 @@ ylabel('percentage CCEPs')
 title('age-effect on percentage of CCEPs in all electrodes')
 hold off
 
-
+%%% TILL HERE
 
 
 %% layout for all subjects and only SPESclin runs 
@@ -329,6 +348,7 @@ end
 %% Set data for rendering
 
 addpath('/Fridge/users/jaap/github/ecogBasicCode/render/')
+addpath('/Fridge/users/jaap/github/ccep/oldCode/2019/')
 top_path = '/Fridge/users/jaap/ccep/dataBIDS/';
 subjects = {'RESP0467'};
 hemi_cap = {'R'};
@@ -398,8 +418,3 @@ for s = 1%:3 %1:length(subjects)
 end
 
 
-%% 
-
-tic;
-save('dbstruct160719','database', '-v7.3')
-time3 = toc;

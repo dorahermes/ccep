@@ -179,9 +179,9 @@ hold off
 figure(), hold on
 
 for gg = 1:length(age_vector)
-    if age_vector(gg) <= 18
+    if age_vector(gg) < 18
         age_group(gg) = 1;
-    elseif age_vector(gg) > 18
+    elseif age_vector(gg) >= 18
         age_group(gg) = 2;
         
     end
@@ -258,9 +258,9 @@ hold off
 figure(), hold on
 
 for gg = 1:length(age_vector)
-    if age_vector(gg) <= 18
+    if age_vector(gg) < 18
         age_group(gg) = 1;
-    elseif age_vector(gg) > 18
+    elseif age_vector(gg) >= 18
         age_group(gg) = 2;
         
     end

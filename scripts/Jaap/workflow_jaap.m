@@ -50,4 +50,4 @@ database = ccep_detect_n1peak(database, amplitude_thresh, n1_peak_range);
 
 %% Save
 
-save('dbstruct_jaap_080819','database', '-v7.3')
+save('dbstruct_jaap_130819','database', '-v7.3')

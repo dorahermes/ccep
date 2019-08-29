@@ -12,7 +12,7 @@
 
 
 % FILL IN THE ROI HERE (as variable for scatter_ROI) - CHOOSE FROM ABOVE
-scatter_ROI = matrix_reshape_all;
+scatter_ROI = ROI_plot_matrix_15;
 
 % calculate means
 trendline_ROI = nanmean(scatter_ROI);
@@ -62,12 +62,16 @@ hold off
 
 %%%% Anovan
 
-y = trendline_ROI';
-g1 = age_group; 
-g2 = age_vector; 
+% y = trendline_ROI';
+% g1 = age_group; 
+% g2 = age_vector; 
+% 
+% p = anovan(y,{g2,g1},'varnames',{'age','subject nr'},'nested',[0 0; 1 0]) 
 
-p = anovan(y,{g2,g1},'varnames',{'age','subject nr'},'nested',[0 0; 1 0]) 
-
+STATS(1) 
+STATS(2)
+STATS(3)
+df
 %% group level analysis 
 
 % list of ROI_within matrices that can be used for plotting:
@@ -91,16 +95,16 @@ H = histfit(grouped_age_ROI(:));
 [h_ks,p_ks,ksstat,cv] = kstest(grouped_age_ROI);
 
 for gg = 1:length(age_vector)
-    if age_vector(gg) <= 18
+    if age_vector(gg) < 18
         age_group(gg) = 1;
-    elseif age_vector(gg) > 18
+    elseif age_vector(gg) >= 18
         age_group(gg) = 2;
         
     end
 end
 
 % levene test for heterogeneity of variance - no sig results on means
-p_levene = vartestn(grouped_age_ROI',age_group','TestType','LeveneAbsolute')
+p_levene = vartestn(grouped_age_ROI',age_group','TestType','LeveneQuadratic')
 
 % create vector with data for both groups
 for qq = 1:length(age_group)
@@ -129,8 +133,8 @@ group_2_vec = group_2_vec(~isnan(group_2_vec))
 [p,h,stats] = ranksum(group_1_vec',group_2_vec','tail', 'right', 'method', 'approximate')
 
 % calculate median + effect size for report
-median(group_1_vec)
-median(group_2_vec)
+median(group_1_vec,'omitnan')
+median(group_2_vec,'omitnan')
 r = stats.zval / sqrt((length(group_1_vec) + length(group_2_vec)))
 
 
@@ -297,3 +301,83 @@ group_2_vec = group_2_vec(~isnan(group_2_vec))
 median(group_1_vec)
 median(group_2_vec)
 r = stats.zval / sqrt((length(group_1_vec) + length(group_2_vec)))
+
+
+%% variance tests - scatter - Spearman correlation
+
+% list of ROI_within matrices that can be used for variance test:
+% - ROI_within_plot_matrix_all
+% or for between ROI analysis:
+% - ROI_between_plot_matrix
+% or for all found CCEPs
+% - matrix_reshape_all
+
+
+% put here which matrix you want to use for testing
+variance_test_mat = matrix_reshape_all;
+
+% test variance across subjects
+vartestn(variance_test_mat,'testtype','LeveneQuadratic');
+
+% find standard deviation for every subject 
+subj_std = nanstd(variance_test_mat,[],1);
+
+% change the std's of 0 to NaN due to lack of data and to ensure they are
+% not used in analysis
+for zz = 1:length(subj_std)
+    if subj_std(zz) == 0 
+        subj_std(zz) = NaN;
+    end
+end
+
+% not normally distributed, so used Spearman
+[h_ks,p_ks,ksstat,cv] = kstest(subj_std);
+
+% plot std as a function of age
+figure(), hold on
+plot(age_vector,subj_std,'.','MarkerSize',10)
+
+[RHO,PVAL] = corr(age_vector(~isnan(subj_std))',subj_std(~isnan(subj_std))','type','Spearman')
+
+% degrees of freedom for correlation
+df = [1  (length(subj_std(~isnan(subj_std)))-2)];   
+
+xlim([0 55]),ylim([0 30])
+xlabel('age subject')
+ylabel('standard deviation (in ms)')
+title('variance in latency per subject within ROIs')
+hold off
+
+%% variance tests - grouped - Wilcoxon rank sum correlation
+
+% list of ROI_within matrices that can be used for variance test:
+% - ROI_within_plot_matrix_all
+% or for between ROI analysis:
+% - ROI_between_plot_matrix
+% or for all found CCEPs
+% - matrix_reshape_all
+
+% put here which matrix you want to use for testing
+variance_grouped_mat = matrix_reshape_all;
+
+% find standard deviation for every subject 
+subj_std = nanstd(variance_grouped_mat,[],1);
+
+% change the std's of 0 to NaN due to lack of data and to ensure they are
+% not used in analysis
+for zz = 1:length(subj_std)
+    if subj_std(zz) == 0 
+        subj_std(zz) = NaN;
+    end
+end
+
+% Wilcoxon rank-sum/Mann-Whitney
+[p,h,stats] = ranksum(subj_std(age_group == 1)',subj_std(age_group == 2)', 'method', 'approximate')
+
+% calculate median + effect size and other things for report
+ans1 = median(subj_std(age_group == 1),'omitnan')
+ans2 = median(subj_std(age_group == 2),'omitnan')
+ans1 - ans2
+sum(~isnan(subj_std(age_group == 1)))
+sum(~isnan(subj_std(age_group == 2)))
+r = stats.zval / sqrt((sum(~isnan(subj_std(age_group == 1))) + sum(~isnan(subj_std(age_group == 2)))))

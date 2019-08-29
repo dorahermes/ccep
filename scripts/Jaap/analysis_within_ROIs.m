@@ -119,10 +119,11 @@ ROI_list = [15, 26, 38];
 runs = 1;
 ses = 1;
 
+
 for ROI = 1:size(ROI_list,2)
     
     % create empty matrix
-    ROI_plot_matrix = nan(250,length(subjects));
+    ROI_plot_matrix = nan(250,length(database));
     
     for subj = 1:length(database)
         database(subj).ROI_within_coverage = [];
@@ -276,7 +277,7 @@ for subj = 1:length(database)
 
 end
 
-xlim([0 50]),ylim([10 90])
+xlim([0 55]),ylim([1 109])
 xlabel('age subject')
 ylabel('latency in ms')
 title('latency within Destieux ROI: 15, 26 & 38')
@@ -289,33 +290,76 @@ hold off
 
 %% Plot latencies in two groups: 18- and 18+
 
-figure(), hold on
+ % list of ROI_between matrices that can be used for plotting:
+% - ROI_plot_matrix_15
+% - ROI_plot_matrix_26
+% - ROI_plot_matrix_38
+% - ROI_within_plot_matrix_all 
+% or for between ROI analysis:
+% - ROI_between_plot_matrix
+% or for all found CCEPs
+% - matrix_reshape_all
+
+% variable/ROI to plot
+ROI_within_plot = matrix_reshape_all;
+
+clear group_1_cceps
+clear group_2_cceps
 
 for gg = 1:length(age_vector)
-    if age_vector(gg) <= 18
+    if age_vector(gg) < 18        
+        
+        group_1_cceps(:,gg) = ROI_within_plot(:,gg);
+        group_2_cceps(:,gg) = nan(length(ROI_within_plot),1);
+        
         age_group(gg) = 1;
-    elseif age_vector(gg) > 18
+                
+    elseif age_vector(gg) >= 18
+       
+        group_1_cceps(:,gg) = nan(length(ROI_within_plot),1);
+        group_2_cceps(:,gg) = ROI_within_plot(:,gg);        
+        
         age_group(gg) = 2;
         
     end
 end
 
- % list of ROI_between matrices that can be used for plotting:
-% - ROI_plot_matrix_15
-% - ROI_plot_matrix_26
-% - ROI_plot_matrix_38
-% - ROI_within_plot_matrix_all  
+% reshape for right format
+group_1_cceps = reshape(group_1_cceps(:), (size(group_1_cceps,1) * size(group_1_cceps,2)),1);
+group_2_cceps = reshape(group_2_cceps(:), (size(group_1_cceps,1) * size(group_1_cceps,2)),1);
 
-% variable/ROI to plot
-ROI_within_plot = ROI_within_plot_matrix_all;
+% delete nan's
+group_1_cceps = group_1_cceps(~isnan(group_1_cceps))
+group_2_cceps = group_2_cceps(~isnan(group_2_cceps))
 
-boxplot(ROI_within_plot,age_group,'Notch', 'on','Labels',{'18-','18+'})
+% because they have different sizes, calculate difference and add the
+% difference as number of nan's to the shortest group
+test = abs(size(group_2_cceps,1) - size(group_1_cceps,1));
 
+if size(group_2_cceps,1) < size(group_1_cceps,1)
+    
+    group_2_cceps = [group_2_cceps;  nan(test,1)];
+    
+elseif size(group_2_cceps,1) >= size(group_1_cceps,1)
+    
+    group_1_cceps = [group_1_cceps;  nan(test,1)];
+end
 
+figure(), hold on
+violin([group_1_cceps group_2_cceps],'facecolor',[[1 0 0];[0 0 1]],'medc','','mc','')
+
+boxplot(ROI_within_plot,age_group,'Labels',{'18 -','18 +'},'Plotstyle', 'compact','Symbol','')
+
+ylim([9 109])
 xlabel('age subject')
 ylabel('latency in ms')
-title('age-effect on latency two groups, 18- and 18+, ROI 15, 26 & 38')
+title('ROI 38')
+
+
+
 hold off
+
+
 
 summed_cceps = (sum(~isnan(ROI_within_plot)));
 
@@ -335,3 +379,38 @@ CCEPs_18plus
 
 
 
+
+
+%% 
+
+
+
+figure(10)
+
+ROI_within_plot = ROI_within_plot_matrix_all;
+
+
+for gg = 1:length(age_vector)
+    if age_vector(gg) < 18
+        
+        
+        group_1_cceps(:,gg) = ROI_within_plot(:,gg);
+        group_2_cceps(:,gg) = nan(length(ROI_within_plot),1);
+        
+        
+    elseif age_vector(gg) >= 18
+        
+        group_1_cceps(:,gg) = nan(length(ROI_within_plot),1);
+        group_2_cceps(:,gg) = ROI_within_plot(:,gg);
+        
+        
+    end
+end
+
+% reshape
+group_1_cceps = reshape(group_1_cceps(:), (size(group_1_cceps,1) * size(group_1_cceps,2)),1);
+group_2_cceps = reshape(group_2_cceps(:), (size(group_1_cceps,1) * size(group_1_cceps,2)),1);
+
+figure(10)
+subplot(1,2,1)
+violin([group_1_cceps group_2_cceps],'facecolor',[[1 0 0];[0 0 1]],'medc','','mc','k')
