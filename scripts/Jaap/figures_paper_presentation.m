@@ -23,6 +23,79 @@ addpath(genpath('/Fridge/users/jaap/github/ccep/'))
 
 %% Figure 1: visualisation of how the detection algorithm works
 
+subj = 1;
+runs = 1;
+ii = 3;
+jj = 1;
+minSD = 50;
+n1_samples_start = find(tt>0.009,1);
+n1_samples_end = find(tt>0.1,1);
+thresh = 3.6;
+
+baseline_tt = tt>-1 & tt<-.01;
+signal_median = median(database(subj).metadata(runs).epoched_data_avg(ii,jj,baseline_tt),3);
+
+% subtract median baseline from signal
+new_signal = squeeze(database(subj).metadata(runs).epoched_data_avg(ii,jj,:)) - signal_median;
+% testplot new signal: plot(tt,squeeze(new_signal))
+
+% take area before the stimulation of the new signal and calculate its SD
+pre_stim_sd_orig = std(new_signal(baseline_tt));
+
+% if the pre_stim_sd is smaller that the minimally needed SD, use this
+% the minSD as pre_stim_sd
+if pre_stim_sd_orig < minSD
+    pre_stim_sd = minSD * thresh;
+else 
+    pre_stim_sd =  pre_stim_sd_orig * thresh;
+end
+
+% display figure in specific size
+fig10 = figure(10); set(fig10,'Position',[0 0 1000 400]), hold on
+
+
+% plot relevant part of the signal (1s before till 500ms after stimulation)
+
+plot(tt(tt>-1 & tt<.5),squeeze(new_signal(tt>-1 & tt<.5)),'Color',[0 0 0],'LineWidth',2)
+
+xlabel('time (in sec)')
+ylabel('amplitude (in uV)')
+title('Visualisation of detection algorithm')
+set(gca, 'FontName','arial','FontSize',20)
+
+ylim([-1200 1200])
+xlim([-1 .5])
+box off
+
+hold on
+% plot stimulation artifact (first 20 samples, +/- 9ms)
+plot(tt(5120:5139),squeeze(new_signal(5120:5139)),'r','LineWidth',2)
+% plot found peaks and onsets
+% plot(tt(output_ER_all(ii,jj,1)),output_ER_all(ii,jj,2),'b*')
+% plot(tt(output_ER_all(ii,jj,3)),output_ER_all(ii,jj,4),'r*')
+% plot(tt(output_ER_all(ii,jj,5)),output_ER_all(ii,jj,6),'g*')
+% plot(tt(output_ER_all(ii,jj,7)),output_ER_all(ii,jj,8),'y*')
+
+% plot calculated baseline standard deviation
+plot(tt(baseline_tt), pre_stim_sd_orig+zeros(size(tt(baseline_tt))), 'm-','LineWidth',2)
+plot(tt(baseline_tt), -pre_stim_sd_orig+zeros(size(tt(baseline_tt))), 'm-','LineWidth',2)
+
+% plot adjusted baseline (when calculated < minSD)
+plot(tt(baseline_tt), (pre_stim_sd)+zeros(size(tt(baseline_tt))), 'g-','LineWidth',2)
+plot(tt(baseline_tt), (-pre_stim_sd)+zeros(size(tt(baseline_tt))), 'g-','LineWidth',2)
+
+% plot lines with timeframe of n1 peak
+plot([tt(n1_samples_start) tt(n1_samples_start)],[-2000 -180], 'b-','LineWidth',2)
+plot([tt(n1_samples_end) tt(n1_samples_end)],[-2000 -180], 'b-','LineWidth',2)
+plot(tt(n1_samples_start:n1_samples_end), (-pre_stim_sd)+zeros(size(tt(n1_samples_start:n1_samples_end))), 'b-','LineWidth',2)
+
+
+plot(tt(database(subj).metadata(runs).n1_peak_sample(ii,jj)), database(subj).metadata(runs).n1_peak_amplitude(ii,jj), ...
+    'o', 'LineWidth',4, 'MarkerSize',8,'MarkerEdgeColor', 'c');
+
+
+hold off
+
 
 %% Figure 2: The ROC-curves - finished
 
@@ -104,7 +177,7 @@ ylabel('sensitivity')
 xlim([0 1]),ylim([0 1])
 axis square
 title('ROC-curves of algorithm performance')
-set(gca,'XTick',[0:.5:1],'YTick',[0:.5:1],'FontName','arial','FontSize',16)
+set(gca,'XTick',[0:.5:1],'YTick',[0:.5:1],'FontName','arial','FontSize',18)
 
 % plot star at optimum
 plot(((100-95.51)/100),(75.40/100),'p', 'MarkerFaceColor','black','MarkerSize',15,'MarkerEdgeColor', 'black');
@@ -124,12 +197,12 @@ xlim([-4 80]), set(gca,'XTick',[])
 ylim([35,115]), ylabel('time end (ms)')
 ttl = title('Detection range'); 
 box on
-set(gca,'FontName','arial','FontSize',16)
+set(gca,'FontName','arial','FontSize',18)
 set(gcf,'PaperPositionMode','auto')
 
 
 % plot figure with zoomed on part of the ROC-curves 
-fig22 = figure(22);
+fig23 = figure(23);
 plot([0 1],[0 1],'k'),hold on
 % use jet as colors
 my_colors = jet(size(averaged_parameter_scores,2));
@@ -153,8 +226,7 @@ xlim([0 .3]),ylim([0.7 1])
 axis square
 
 set(gcf,'PaperPositionMode','auto')
-
-
+set(gca,'XTick',[0:.05:.3],'YTick',[.7:.05:1],'FontName','arial','FontSize',14)
 
 
 %% Figure 3: Boxplot/scatter of all latencies 
@@ -195,7 +267,7 @@ xlabel('Age subject (in years)')
 ylabel('Latency (in ms)')
 title('Boxplot of all detected latencies for each subject')
 
-set(gca,'XTick',[0:10:50],'FontName','arial','FontSize',16)
+set(gca,'XTick',[0:10:50],'FontName','arial','FontSize',28)
 xlim([0 55]),ylim([1 109])
 
 % plot trendline
@@ -217,7 +289,7 @@ xlabel('Age subject (in years)')
 ylabel('Latency (in ms)')
 title('Scatterplot of all detected latencies for each subject')
 
-set(gca,'XTick',[0:10:50],'FontName','arial','FontSize',16)
+set(gca,'XTick',[0:10:50],'FontName','arial','FontSize',28)
 xlim([0 55]),ylim([1 109])
 
 % plot trendline
@@ -238,7 +310,7 @@ figure(41), hold on
 plot(age_vector,subj_std,'.','MarkerSize',20)
 
 xlim([0 55]),ylim([0 30])
-set(gca,'XTick',[0:10:50], 'YTick', [0:10:30],'FontName','arial','FontSize',16)
+set(gca,'XTick',[0:10:50], 'YTick', [0:10:30],'FontName','arial','FontSize',18)
 xlabel('Age subject')
 ylabel('Variance SD (in ms)')
 title('Variance in latency across subjects')
@@ -304,7 +376,7 @@ boxplot(matrix_reshape_all,age_group,'Labels',{'Children','Adults'},'LabelOrient
 
 ylim([9 109])
 ylabel('Latency (in ms)')
-set(gca,'FontName','arial','FontSize',16)
+set(gca,'FontName','arial','FontSize',18)
 title('Latency distribution in children and adults')
 
 hold off
@@ -368,13 +440,13 @@ end
 connectivity_mat = connectivity_mat(2:75,2:75);
 
 % visualize matrix
-fig61 = figure(61); set(fig61,'Position',[0 0 800 800])
+fig61 = figure(61); set(fig61,'Position',[0 0 800 600])
 imagesc(connectivity_mat,[0 max(connectivity_mat(:))])
 axis square
-title('Number of averaged epochs present in data')
+title('Number of averaged epochs')
 xlabel('Recorded region')
 ylabel('Stimulated region')
-set(gca,'FontName','arial','FontSize',16,...
+set(gca,'FontName','arial','FontSize',20, 'XTick',[10:10:70],...
     'XDir','normal'); xtickangle(90)
 
 % use color matrix 'hot', but make all combinations with > 1000 avg. epochs
@@ -396,6 +468,7 @@ hold off
 dataRootPath = '/Fridge/users/jaap/ccep/dataBIDS/';
 % add vistasoft for read_annotation
 addpath('/home/jaap/vistasoft/external/freesurfer');
+addpath('/Fridge/users/jaap/github/ecogBasicCode/render');
 
 subjects = {'RESP0768'};
 sessions = {'1'};
@@ -451,40 +524,451 @@ for k = 1:size(v_dirs,1) % loop across viewing angles
 
 end
 
-title('Location of the three ROIs') 
+title('Locations of the three ROIs') 
+set(gca,'FontName','arial','FontSize',16)
+
+
+%% Figure 8: Within ROI scatterplots
+
+% create cells with all within measures to put in loop
+within_plots = {ROI_plot_matrix_15, ROI_plot_matrix_26,  ROI_plot_matrix_38, ROI_within_plot_matrix_all}; 
+titles = {'Frontal Middle Gyrus', 'Supramarginal Gyrus', 'Temporal Middle Gyrus', 'Three ROIs combined'};
+
+fig81 = figure(81); set(fig81,'Position',[0 0 800 600])
+
+for qq = 1:length(within_plots)
+    % for all three ROIs combined
+    subplot(2,2,qq), hold on
+    
+    within_mat = cell2mat(within_plots(qq));
+    
+    % iterate over all subjects in database
+    for subj = 1:length(database)
+
+        % scatterplot
+        scatter(repelem(age_vector(1,subj),length(within_mat)),within_mat(:,subj))
+
+    end
+
+    xlim([0 55]),ylim([1 109])
+    
+    if qq == 1 || qq == 3
+        ylabel('Latency (in ms)')       
+    end
+    if qq == 3 || qq == 4
+        xlabel('Age subject')
+    end
+    title(titles(qq))
+    set(gca,'FontName','arial','FontSize',16, 'XTick', [10:10:50])
+    
+    % calculate means
+    trendline_ROI = nanmean(within_mat);
+
+    % do regress analysis to find the linear regression
+    [B,BINT,R,RINT,STATS] = regress(age_vector',[trendline_ROI' ones(length(trendline_ROI),1)]);
+
+    % plot regression trendine
+    x = [6:1:50];
+    y = B(1) * x + B(2); 
+    plot(x,y, 'r')
+    hold off
+
+end
+
+%% Figure 9: Within ROI violin plots
+
+% create cells as input for loop
+within_plots = {ROI_plot_matrix_15, ROI_plot_matrix_26,  ROI_plot_matrix_38, ROI_within_plot_matrix_all}; 
+titles = {'Fro. Mid.', 'Sup. Mar.', 'Tem. Mid. ', 'Combined'};
+
+
+fig91 = figure(91); set(fig91,'Position',[0 0 1100 250])
+
+for yy = 1:length(within_plots)
+    
+    % clear variables that will be used
+    clear group_1_cceps
+    clear group_2_cceps
+    
+    
+    % create two groups, an 18- and an 18+ group with the corresponding data
+    % also create age_group which corresponds with the group number
+    for gg = 1:length(age_vector)
+
+        within_mat = cell2mat(within_plots(yy));
+
+        if age_vector(gg) < 18        
+
+            group_1_cceps(:,gg) = within_mat(:,gg);
+            group_2_cceps(:,gg) = nan(length(within_mat),1);
+
+            age_group(gg) = 1;
+
+        elseif age_vector(gg) >= 18
+
+            group_1_cceps(:,gg) = nan(length(within_mat),1);
+            group_2_cceps(:,gg) = within_mat(:,gg);        
+
+            age_group(gg) = 2;
+
+        end
+    end
+
+    % reshape for right format for violin function
+    group_1_cceps = reshape(group_1_cceps(:), (size(group_1_cceps,1) * size(group_1_cceps,2)),1);
+    group_2_cceps = reshape(group_2_cceps(:), (size(group_1_cceps,1) * size(group_1_cceps,2)),1);
+
+    % delete nan's 
+    group_1_cceps = group_1_cceps(~isnan(group_1_cceps));
+    group_2_cceps = group_2_cceps(~isnan(group_2_cceps));
+
+    % because they have different sizes, calculate difference and add the
+    % difference as number of nan's to the shortest group. This is necessary
+    % for the violin function
+    find_smallest = abs(size(group_2_cceps,1) - size(group_1_cceps,1));
+
+    if size(group_2_cceps,1) < size(group_1_cceps,1)
+
+        group_2_cceps = [group_2_cceps;  nan(find_smallest,1)];
+
+    elseif size(group_2_cceps,1) >= size(group_1_cceps,1)
+
+        group_1_cceps = [group_1_cceps;  nan(find_smallest,1)];
+    end
+
+
+    % for all three ROIs combined
+    subplot(1,4,yy), hold on
+
+
+    % plot violin
+    violin([group_1_cceps group_2_cceps],'facecolor',[[1 0 0];[0 0 1]], 'edgecolor', 'none', 'medc','','mc','')
+
+    % plot boxplot within violin
+    boxplot(within_mat,age_group,'Labels',{'18-','18+'},'LabelOrientation', 'horizontal',...
+        'Plotstyle', 'compact','Symbol','','Colors',[0 0 0])
+
+    ylim([9 109])
+    
+    if yy ==1 
+        ylabel('Latency (in ms)')
+    end
+    set(gca,'FontName','arial','FontSize',16)
+    title(titles(yy))
+
+    hold off
+end
+
+
+%% Figure 10: Between ROIs scatter
+
+fig101 = figure(101); set(fig101,'Position',[0 0 450 350]), hold on
+
+    
+% iterate over all subjects in database
+for subj = 1:length(database)
+    
+    % scatterplot
+    scatter(repelem(age_vector(1,subj),length(ROI_between_plot_matrix)),ROI_between_plot_matrix(:,subj))
+    
+end
+
+xlim([0 55]),ylim([1 109])
+    
+
+ylabel('Latency (in ms)')
+xlabel('Age subject')
+
+set(gca,'FontName','arial','FontSize',18, 'XTick', [10:10:50])
+
+% calculate means
+trendline_ROI = nanmean(ROI_between_plot_matrix);
+
+% do regress analysis to find the linear regression
+[B,BINT,R,RINT,STATS] = regress(age_vector',[trendline_ROI' ones(length(trendline_ROI),1)]);
+
+% plot regression trendine
+x = [6:1:50];
+y = B(1) * x + B(2);
+plot(x,y, 'r')
+hold off
+
+
+%% Figure 11: Between ROIs violin
+
+% clear variables that will be used
+clear group_1_cceps
+clear group_2_cceps
+
+% create two groups, an 18- and an 18+ group with the corresponding data
+% also create age_group which corresponds with the group number
+for gg = 1:length(age_vector)
+    if age_vector(gg) < 18        
+        
+        group_1_cceps(:,gg) = ROI_between_plot_matrix(:,gg);
+        group_2_cceps(:,gg) = nan(length(ROI_between_plot_matrix),1);
+        
+        age_group(gg) = 1;
+                
+    elseif age_vector(gg) >= 18
+       
+        group_1_cceps(:,gg) = nan(length(ROI_between_plot_matrix),1);
+        group_2_cceps(:,gg) = ROI_between_plot_matrix(:,gg);        
+        
+        age_group(gg) = 2;
+        
+    end
+end
+
+% reshape for right format for violin function
+group_1_cceps = reshape(group_1_cceps(:), (size(group_1_cceps,1) * size(group_1_cceps,2)),1);
+group_2_cceps = reshape(group_2_cceps(:), (size(group_1_cceps,1) * size(group_1_cceps,2)),1);
+
+% delete nan's 
+group_1_cceps = group_1_cceps(~isnan(group_1_cceps));
+group_2_cceps = group_2_cceps(~isnan(group_2_cceps));
+
+% because they have different sizes, calculate difference and add the
+% difference as number of nan's to the shortest group. This is necessary
+% for the violin function
+find_smallest = abs(size(group_2_cceps,1) - size(group_1_cceps,1));
+
+if size(group_2_cceps,1) < size(group_1_cceps,1)
+    
+    group_2_cceps = [group_2_cceps;  nan(find_smallest,1)];
+    
+elseif size(group_2_cceps,1) >= size(group_1_cceps,1)
+    
+    group_1_cceps = [group_1_cceps;  nan(find_smallest,1)];
+end
+
+figure(111), hold on
+
+% plot violin
+violin([group_1_cceps group_2_cceps],'facecolor',[[1 0 0];[0 0 1]], 'edgecolor', 'none', 'medc','','mc','')
+
+% plot boxplot within violin
+boxplot(ROI_between_plot_matrix,age_group,'Labels',{'Children','Adults'},'LabelOrientation', 'horizontal',...
+    'Plotstyle', 'compact','Symbol','','Colors',[0 0 0])
+
+ylim([9 109])
+ylabel('Latency (in ms)')
+set(gca,'FontName','arial','FontSize',18)
+title('Latency distribution in children and adults')
+
+hold off
+
+%% Figure 12: relative number of CCEPs scatter
+
+% be sure to have database(subj).amount_cceps and database(subj).total_stims
+% if not, first run analysis_percentage_CCEPs.m
+
+figure(121), hold on
+
+% do some recalculation to add within data and between data 
+for subj = 1:length(database)
+    
+     if ~isempty(database(subj).ROI_between_all)
+         
+         total_relative_cceps(subj) = ((database(subj).amount_cceps) + (sum(~isnan(database(subj).ROI_between_all(:,3))))) / ...
+             ((database(subj).total_stims) + (length(database(subj).ROI_between_all(:,3))));
+
+     elseif isempty(database(subj).ROI_between_all) 
+         
+         total_relative_cceps(subj) = (database(subj).amount_cceps) / (database(subj).total_stims);
+     end
+end
+
+
+figure(),hold on
+
+for subj = 1:length(database)
+    
+    scatter(age_vector(1,subj),(rel_perc_cceps_within(subj)*100),50,'MarkerEdgeColor',[0 0 1],'MarkerFaceColor',[0 0 1])
+      
+end
+
+
+for subj = 1:length(database)
+    
+    scatter(age_vector(1,subj),(rel_perc_cceps_between(subj)*100),50,'MarkerEdgeColor',[1 0 0],'MarkerFaceColor',[1 0 0])
+    
+end
+
+xlim([1 55]), ylim([0 100])
+xlabel('Age subject')
+ylabel('Percentage CCEPs')
+set(gca,'FontName','arial','FontSize',18)
+title('Relative number of CCEPs')
+
+hold off
+
+
+%% Figure 13: Rendering of CCEP latencies
+
+addpath('/Fridge/users/jaap/github/ecogBasicCode/render/')
+addpath('/Fridge/users/jaap/github/ccep/oldCode/2019/')
+top_path = '/Fridge/users/jaap/ccep/dataBIDS/';
+%%
+% Rendering brain of RESP0621 (ss = 1), stimpair 21
+subjects = {'RESP0621'};
+hemi_cap = {'R'};
+
+% subject number that correspons with the RESP
+ss = 1; 
+
+% pick a viewing angle:
+v_dirs = [90 0]; %;90 0;90 -60;270 -60;0 0];
+
+% set stimulated pair you want to render
+stim_pair = 21;
+
+% select significant peaks in the other channels
+n1_plot_sample = database(ss).metadata(1).n1_peak_sample(:,stim_pair);
+n1_plot_amplitude =  database(ss).metadata(1).n1_peak_amplitude(:,stim_pair);
+
+%%% Loop for rendering
+for s = 1%:3 %1:length(subjects)
+    % subject code
+    subj = subjects{s};
+    
+    % gifti file name:
+    dataGiiName = fullfile(top_path,'derivatives','surfaces',['sub-' subj],...
+        ['sub-' subj '_T1w_pial.' hemi_cap{s} '.surf.gii']);
+    % load gifti:
+    g = gifti(dataGiiName);
+    
+    % electrode locations name:
+    dataLocName = dir(fullfile(top_path,['sub-' subj],'ses-1','ieeg',...
+        ['sub-' subj '_ses-1_electrodes.tsv']));
+    dataLocName = fullfile(dataLocName(1).folder,dataLocName(1).name);
+    
+    % load electrode locations
+    loc_info = readtable(dataLocName,'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'});
+    elecmatrix = [loc_info.x loc_info.y loc_info.z];
+    
+    % figure with rendering for different viewing angles
+    for k = 1:size(v_dirs,1) % loop across viewing angles
+        v_d = v_dirs(k,:);
+        
+        figure(131)
+        ecog_RenderGifti(g) % render
+        ecog_ViewLight(v_d(1),v_d(2)) % change viewing angle   
+        
+        % make sure electrodes pop out
+        a_offset = .1*max(abs(elecmatrix(:,1)))*[cosd(v_d(1)-90)*cosd(v_d(2)) sind(v_d(1)-90)*cosd(v_d(2)) sind(v_d(2))];
+        els = elecmatrix+repmat(a_offset,size(elecmatrix,1),1);
+        
+        % ecog_Label(els,30,12) % add electrode positions
+        % add electrodes
+        ccep_el_add(els,[0.1 0.1 0.1],20)
+        % give stimulated electrodes other color
+        ccep_el_add(els(database(ss).metadata(1).stimulated_pairs(stim_pair,1:2),:),[0 0 0],40)
+        % set size and color of channels with significant peak 
+        % based on sample (from stimulation on, so -5120) and the amplitude
+        % color = latency, size = amplitude
+        ccep_el_add_size_and_color(els,n1_plot_amplitude,(n1_plot_sample-5120),500,200)
+
+        set(gcf,'PaperPositionMode','auto')
+        % print('-dpng','-r300',fullfile(dataRootPath,'derivatives','render',...
+        % ['subj_' subj '_v' int2str(v_d(1)) '_' int2str(v_d(2))]))
+
+        % close all
+    end
+end
 
 
 
 
+% Rendering brain of RESP0768 (ss = 4), stimpair 29
+subjects = {'RESP0768'};
+hemi_cap = {'R'};
+
+% subject number that correspons with the RESP
+ss = 4; 
+
+% pick a viewing angle:
+v_dirs = [90 0]; %;90 0;90 -60;270 -60;0 0];
+
+% set stimulated pair you want to render
+stim_pair = 29;
+
+% select significant peaks in the other channels
+n1_plot_sample = database(ss).metadata(1).n1_peak_sample(:,stim_pair);
+n1_plot_amplitude =  database(ss).metadata(1).n1_peak_amplitude(:,stim_pair);
+
+%%% Loop for rendering
+for s = 1%:3 %1:length(subjects)
+    % subject code
+    subj = subjects{s};
+    
+    % gifti file name:
+    dataGiiName = fullfile(top_path,'derivatives','surfaces',['sub-' subj],...
+        ['sub-' subj '_T1w_pial.' hemi_cap{s} '.surf.gii']);
+    % load gifti:
+    g = gifti(dataGiiName);
+    
+    % electrode locations name:
+    dataLocName = dir(fullfile(top_path,['sub-' subj],'ses-1','ieeg',...
+        ['sub-' subj '_ses-1_electrodes.tsv']));
+    dataLocName = fullfile(dataLocName(1).folder,dataLocName(1).name);
+    
+    % load electrode locations
+    loc_info = readtable(dataLocName,'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'});
+    elecmatrix = [loc_info.x loc_info.y loc_info.z];
+    
+    % figure with rendering for different viewing angles
+    for k = 1:size(v_dirs,1) % loop across viewing angles
+        v_d = v_dirs(k,:);
+        
+        figure(132)
+        ecog_RenderGifti(g) % render
+        ecog_ViewLight(v_d(1),v_d(2)) % change viewing angle   
+        
+        % make sure electrodes pop out
+        a_offset = .1*max(abs(elecmatrix(:,1)))*[cosd(v_d(1)-90)*cosd(v_d(2)) sind(v_d(1)-90)*cosd(v_d(2)) sind(v_d(2))];
+        els = elecmatrix+repmat(a_offset,size(elecmatrix,1),1);
+        
+        % ecog_Label(els,30,12) % add electrode positions
+        % add electrodes
+        ccep_el_add(els,[0.1 0.1 0.1],20)
+        % give stimulated electrodes other color
+        ccep_el_add(els(database(ss).metadata(1).stimulated_pairs(stim_pair,1:2),:),[0 0 0],40)
+        % set size and color of channels with significant peak 
+        % based on sample (from stimulation on, so -5120) and the amplitude
+        % color = latency, size = amplitude
+        ccep_el_add_size_and_color(els,n1_plot_amplitude,(n1_plot_sample-5120),500,200)
+
+        set(gcf,'PaperPositionMode','auto')
+        title('Latencies of detected CCEPs')
+        set(gca,'FontName','arial','FontSize',24)
+        % print('-dpng','-r300',fullfile(dataRootPath,'derivatives','render',...
+        % ['subj_' subj '_v' int2str(v_d(1)) '_' int2str(v_d(2))]))
+
+        % close all
+    end
+end
 
 
+% to create legenda
+cm1=[repmat([0 0 0],120,1)];
+cm1(1:60,2)=[1];
+cm1(61:120,1)=[1];
+cm1(61:120,2)=flip([0:1/59:1]);
+cm1(1:60,1) = [0:1/59:1];
 
 
+% elsize=[15:(45-15)/(100-1):45];
+elsize = ones(1,120)*50;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+% to create legenda
+fig133 = figure(133); set(fig133, 'Color',[1 1 1],'Position',[30 50 500 150]),hold on
+for k=1:120
+    plot(k,1,'.','MarkerSize',elsize(k),'Color',cm1(k,:))
+end
+title('Electrode Color')
+xlim([10 100])
+set(gca,'YColor','w')
+set(gca,'XTick', [10:10:100],'YTick',[], 'FontName','arial','FontSize',18)
+xlabel('N1 peak latency (in ms)')
+set(gcf, 'PaperPositionMode', 'auto');

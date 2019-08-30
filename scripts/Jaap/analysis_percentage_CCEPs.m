@@ -20,6 +20,7 @@ ROI_list = [15, 26, 38];
 runs = 1;
 ses = 1;
 
+
 for subj = 1:length(database)
     database(subj).amount_cceps = 0;
     database(subj).total_stims = 0;
@@ -31,7 +32,7 @@ figure(), hold on
 for ROI = 1:size(ROI_list,2)
     
     % create empty matrix
-    ROI_plot_matrix = nan(250,length(subjects));
+    ROI_plot_matrix = nan(250,length(database));
     
     for subj = 1:length(database)
         database(subj).ROI_within_coverage = [];
@@ -190,7 +191,7 @@ end
 % create array of relative percentage CCEPs per subject
 rel_perc_cceps_within = nan(1,length(database));
 
-for subj = 1:length(subjects)
+for subj = 1:length(database)
     
     rel_perc_cceps_within(subj) = database(subj).amount_cceps / database(subj).total_stims;
     
@@ -284,7 +285,7 @@ for subj = 1:length(database)
 end
 
 
-for subj = 1:length(subjects)
+for subj = 1:length(database)
     
     scatter(age_vector(1,subj),rel_perc_cceps_between(subj),50,'MarkerEdgeColor',[1 0 0],'MarkerFaceColor',[1 0 0])
     

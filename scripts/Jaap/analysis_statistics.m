@@ -215,7 +215,7 @@ median(rel_perc_cceps_between,'omitnan') % check on other medians
 %% analyzing relative CCEPs - regression
 
 % do some recalculation to add within data and between data 
-for subj = 1:length(subjects)
+for subj = 1:length(database)
     
      if ~isempty(database(subj).ROI_between_all)
          
@@ -256,7 +256,7 @@ for subj = 1:length(database)
 end
 
 
-for subj = 1:length(subjects)
+for subj = 1:length(database)
     
     scatter(age_vector(1,subj),rel_perc_cceps_between(subj),50,'MarkerEdgeColor',[1 0 0],'MarkerFaceColor',[1 0 0])
     

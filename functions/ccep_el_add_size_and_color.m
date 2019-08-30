@@ -27,11 +27,11 @@ function ccep_el_add_size_and_color(els,r2_size,r2_color,r2_sizemax,r2_colormax)
 hold on
 
 % red-green color scale
-cm1=[repmat([0 0 0],80,1)];
-cm1(1:40,2)=[1];
-cm1(41:80,1)=[1];
-cm1(41:80,2)=flip([0:1/39:1]);
-cm1(1:40,1) = [0:1/39:1];
+cm1=[repmat([0 0 0],100,1)];
+cm1(1:50,2)=[1];
+cm1(51:100,1)=[1];
+cm1(51:100,2)=flip([0:1/49:1]);
+cm1(1:50,1) = [0:1/49:1];
 
 cm2=[repmat([.5 .5 .5],100,1)];
 
@@ -53,7 +53,9 @@ r2_color(r2_color<-80) = -100;
 % electrode with r2:
 for k=1:size(els,1)
     if ~isnan(r2_size(k))
-        elsize_r2=elsize(abs(r2_size(k)));
+        % elsize_r2=elsize(abs(r2_size(k)));
+        elsize_r2 = 30; % currently set to 30 for same size, but in case of visualizing
+        % amplitude, change to line of code above
         elcol_r2=cm1(r2_color(k),:); 
         plot3(els(k,1),els(k,2),els(k,3),'.','Color','k','MarkerSize',elsize_r2)
         plot3(els(k,1),els(k,2),els(k,3),'.','Color',elcol_r2,'MarkerSize',elsize_r2-5)
@@ -69,41 +71,43 @@ end
 
 %% red-green color scale
 
-cm1=[repmat([0 0 0],80,1)];
-cm1(1:40,2)=[1];
-cm1(41:80,1)=[1];
-cm1(41:80,2)=flip([0:1/39:1]);
-cm1(1:40,1) = [0:1/39:1];
 
-% elsize=[15:(45-15)/(100-1):45];
-elsize = ones(1,100)*50;
-
-figure('Color',[1 1 1],'Position',[30 50 500 150]),hold on
-for k=1:80
-    plot(k,1,'.','MarkerSize',elsize(k),'Color',cm1(k,:))
-end
-title('Electrode Color')
-xlim([10 70])
-set(gca,'YColor','w')
-set(gca,'XTick', [10:10:70],'YTick',[], 'FontName','arial','FontSize',18)
-xlabel('N1 peak latency (ms)')
-set(gcf, 'PaperPositionMode', 'auto');
+% cm1=[repmat([0 0 0],100,1)];
+% cm1(1:50,2)=[1];
+% cm1(51:100,1)=[1];
+% cm1(51:100,2)=flip([0:1/49:1]);
+% cm1(1:50,1) = [0:1/49:1];
+% 
+% 
+% % elsize=[15:(45-15)/(100-1):45];
+% elsize = ones(1,100)*50;
+% 
+% figure('Color',[1 1 1],'Position',[30 50 500 150]),hold on
+% for k=1:100
+%     plot(k,1,'.','MarkerSize',elsize(k),'Color',cm1(k,:))
+% end
+% title('Electrode Color')
+% xlim([10 100])
+% set(gca,'YColor','w')
+% set(gca,'XTick', [10:10:100],'YTick',[], 'FontName','arial','FontSize',18)
+% xlabel('N1 peak latency (ms)')
+% set(gcf, 'PaperPositionMode', 'auto');
 
 %% grey scale for amplitude
 
-cm2=[repmat([.5 .5 .5],100,1)];
-
-elsize=[15:(100-15)/(100-1):100];
-
-
-
-figure('Color',[1 1 1],'Position',[30 50 500 150]),hold on
-for k=1:200
-    plot((k*10),1,'.','MarkerSize',elsize(ceil(k/2)),'Color',cm2(ceil(k/2),:))
-end
-title('Electrode Size')
-set(gca,'YColor','w')
-xlim([0 2000])
-set(gca,'XTick', [0:500:2000],'YTick',[], 'FontName','arial','FontSize',18)
-xlabel('amplitude peak (uV)')
-set(gcf, 'PaperPositionMode', 'auto');
+% cm2=[repmat([.5 .5 .5],100,1)];
+% 
+% elsize=[15:(100-15)/(100-1):100];
+% 
+% 
+% 
+% figure('Color',[1 1 1],'Position',[30 50 500 150]),hold on
+% for k=1:200
+%     plot((k*10),1,'.','MarkerSize',elsize(ceil(k/2)),'Color',cm2(ceil(k/2),:))
+% end
+% title('Electrode Size')
+% set(gca,'YColor','w')
+% xlim([0 2000])
+% set(gca,'XTick', [0:500:2000],'YTick',[], 'FontName','arial','FontSize',18)
+% xlabel('amplitude peak (uV)')
+% set(gcf, 'PaperPositionMode', 'auto');
