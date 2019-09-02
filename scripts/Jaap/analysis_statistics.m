@@ -85,7 +85,7 @@ df
 % - matrix_reshape_all
 
 % FILL IN THE ROI HERE (as variable for grouped_ROI) - CHOOSE FROM ABOVE
-grouped_ROI = ROI_between_plot_matrix;
+grouped_ROI = matrix_reshape_all;
 
 grouped_age_ROI = nanmean(grouped_ROI);
 
@@ -182,11 +182,11 @@ end
 % use Wilcoxon Signed Rank Test to see if this parameter is significantly
 % better than others. Now compared with the neighbouring parameters (90ms
 % and 110ms, but also significant for all other comparisons)
-[p,h,stats] = signrank(AUC_singlepoint(:,7)',AUC_singlepoint(:,8)','tail','right')
+[p,h,stats] = signrank(AUC_singlepoint(:,7)',AUC_singlepoint(:,8)')
 
 r = stats.zval / sqrt((length(AUC_singlepoint) * 2))
 
-[p,h,stats] = signrank(AUC_singlepoint(:,7)',AUC_singlepoint(:,6)','tail','right')
+[p,h,stats] = signrank(AUC_singlepoint(:,7)',AUC_singlepoint(:,6)')
 
 r = stats.zval / sqrt(length(AUC_singlepoint) * 2)
 
@@ -314,7 +314,7 @@ r = stats.zval / sqrt((length(group_1_vec) + length(group_2_vec)))
 
 
 % put here which matrix you want to use for testing
-variance_test_mat = matrix_reshape_all;
+variance_test_mat = ROI_between_plot_matrix;
 
 % test variance across subjects
 vartestn(variance_test_mat,'testtype','LeveneQuadratic');
@@ -358,7 +358,7 @@ hold off
 % - matrix_reshape_all
 
 % put here which matrix you want to use for testing
-variance_grouped_mat = matrix_reshape_all;
+variance_grouped_mat = ROI_between_plot_matrix;
 
 % find standard deviation for every subject 
 subj_std = nanstd(variance_grouped_mat,[],1);
@@ -381,3 +381,123 @@ ans1 - ans2
 sum(~isnan(subj_std(age_group == 1)))
 sum(~isnan(subj_std(age_group == 2)))
 r = stats.zval / sqrt((sum(~isnan(subj_std(age_group == 1))) + sum(~isnan(subj_std(age_group == 2)))))
+
+
+%% calculate median number of electrodes and median age
+
+num_elecs = nan(length(database),1);
+
+for aa = 1:length(database)
+    
+    if rem(length(database(aa).total_grid),2) == 0
+        
+        num_elecs(aa) = length(database(aa).total_grid);
+        
+    elseif rem(length(database(aa).total_grid),2) == 1
+        
+        num_elecs(aa) = length(database(aa).total_grid) -1;
+        
+    end
+end
+        
+median(num_elecs)    
+    
+
+mdn_age = nan(length(database),1);
+
+for aa = 1:length(database)
+        
+   mdn_age(aa) = database(aa).age_ses1;       
+
+end
+        
+median(mdn_age)    
+
+
+%% Extract the Destrieux region that is mostly covered for each subj.
+
+
+mode_label = nan(length(database),1);
+
+for aa = 1:length(database)
+    
+    list_labels = nan(length(database(aa).metadata(1).atlases_electrodes.Destrieux_label),1);
+    
+    % subj(14) does not have the right labels in database for now,
+    % therefore, do this one manually
+    if aa == 14
+        
+        labels_RESP0435_name = fullfile(dataRootPath,'sub-RESP0435',...
+            'ses-1', 'ieeg', 'sub-RESP0435_ses-1_electrode_positions_fouratlases.tsv');
+        labels_RESP0435 = readtable(labels_RESP0435_name, 'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'},'ReadVariableNames', 1);
+        
+        
+        for zz = 1:length(database(aa).metadata(1).atlases_electrodes.Destrieux_label)
+            
+            list_labels(zz) = str2double((database(aa).metadata(1).atlases_electrodes.Destrieux_label(zz)));
+            
+        end
+               
+    else
+        % because most of the time it is in cells
+        if ~isnumeric(database(aa).metadata(1).atlases_electrodes.Destrieux_label(1))
+            
+            for zz = 1:length(database(aa).metadata(1).atlases_electrodes.Destrieux_label)
+                
+                list_labels(zz) = str2double((database(aa).metadata(1).atlases_electrodes.Destrieux_label(zz)));
+                
+            end
+            
+            % but for subj(12 and 26) it is in doubles already - this is problem in
+            % the within and between ROI analysis
+        elseif isnumeric(database(aa).metadata(1).atlases_electrodes.Destrieux_label(1))
+            
+            list_labels = database(aa).metadata(1).atlases_electrodes.Destrieux_label;
+            
+        end
+
+    
+    end
+    
+     % -1 for destrieux correction
+    mode_label(aa) = mode(list_labels) - 1;
+end
+
+%% Extract hemisphere of each subject
+
+% If x coordinates is positive, it is right
+% negative is right
+hemisphere = nan(length(database),1);
+
+for aa = 1:length(database)
+    
+    if str2double(database(aa).metadata(1).atlases_electrodes.x(1)) > 0 && ...
+        str2double(database(aa).metadata(1).atlases_electrodes.x(2)) > 0 && ...
+        str2double(database(aa).metadata(1).atlases_electrodes.x(3)) > 0
+    
+    hemisphere(aa) = 1; 
+
+    elseif str2double(database(aa).metadata(1).atlases_electrodes.x(1)) < 0 && ...
+            str2double(database(aa).metadata(1).atlases_electrodes.x(2)) < 0 && ...
+            str2double(database(aa).metadata(1).atlases_electrodes.x(3)) < 0
+    
+    
+    hemisphere(aa) = 2; 
+    
+    
+    end
+end
+
+% again problems with subj 12 and 26 so look them up manually
+zz = find(isnan(hemisphere(:)))
+
+for bb = 1:length(zz)
+    
+    database(bb).metadata(1).atlases_electrodes.x(:)
+    
+end
+
+
+    
+        
+        

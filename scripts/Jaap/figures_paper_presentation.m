@@ -154,7 +154,7 @@ tt = [1:database(subj).metadata(runs).epoch_length*database(subj).metadata(runs)
 n1_samples_end = [find(tt>0.04,1), find(tt>0.05,1), find(tt>0.06,1), find(tt>0.07,1), find(tt>0.08,1), find(tt>0.09,1), find(tt>0.1,1), find(tt>0.11,1)]; 
 
 
-fig21 = figure(21); set(fig21,'Position',[0 0 1200 550])
+fig21 = figure(21); set(fig21,'Position',[0 0 1200 620])
 
 % plot averaged ROCs
 subplot(1,4,1:3)

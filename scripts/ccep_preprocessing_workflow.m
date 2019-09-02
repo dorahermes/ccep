@@ -24,10 +24,10 @@ dataRootPath = fullfile('/Fridge','users','giulio','ccep','dataBIDS');
 addpath(fullfile('/Fridge','users','giulio','github','ccep'))
 
 % add subject(s) information
-subjects = {'RESP0751'};
+subjects = {'RESP0435'};
 sessions = {'1'};
-hemi_smalls = {'r'};
-hemi_caps = {'R'};
+hemi_smalls = {'l'};
+hemi_caps = {'L'};
 % s gives the possibility to add more then 1 subjects, or multiple sessions
 % in once. Wrap functions into [ss = 1:size(s) ... end] to iterate over subject data cells
 s = 1;

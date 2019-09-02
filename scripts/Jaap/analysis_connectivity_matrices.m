@@ -157,3 +157,6 @@ set(gcf,'PaperPositionMode','auto')
 % to know which combinations of stim and rec have > 1000 epochs
 [stim_region, rec_region] = find(connectivity_mat > 1000);
 rec_stim_regions = [rec_region stim_region] - 1;
+
+
+
