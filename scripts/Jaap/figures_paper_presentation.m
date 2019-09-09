@@ -96,8 +96,154 @@ plot(tt(database(subj).metadata(runs).n1_peak_sample(ii,jj)), database(subj).met
 
 hold off
 
+%% Figure 2: Matrix with number of connections in data - finished
 
-%% Figure 2: The ROC-curves - finished
+% First, create a connectivity matrix by running over all recordings to see
+% which stimulations are applied, and on which regions there are recordings
+
+% how many connections to each electrode would be possible 
+connectivity_mat = zeros(75,75);
+
+% iterate over all subjects in database
+for subj = 1:length(database)
+    % iterate over all their runs
+    for runs = 1:length(database(subj).metadata)
+        % for the SPESclin runs
+        if strcmp(database(subj).metadata(runs).task, 'SPESclin')
+            % run through all stimulations
+            for stims = 1:length(database(subj).metadata(runs).stimulated_pairs)
+
+                % add one to every recorded channel except for the ones that
+                % are stimulated (e.g. add +1 to channel 3 till 64 one the
+                % places (stim1,3:64) and (stim2,3:64). But then converted
+                % to the brain re_jgions
+
+                % find locations of the stimulated pairs
+                stimnum_1 = database(subj).metadata(runs).stimulated_pairs(stims,1);
+                stimnum_2 = database(subj).metadata(runs).stimulated_pairs(stims,1);
+                
+                if stimnum_1 <= length(database(subj).total_grid) && stimnum_2 <= length(database(subj).total_grid)
+               
+                    stimloc_1 = str2double(database(subj).metadata(runs).atlases_electrodes.Destrieux_label(stimnum_1));            
+                    stimloc_2 = str2double(database(subj).metadata(runs).atlases_electrodes.Destrieux_label(stimnum_2));
+
+                    % for all recorded channels
+                    for zz = 1:length(database(subj).metadata(runs).atlases_electrodes.Destrieux_label)
+                        % if the row does not correspond with the stimulated
+                        % electrodes, add +1 to the matrix
+                        if zz ~= stimnum_1 || zz ~= stimnum_2
+
+                            rec_loc = str2double(database(subj).metadata(runs).atlases_electrodes.Destrieux_label(zz));
+                            
+                            if ~isnan(rec_loc) && ~isnan(stimloc_1) && ~isnan(stimloc_2) 
+                                connectivity_mat(stimloc_1,rec_loc) = connectivity_mat(stimloc_1,rec_loc) + 1; 
+                                connectivity_mat(stimloc_2,rec_loc) = connectivity_mat(stimloc_2,rec_loc) + 1; 
+                            end
+
+                        end
+                    end              
+                end               
+            end
+        end
+    end
+end
+
+% currently, there is still a mistake in the code. The atlas starts
+% labeling 1 later then how it is assigned in the electrodes tsv.
+% in other code, there is correction for this problem, but in the figure
+% making not, therefore, delete first row (destrieux should have 74 labels)
+connectivity_mat = connectivity_mat(2:75,2:75);
+
+% visualize matrix
+fig61 = figure(61); set(fig61,'Position',[0 0 800 600])
+imagesc(connectivity_mat,[0 max(connectivity_mat(:))])
+axis square
+title('Number of averaged epochs')
+xlabel('Recorded region')
+ylabel('Stimulated region')
+set(gca,'FontName','arial','FontSize',20, 'XTick',[10:10:70],...
+    'XDir','normal'); xtickangle(90)
+
+% use color matrix 'hot', but make all combinations with > 1000 avg. epochs
+% all white
+cm = hot(1000);
+cm = [0 0 0; cm];
+cm(1000:max(connectivity_mat(:)),1) = [1];
+cm(1000:max(connectivity_mat(:)),2) = [1];
+cm(1000:max(connectivity_mat(:)),3) = [1];
+colormap(cm)
+hcb = colorbar;
+set(gcf,'PaperPositionMode','auto')
+
+hold off
+
+
+%% Figure 3: Rendering of ROIs - finished
+
+dataRootPath = '/Fridge/users/jaap/ccep/dataBIDS/';
+% add vistasoft for read_annotation
+addpath('/home/jaap/vistasoft/external/freesurfer');
+addpath('/Fridge/users/jaap/github/ecogBasicCode/render');
+
+subjects = {'RESP0768'};
+sessions = {'1'};
+hemi_cap = {'R'}; 
+hemi_small = {'r'};
+
+v_dirs = [90 0];
+s = 1;
+
+% subject code
+subj = subjects{s};
+ses_label = sessions{s};
+
+% gifti file name:
+dataGiiName = fullfile(dataRootPath,'derivatives','surfaces',['sub-' subj],...
+    ['sub-' subj '_T1w_pial.' hemi_cap{s} '.surf.gii']);
+% surface labels
+surface_labels_name = fullfile(dataRootPath,'derivatives','freesurfer',['sub-' subj],'label',...
+    [hemi_small{s} 'h.aparc.a2009s.annot']);
+% surface_labels = MRIread(surface_labels_name);
+[vertices, label, colortable] = read_annotation(surface_labels_name);
+vert_label = label; 
+
+for kk = 1:size(colortable.table,1) 
+    vert_label(label==colortable.table(kk,5)) = kk;
+end
+
+% make manually a colormap which only highlights the selected ROIs
+cmap = [repmat([.3 .3 .3],76,1)];
+cmap(16,1:3) = [.6 .1 .1];
+cmap(27,1:3) = [.1 .6 .1];
+cmap(39,1:3) = [.1 .1 .6];
+
+% electrode locations name:
+dataLocName = [dataRootPath 'sub-' subj '/ses-' ses_label '/ieeg/sub-' subj '_ses-' ses_label '_electrodes.tsv'];
+% load electrode locations
+loc_info = readtable(dataLocName,'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'});
+elecmatrix = [loc_info.x loc_info.y loc_info.z];
+
+% load gifti:
+g = gifti(dataGiiName);
+
+% figure with rendering for different viewing angles
+for k = 1:size(v_dirs,1) % loop across viewing angles
+    v_d = v_dirs(k,:);
+    
+    figure(71)
+    ecog_RenderGiftiLabels(g,vert_label,cmap,colortable.struct_names)
+    ecog_ViewLight(v_d(1),v_d(2)) % change viewing angle
+    
+
+    set(gcf,'PaperPositionMode','auto')
+
+end
+
+title('Locations of the three ROIs') 
+set(gca,'FontName','arial','FontSize',16)
+
+
+%% Figure 4: The ROC-curves - finished
 
 % First, load the validation matrices of all validated subjects,
 % and calculate the averaged scores (variable: averaged_parameter_scores) 
@@ -229,7 +375,7 @@ set(gcf,'PaperPositionMode','auto')
 set(gca,'XTick',[0:.05:.3],'YTick',[.7:.05:1],'FontName','arial','FontSize',14)
 
 
-%% Figure 3: Boxplot/scatter of all latencies 
+%% Figure 5: Boxplot/scatter of all latencies 
 
 % create age_vector
 for subj = 1:length(database)
@@ -263,9 +409,9 @@ boxplot(matrix_reshape_all, 'positions', age_vector_scale, 'labels', age_vector_
     'OutlierSize', 1, 'Symbol', 'x')
 
 
-xlabel('Age subject (in years)')
-ylabel('Latency (in ms)')
-title('Boxplot of all detected latencies for each subject')
+xlabel('Age subject (years)')
+ylabel('Latency (ms)')
+%title('Scatterplot of all detected latencies for each subject')
 
 set(gca,'XTick',[0:10:50],'FontName','arial','FontSize',28)
 xlim([0 55]),ylim([1 109])
@@ -278,28 +424,8 @@ plot(x,y, 'r')
 hold off
 
 
-% create scatterplot of all latencies for each subject 
-fig32 = figure(32); set(fig32,'Position',[0 0 2000 700]), hold on
-for subj = 1:length(database)
-    scatter(repelem(age_vector(1,subj),length(matrix_reshape_all)),matrix_reshape_all(:,subj),50,[0 0 0])
-end
 
-
-xlabel('Age subject (in years)')
-ylabel('Latency (in ms)')
-title('Scatterplot of all detected latencies for each subject')
-
-set(gca,'XTick',[0:10:50],'FontName','arial','FontSize',28)
-xlim([0 55]),ylim([1 109])
-
-% plot trendline
-x = [6:1:50];
-y = (-0.6547 * x) + 39.4192;
-plot(x,y, 'r')
-
-hold off
-
-%% Figure 4: Variation in latency - finished
+%% Figure 6: Variation in latency - finished
 
 % calculate SD of latencies
 subj_std = nanstd(matrix_reshape_all,[],1);
@@ -311,13 +437,13 @@ plot(age_vector,subj_std,'.','MarkerSize',20)
 
 xlim([0 55]),ylim([0 30])
 set(gca,'XTick',[0:10:50], 'YTick', [0:10:30],'FontName','arial','FontSize',18)
-xlabel('Age subject')
-ylabel('Variance SD (in ms)')
-title('Variance in latency across subjects')
+xlabel('Age subject (years)')
+ylabel('Variance SD (ms)')
+%title('Variance in latency across subjects')
 
 hold off
 
-%% Figure 5: Violin + boxplot group differences all latencies - finished
+%% Figure 7: Violin + boxplot group differences all latencies - finished
 
 % clear variables that will be used
 clear group_1_cceps
@@ -369,163 +495,19 @@ figure(51), hold on
 
 % plot violin
 violin([group_1_cceps group_2_cceps],'facecolor',[[1 0 0];[0 0 1]], 'edgecolor', 'none', 'medc','','mc','')
+%set(gca, 'Box', 'off')
 
 % plot boxplot within violin
 boxplot(matrix_reshape_all,age_group,'Labels',{'Children','Adults'},'LabelOrientation', 'horizontal',...
     'Plotstyle', 'compact','Symbol','','Colors',[0 0 0])
 
 ylim([9 109])
-ylabel('Latency (in ms)')
+ylabel('Latency (ms)')
 set(gca,'FontName','arial','FontSize',18)
-title('Latency distribution in children and adults')
+set(gca, 'Box', 'off')
+%title('Latency distribution in children and adults')
 
 hold off
-
-%% Figure 6: Matrix with number of connections in data - finished
-
-% First, create a connectivity matrix by running over all recordings to see
-% which stimulations are applied, and on which regions there are recordings
-
-% how many connections to each electrode would be possible 
-connectivity_mat = zeros(75,75);
-
-% iterate over all subjects in database
-for subj = 1:length(database)
-    % iterate over all their runs
-    for runs = 1:length(database(subj).metadata)
-        % for the SPESclin runs
-        if strcmp(database(subj).metadata(runs).task, 'SPESclin')
-            % run through all stimulations
-            for stims = 1:length(database(subj).metadata(runs).stimulated_pairs)
-
-                % add one to every recorded channel except for the ones that
-                % are stimulated (e.g. add +1 to channel 3 till 64 one the
-                % places (stim1,3:64) and (stim2,3:64). But then converted
-                % to the brain re_jgions
-
-                % find locations of the stimulated pairs
-                stimnum_1 = database(subj).metadata(runs).stimulated_pairs(stims,1);
-                stimnum_2 = database(subj).metadata(runs).stimulated_pairs(stims,1);
-                
-                if stimnum_1 <= length(database(subj).total_grid) && stimnum_2 <= length(database(subj).total_grid)
-               
-                    stimloc_1 = str2double(database(subj).metadata(runs).atlases_electrodes.Destrieux_label(stimnum_1));            
-                    stimloc_2 = str2double(database(subj).metadata(runs).atlases_electrodes.Destrieux_label(stimnum_2));
-
-                    % for all recorded channels
-                    for zz = 1:length(database(subj).metadata(runs).atlases_electrodes.Destrieux_label)
-                        % if the row does not correspond with the stimulated
-                        % electrodes, add +1 to the matrix
-                        if zz ~= stimnum_1 || zz ~= stimnum_2
-
-                            rec_loc = str2double(database(subj).metadata(runs).atlases_electrodes.Destrieux_label(zz));
-                            
-                            if ~isnan(rec_loc) && ~isnan(stimloc_1) && ~isnan(stimloc_2) 
-                                connectivity_mat(stimloc_1,rec_loc) = connectivity_mat(stimloc_1,rec_loc) + 1; 
-                                connectivity_mat(stimloc_2,rec_loc) = connectivity_mat(stimloc_2,rec_loc) + 1; 
-                            end
-
-                        end
-                    end              
-                end               
-            end
-        end
-    end
-end
-
-% currently, there is still a mistake in the code. The atlas starts
-% labeling 1 later then how it is assigned in the electrodes tsv.
-% in other code, there is correction for this problem, but in the figure
-% making not, therefore, delete first row (destrieux should have 74 labels)
-connectivity_mat = connectivity_mat(2:75,2:75);
-
-% visualize matrix
-fig61 = figure(61); set(fig61,'Position',[0 0 800 600])
-imagesc(connectivity_mat,[0 max(connectivity_mat(:))])
-axis square
-title('Number of averaged epochs')
-xlabel('Recorded region')
-ylabel('Stimulated region')
-set(gca,'FontName','arial','FontSize',20, 'XTick',[10:10:70],...
-    'XDir','normal'); xtickangle(90)
-
-% use color matrix 'hot', but make all combinations with > 1000 avg. epochs
-% all white
-cm = hot(1000);
-cm = [0 0 0; cm];
-cm(1000:max(connectivity_mat(:)),1) = [1];
-cm(1000:max(connectivity_mat(:)),2) = [1];
-cm(1000:max(connectivity_mat(:)),3) = [1];
-colormap(cm)
-hcb = colorbar;
-set(gcf,'PaperPositionMode','auto')
-
-hold off
-
-
-%% Figure 7: Rendering of ROIs - finished
-
-dataRootPath = '/Fridge/users/jaap/ccep/dataBIDS/';
-% add vistasoft for read_annotation
-addpath('/home/jaap/vistasoft/external/freesurfer');
-addpath('/Fridge/users/jaap/github/ecogBasicCode/render');
-
-subjects = {'RESP0768'};
-sessions = {'1'};
-hemi_cap = {'R'}; 
-hemi_small = {'r'};
-
-v_dirs = [90 0];
-s = 1;
-
-% subject code
-subj = subjects{s};
-ses_label = sessions{s};
-
-% gifti file name:
-dataGiiName = fullfile(dataRootPath,'derivatives','surfaces',['sub-' subj],...
-    ['sub-' subj '_T1w_pial.' hemi_cap{s} '.surf.gii']);
-% surface labels
-surface_labels_name = fullfile(dataRootPath,'derivatives','freesurfer',['sub-' subj],'label',...
-    [hemi_small{s} 'h.aparc.a2009s.annot']);
-% surface_labels = MRIread(surface_labels_name);
-[vertices, label, colortable] = read_annotation(surface_labels_name);
-vert_label = label; 
-
-for kk = 1:size(colortable.table,1) 
-    vert_label(label==colortable.table(kk,5)) = kk;
-end
-
-% make manually a colormap which only highlights the selected ROIs
-cmap = [repmat([.3 .3 .3],76,1)];
-cmap(16,1:3) = [.6 .1 .1];
-cmap(27,1:3) = [.1 .6 .1];
-cmap(39,1:3) = [.1 .1 .6];
-
-% electrode locations name:
-dataLocName = [dataRootPath 'sub-' subj '/ses-' ses_label '/ieeg/sub-' subj '_ses-' ses_label '_electrodes.tsv'];
-% load electrode locations
-loc_info = readtable(dataLocName,'FileType','text','Delimiter','\t','TreatAsEmpty',{'N/A','n/a'});
-elecmatrix = [loc_info.x loc_info.y loc_info.z];
-
-% load gifti:
-g = gifti(dataGiiName);
-
-% figure with rendering for different viewing angles
-for k = 1:size(v_dirs,1) % loop across viewing angles
-    v_d = v_dirs(k,:);
-    
-    figure(71)
-    ecog_RenderGiftiLabels(g,vert_label,cmap,colortable.struct_names)
-    ecog_ViewLight(v_d(1),v_d(2)) % change viewing angle
-    
-
-    set(gcf,'PaperPositionMode','auto')
-
-end
-
-title('Locations of the three ROIs') 
-set(gca,'FontName','arial','FontSize',16)
 
 
 %% Figure 8: Within ROI scatterplots
@@ -553,10 +535,10 @@ for qq = 1:length(within_plots)
     xlim([0 55]),ylim([1 109])
     
     if qq == 1 || qq == 3
-        ylabel('Latency (in ms)')       
+        ylabel('Latency (ms)')       
     end
     if qq == 3 || qq == 4
-        xlabel('Age subject')
+        xlabel('Age subject (years)')
     end
     title(titles(qq))
     set(gca,'FontName','arial','FontSize',16, 'XTick', [10:10:50])
@@ -647,11 +629,12 @@ for yy = 1:length(within_plots)
     % plot boxplot within violin
     boxplot(within_mat,age_group,'Labels',{'18-','18+'},'LabelOrientation', 'horizontal',...
         'Plotstyle', 'compact','Symbol','','Colors',[0 0 0])
+    set(gca,'Box', 'off')
 
     ylim([9 109])
     
     if yy ==1 
-        ylabel('Latency (in ms)')
+        ylabel('Latency (ms)')
     end
     set(gca,'FontName','arial','FontSize',16)
     title(titles(yy))
@@ -676,8 +659,8 @@ end
 xlim([0 55]),ylim([1 109])
     
 
-ylabel('Latency (in ms)')
-xlabel('Age subject')
+ylabel('Latency (ms)')
+xlabel('Age subject (years)')
 
 set(gca,'FontName','arial','FontSize',18, 'XTick', [10:10:50])
 
@@ -750,11 +733,12 @@ violin([group_1_cceps group_2_cceps],'facecolor',[[1 0 0];[0 0 1]], 'edgecolor',
 % plot boxplot within violin
 boxplot(ROI_between_plot_matrix,age_group,'Labels',{'Children','Adults'},'LabelOrientation', 'horizontal',...
     'Plotstyle', 'compact','Symbol','','Colors',[0 0 0])
+set(gca,'Box', 'off')
 
 ylim([9 109])
-ylabel('Latency (in ms)')
+ylabel('Latency (ms)')
 set(gca,'FontName','arial','FontSize',18)
-title('Latency distribution in children and adults')
+%title('Latency distribution in children and adults')
 
 hold off
 
@@ -762,8 +746,6 @@ hold off
 
 % be sure to have database(subj).amount_cceps and database(subj).total_stims
 % if not, first run analysis_percentage_CCEPs.m
-
-figure(121), hold on
 
 % do some recalculation to add within data and between data 
 for subj = 1:length(database)
@@ -780,7 +762,7 @@ for subj = 1:length(database)
 end
 
 
-figure(),hold on
+figure(121),hold on
 
 for subj = 1:length(database)
     
@@ -796,10 +778,10 @@ for subj = 1:length(database)
 end
 
 xlim([1 55]), ylim([0 100])
-xlabel('Age subject')
+xlabel('Age subject (years)')
 ylabel('Percentage CCEPs')
 set(gca,'FontName','arial','FontSize',18)
-title('Relative number of CCEPs')
+%title('Relative number of CCEPs')
 
 hold off
 
@@ -972,3 +954,61 @@ set(gca,'YColor','w')
 set(gca,'XTick', [10:10:100],'YTick',[], 'FontName','arial','FontSize',18)
 xlabel('N1 peak latency (in ms)')
 set(gcf, 'PaperPositionMode', 'auto');
+
+%% Apendix II - individual ROC curves
+
+%% figure with multiple ROC-curves for multiple datasets
+
+fig_individual_rocs = figure('Position',[0 0 1200 2000]);
+
+% The validation_matrix and parameters_optimalize_mat of all validated data
+% are loaded (the variables in the mat-files are renamed so they do not overwrite)
+load(fullfile(top_path,'validation', 'sub-RESP0458_ses-1_run-011714_parameters_optimalization.mat'))
+
+load(fullfile(top_path,'validation', 'sub-RESP0468_ses-1_run-031729_parameters_optimalization.mat'))
+
+load(fullfile(top_path,'validation', 'sub-RESP0621_ses-1_run-021147_parameters_optimalization.mat'))
+
+load(fullfile(top_path,'validation', 'sub-RESP0706_ses-1_run-041501_parameters_optimalization.mat'))
+
+load(fullfile(top_path,'validation', 'sub-RESP0733_ses-1b_run-050941_parameters_optimalization.mat'))
+
+load(fullfile(top_path,'validation', 'sub-RESP0768_ses-1_run-021704_parameters_optimalization.mat'))
+
+
+roc_curves_list = {parameters_optimalize_mat_0458, parameters_optimalize_mat_0468, parameters_optimalize_mat_0621, ...
+    parameters_optimalize_mat_0706, parameters_optimalize_mat_0733, parameters_optimalize_mat_0768}; 
+
+titles = {'RESP0458 - 9yr', 'RESP0468 - 16yr','RESP0621 - 18yr', 'RESP0706 - 50yr', 'RESP0733 - 8yr', 'RESP0768 - 6yr'};
+
+
+for aa = 1:length(roc_curves_list)
+    
+    fig_individual_rocs = figure(aa);  set(fig_individual_rocs,'Position',[0 0 800 400]);
+
+    % plot change level line
+    plot([0 1],[0 1],'k'),hold on
+    
+    
+    
+    individual_roc = cell2mat(roc_curves_list(aa)); 
+    
+    % use jet as colors
+    my_colors = jet(size(individual_roc,2));
+    
+    % for all different ranges plot a ROC- curve
+    for time_th = 1:size(individual_roc,2)
+        
+        sens_plot = individual_roc(:,time_th,1);
+        spes_plot = individual_roc(:,time_th,2);
+        
+        plot(1-spes_plot,sens_plot,'Color',my_colors(time_th,:))
+    end
+    xlabel('1 - specificity')
+    ylabel('sensitivity')
+    xlim([0 1]),ylim([0 1])
+    axis square
+    title(titles(aa))
+    set(gca,'XTick',[0:.5:1],'YTick',[0:.5:1],'FontName','arial','FontSize',16)
+    
+end

@@ -28,16 +28,14 @@ function [database] = ccep_data_preprocess(database, top_path, stim_status)
 %       datastucture
 % - Adds data, epoched data, averaged epoched data and stimulated pairs to
 %       datastructure
-% - Possibility to choose between biphasic and monophasic stimulations
+% - Possibility to choose between averaging epochs over alternating, or    
+%   only same polarity
 
 
 % D. Hermes & J. van der Aar & Giulio Castegnaro, UMC Utrecht, 2019
 
 
-
-
 % Fieldtrip has to be in the path!
-
 
 
 % iterate over all subjects in database

@@ -39,8 +39,8 @@ database = ccep_data_preprocess(database, top_path, stim_status);
 
 %% Set parameters for n1 peak detection
 
-amplitude_thresh = 3.6;   
-n1_peak_range = 100;
+amplitude_thresh = 3.6;  % times minSD of 50 uV 
+n1_peak_range = 100; % endpoint in ms
 
 
 %% Run detect n1 peaks function

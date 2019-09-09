@@ -54,8 +54,6 @@ ccep_write_coordsystemJSON(dataRootPath, subj, ses)
 
 %%%% use ALICE or script Dora 
 
-
-
 %% STEP 6.1: write coordinates to electrodes TSV-file - loading
 
 % GUI to select the file containing the projected electrodes matrix
