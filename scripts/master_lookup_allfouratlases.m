@@ -1,6 +1,52 @@
 % this script localizes electrodes based on 4 atlases
 % Destrieux Atlas, DKT Atlas, Benson Atlas , Wang/Karsner Atlas
 
+%% Convert Freesurfer surface to Gifti
+% Before we can lookup the atlas labels, we need to make sure that the
+% surface (which has the labels) is in the space of the pre-op T1 and
+% electrodes
+
+% Subject information
+subj = 'RESP0621';
+ses_label = '1';
+hemi_cap = 'L'; 
+hemi_small = 'l';
+
+%%% Preperation step 1: create the output directory for your surface
+    % mkdir dataRootPath/derivatives/surfaces/sub-<>
+%%% Preperation step 2: create a gifti file from the freesurfer pial in Freesurfer coordinates
+    % run next line in the terminal
+    % mris_convert lh.pial lh.pial.gii 
+% NOTE: this lh.pial.gii is in Freesurfer coordinates, we want pre-op T1
+% coordinates, like out electrodes, we get those now:
+    
+% load the Freesurfer gifti (freesurfer coordinates)
+g = gifti([dataRootPath 'derivatives/freesurfer/sub-' subj '/surf/' hemi_small{s} 'h.pial.gii']);
+
+% convert from freesurfer space to original space
+mri_orig = ([dataRootPath '/derivatives/freesurfer/sub-' subj '/mri/orig.mgz']);
+orig = MRIread(mri_orig); % MRIread is a function from vistasoft
+Torig = orig.tkrvox2ras;
+Norig = orig.vox2ras;
+freeSurfer2T1 = Norig*inv(Torig);
+
+% convert freesurfer vertices to original T1 space
+vert_mat = double(([g.vertices ones(size(g.vertices,1),1)])');
+vert_mat = freeSurfer2T1*vert_mat;
+vert_mat(4,:) = [];
+vert_mat = vert_mat';
+g.vertices = vert_mat; clear vert_mat
+
+% save as a gifti
+gifti_name = [dataRootPath '/derivatives/surfaces/sub-' subj '/sub-' subj '_T1w_pial.' hemi_cap{s} '.surf.gii'];
+
+save(g,gifti_name,'Base64Binary')
+
+disp('converted to original space')
+
+%%
+%% Now we can lookup the atlas labels
+%%
 %% Setting right paths and loading data
 % Make sure that this toolbox is in the path:
 % can be cloned from: https://github.com/dorahermes/ecogBasicCode.git
