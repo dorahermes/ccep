@@ -332,19 +332,6 @@ hold off
 %%% TILL HERE
 
 
-%% layout for all subjects and only SPESclin runs 
-
-% iterate over all subjects in database
-for subj = 1:length(database)
-    % iterate over all their runs
-    for runs = 1:length(database(subj).metadata)
-        if strcmp(database(subj).metadata(runs).task, 'SPESclin')
-            
-            
-        end
-    end
-end
-
 %% Set data for rendering
 
 addpath('/Fridge/users/jaap/github/ecogBasicCode/render/')
@@ -407,7 +394,7 @@ for s = 1%:3 %1:length(subjects)
         % set size and color of channels with significant peak 
         % based on sample (from stimulation on, so -5120) and the amplitude
         % color = latency, size = amplitude
-        ccep_el_add_size_and_color(els,n1_plot_amplitude,(n1_plot_sample-5120),500,200)
+        ccep_el_add_size_and_color(els(1:length(n1_plot_amplitude),:),n1_plot_amplitude,(n1_plot_sample-5120),500,200)
 
         set(gcf,'PaperPositionMode','auto')
         % print('-dpng','-r300',fullfile(dataRootPath,'derivatives','render',...

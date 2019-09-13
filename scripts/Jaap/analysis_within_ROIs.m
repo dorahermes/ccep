@@ -281,11 +281,8 @@ xlim([0 55]),ylim([1 109])
 xlabel('age subject')
 ylabel('latency in ms')
 title('latency within Destieux ROI: 15, 26 & 38')
-% print_label = sprintf('%.f', ROI_destrieux(destrieux_array));
-% title(['latency within Destieux ROI: ' print_label])
+
 hold off
-
-
 
 
 %% Plot latencies in two groups: 18- and 18+

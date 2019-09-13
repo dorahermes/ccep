@@ -468,14 +468,20 @@ print('-dpng','-r300','/home/jaap/figures/example_ccep')
 
 %% Plot to visualise parameters of detect ER algorithm
 
+subj = 1;
+runs = 1;
 ii = 3;
 jj = 1;
+minSD = 50;
+n1_samples_start = find(tt>0.009,1);
+n1_samples_end = find(tt>0.1,1);
+thresh = 3.6;
 
 baseline_tt = tt>-1 & tt<-.01;
-signal_median = median(cc_epoch_sorted_avg(ii,jj,baseline_tt),3);
+signal_median = median(database(subj).metadata(runs).epoched_data_avg(ii,jj,baseline_tt),3);
 
 % subtract median baseline from signal
-new_signal = squeeze(cc_epoch_sorted_avg(ii,jj,:)) - signal_median;
+new_signal = squeeze(database(subj).metadata(runs).epoched_data_avg(ii,jj,:)) - signal_median;
 % testplot new signal: plot(tt,squeeze(new_signal))
 
 % take area before the stimulation of the new signal and calculate its SD
@@ -484,30 +490,31 @@ pre_stim_sd_orig = std(new_signal(baseline_tt));
 % if the pre_stim_sd is smaller that the minimally needed SD, use this
 % the minSD as pre_stim_sd
 if pre_stim_sd_orig < minSD
-    pre_stim_sd = minSD;
+    pre_stim_sd = minSD * thresh;
 else 
-    pre_stim_sd =  pre_stim_sd_orig;
+    pre_stim_sd =  pre_stim_sd_orig * thresh;
 end
 
 % display figure in specific size
-figure('Position',[0 0 500 500]), hold on
+fig10 = figure(10); set(fig10,'Position',[0 0 1000 400]), hold on
 
 
 % plot relevant part of the signal (1s before till 500ms after stimulation)
 
 plot(tt(tt>-1 & tt<.5),squeeze(new_signal(tt>-1 & tt<.5)),'Color',[0 0 0],'LineWidth',2)
 
-xlabel('time(s)')
-ylabel('amplitude(uV)')
+xlabel('time (in sec)')
+ylabel('amplitude (in uV)')
+title('Visualisation of detection algorithm')
 set(gca, 'FontName','arial','FontSize',20)
 
 ylim([-1200 1200])
-xlim([-.5 .5])
+xlim([-1 .5])
 box off
 
 hold on
-% plot stimulation artifact (first 20 samples, +/- 10ms)
-plot(tt(5120:5140),squeeze(new_signal(5120:5140)),'r','LineWidth',2)
+% plot stimulation artifact (first 20 samples, +/- 9ms)
+plot(tt(5120:5139),squeeze(new_signal(5120:5139)),'r','LineWidth',2)
 % plot found peaks and onsets
 % plot(tt(output_ER_all(ii,jj,1)),output_ER_all(ii,jj,2),'b*')
 % plot(tt(output_ER_all(ii,jj,3)),output_ER_all(ii,jj,4),'r*')
@@ -515,16 +522,22 @@ plot(tt(5120:5140),squeeze(new_signal(5120:5140)),'r','LineWidth',2)
 % plot(tt(output_ER_all(ii,jj,7)),output_ER_all(ii,jj,8),'y*')
 
 % plot calculated baseline standard deviation
-plot(tt(baseline_tt), pre_stim_sd_orig+zeros(size(tt(baseline_tt))), 'r-','LineWidth',2)
-plot(tt(baseline_tt), -pre_stim_sd_orig+zeros(size(tt(baseline_tt))), 'r-','LineWidth',2)
+plot(tt(baseline_tt), pre_stim_sd_orig+zeros(size(tt(baseline_tt))), 'm-','LineWidth',2)
+plot(tt(baseline_tt), -pre_stim_sd_orig+zeros(size(tt(baseline_tt))), 'm-','LineWidth',2)
 
 % plot adjusted baseline (when calculated < minSD)
-plot(tt(baseline_tt), (pre_stim_sd*2.5)+zeros(size(tt(baseline_tt))), 'g-','LineWidth',2)
-plot(tt(baseline_tt), (-pre_stim_sd*2.5)+zeros(size(tt(baseline_tt))), 'g-','LineWidth',2)
+plot(tt(baseline_tt), (pre_stim_sd)+zeros(size(tt(baseline_tt))), 'g-','LineWidth',2)
+plot(tt(baseline_tt), (-pre_stim_sd)+zeros(size(tt(baseline_tt))), 'g-','LineWidth',2)
 
 % plot lines with timeframe of n1 peak
-plot([tt(n1_samples_start) tt(n1_samples_start)],[-2000 2000], 'c-','LineWidth',2)
-plot([tt(n1_samples_end) tt(n1_samples_end)],[-2000 2000], 'c-','LineWidth',2)
+plot([tt(n1_samples_start) tt(n1_samples_start)],[-2000 -180], 'b-','LineWidth',2)
+plot([tt(n1_samples_end) tt(n1_samples_end)],[-2000 -180], 'b-','LineWidth',2)
+plot(tt(n1_samples_start:n1_samples_end), (-pre_stim_sd)+zeros(size(tt(n1_samples_start:n1_samples_end))), 'b-','LineWidth',2)
+
+
+plot(tt(database(subj).metadata(runs).n1_peak_sample(ii,jj)), database(subj).metadata(runs).n1_peak_amplitude(ii,jj), ...
+    'o', 'LineWidth',4, 'MarkerSize',8,'MarkerEdgeColor', 'c');
+
 
 hold off
 
