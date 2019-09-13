@@ -332,19 +332,6 @@ hold off
 %%% TILL HERE
 
 
-%% layout for all subjects and only SPESclin runs 
-
-% iterate over all subjects in database
-for subj = 1:length(database)
-    % iterate over all their runs
-    for runs = 1:length(database(subj).metadata)
-        if strcmp(database(subj).metadata(runs).task, 'SPESclin')
-            
-            
-        end
-    end
-end
-
 %% Set data for rendering
 
 addpath('/Fridge/users/jaap/github/ecogBasicCode/render/')
