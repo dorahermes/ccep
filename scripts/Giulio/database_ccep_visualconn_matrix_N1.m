@@ -5,9 +5,11 @@
 %Wang & Kastner visual atlases.
 % D. Hermes and G. Castegnaro, 2019, UMC Utrecht
 
-%for subjects 0315, 0405, 0306 we need to change the class of the data from
+%for subjects 0315, 0405, 0306,0703 we need to change the class of the data from
 %cell array to double 
-for subj = [1 4 5 6];  
+%Today 31.7 I decided to exclude 0405 from analysis so RESP0703 is now n.5
+%and RESP0401 is n.4 
+for subj = [1 4 5];  
     for runs = 1:length(database(subj).metadata);
         if iscell(database(subj).metadata(runs).electrodes.Benson_label); 
             database(subj).metadata(runs).electrodes.Benson_label = str2double(database(subj).metadata(runs).electrodes.Benson_label);
@@ -21,22 +23,23 @@ for subj = [1 4 5 6];
     end 
 end
 
-%% Concatenating runs that are following each other 
-for subj = [1 5] 
-    database(subj).metadata(1).events = [database(subj).metadata(1).events; database(subj).metadata(2).events]   
-    database(subj).metadata(1).events_onlystims = [database(subj).metadata(1).events_onlystims; database(subj).metadata(2).events_onlystims]   
-    database(subj).metadata(1).stimulated_nroftimes = [database(subj).metadata(1).stimulated_nroftimes; database(subj).metadata(2).stimulated_nroftimes]
+%% Concatenating runs that are following each other (!! do not run more than once!) It erases run n.2
+for subj = [1 4 5] 
+    database(subj).metadata(1).events = [database(subj).metadata(1).events; database(subj).metadata(2).events];   
+    database(subj).metadata(1).events_onlystims = [database(subj).metadata(1).events_onlystims; database(subj).metadata(2).events_onlystims];   
+    database(subj).metadata(1).stimulated_nroftimes = [database(subj).metadata(1).stimulated_nroftimes; database(subj).metadata(2).stimulated_nroftimes];
     database(subj).metadata(1).epoched_data_avg = cat(2,database(subj).metadata(1).epoched_data_avg,database(subj).metadata(2).epoched_data_avg);  
     database(subj).metadata(1).stimulated_pairs = [database(subj).metadata(1).stimulated_pairs; database(subj).metadata(2).stimulated_pairs]; 
     database(subj).metadata(1).n1_peak_amplitude = cat(2,database(subj).metadata(1).n1_peak_amplitude, database(subj).metadata(2).n1_peak_amplitude); 
+    database(subj).metadata(2) = [];
 end 
-% now for subjects 1 and 5 we have runs 1 and 2 in run 1 
+% now for subjects 1,4 and 5 we have runs 1 and 2 in run 1 
 
 runs = 1; %[1:length(database(subj).metadata)] %(this is partially right, because it loops around the rows of the metadata, not specifically on the runs columns
 
 % select subjects/iterate over all subjects in database
 
-for subj = 1
+for subj = 1:5
     % we need to make a matrix of size Atlas areas X Atlas areas
     % integrate Wang and Benson maps to gte th best of both
     new_label = NaN(size(database(subj).metadata(runs).electrodes.name,1),1);
@@ -73,12 +76,21 @@ for subj = 1
                 new_label(kk) = database(subj).metadata(runs).electrodes.Wang_label(kk);
             end
         end
+        
+%     %% We take only the Wang atlas to label all the electrodes 
+%     %maybe also take hV4 from Benson atlas? 
+%     new_label = NaN(size(database(subj).metadata(runs).electrodes.name,1),1);
+%     new_label = database(subj).metadata(runs).electrodes.Wang_label;
+%     new_label(new_label == 0) = NaN;   
 
     % we keep the Wang ROI names, but add larger area estimates from Benson
     Wang_ROI_Names = {...
         'V1v' 'V1d' 'V2v' 'V2d' 'V3v' 'V3d' 'hV4' 'VO1' 'VO2' 'PHC1' 'PHC2' ...
         'TO2' 'TO1' 'LO2' 'LO1' 'V3B' 'V3A' 'IPS0' 'IPS1' 'IPS2' 'IPS3' 'IPS4' ...
         'IPS5' 'SPL1' 'FEF'};
+    
+    database(subj).metadata(runs).new_label = new_label; % adding the matrix to the database
+
     
     %% plot how many electrodes are on every area 
     elec_on_area = (1:length(Wang_ROI_Names))';
@@ -131,10 +143,10 @@ for subj = 1
         stim_el2_label = channel_labels(database(subj).metadata(runs).stimulated_pairs(kk,2));
 
         if stim_el2_label>0 % this electrode has a label
-            [nn,~] = hist(measured_channel_labels(measured_channel_labels>0),[1:25]);
+            [ss,~] = hist(measured_channel_labels(measured_channel_labels>0),[1:25]);
             % add the number of measured channels
             measured_connection_matrix(stim_el2_label,:) = ...
-                 measured_connection_matrix(stim_el2_label,:) + nn;
+                 measured_connection_matrix(stim_el2_label,:) + ss;
         end
     end
 
@@ -153,8 +165,8 @@ for subj = 1
     hcb = colorbar;
     title(hcb,'# of stimulations per area')
     set(gcf,'PaperPositionMode','auto')
-    % print('-dpng','-r300','/home/giulio/figures/measured_connections_matrix')
     title(['POSSIBLE MATRIX Subject: ' database(subj).subject ' - Run: ' database(subj).metadata(runs).run ])
+    %print('-djpeg','-r300',fullfile('/home/giulio/allimagesplotted', sprintf('measured_connection_matrix %s', database(subj).subject )))
     %% create a matrix starting from the ccep data (ccep_detect_onlyN1)
     %on the y axis all the stimulation pairs, on the x axis all the target
     %areas (electrodes). If CCEP is significant then 1, if not then 0. 
@@ -169,7 +181,7 @@ for subj = 1
     %only  removes the first one 
     for kk = 1:size(database(subj).metadata(runs).stimulated_pairs,1)
         for ss = 1:size(database(subj).metadata(runs).channels.name,1) 
-            if database(subj).metadata(runs).stimulated_pairs(kk,1) == ss'
+            if database(subj).metadata(runs).stimulated_pairs(kk,1) == ss
                 conn_plot(ss,kk) = 0; % set stimulated channels to zero
             end
         end 
@@ -177,10 +189,12 @@ for subj = 1
 
     % necessary to assign a label to every stimulation pair and match it with
     % the channels that do have a label (channel_labels)
+    
     labeled_stimsets = zeros(size(database(subj).metadata(runs).stimulated_pairs));
     for kk = 1:size(database(subj).metadata(runs).stimulated_pairs,1)
         labeled_stimsets(kk,1:2) = channel_labels(database(subj).metadata(runs).stimulated_pairs(kk,1:2));
     end
+    database(subj).metadata(runs).labeled_stimsets = labeled_stimsets;
 
     % we have: 
     % output_ER:        channels X Nstimpairs X amplitude & latency
@@ -199,27 +213,26 @@ for subj = 1
                 % then add 1s for measured CCEPs
                     % does the measured channel have a label?
                     if channel_labels(ee) ~= 0 && ~isnan(channel_labels(ee)) 
-                        measured_N1_matrix(channel_labels(ee),labeled_stimsets(ss,1)) = ...
-                        conn_plot(ee,ss)+ measured_N1_matrix(channel_labels(ee),labeled_stimsets(ss,1));
+                        measured_N1_matrix(labeled_stimsets(ss,1),channel_labels(ee)) = ...
+                        conn_plot(ee,ss)+ measured_N1_matrix(labeled_stimsets(ss,1),channel_labels(ee));
                     end
             end
-        end 
+         
 
             if labeled_stimsets(ss,2) ~= 0 && ~isnan(labeled_stimsets(ss,2)) % does the second stimulated electrode have a label
                 % then add 1s for measured CCEPs
                 % does the measured channel have a label?
                     if channel_labels(ee) ~= 0 && ~isnan(channel_labels(ee))
-                    measured_N1_matrix(channel_labels(ee),labeled_stimsets(ss,2)) = ...
-                        conn_plot(ee,ss)+ measured_N1_matrix(channel_labels(ee),labeled_stimsets(ss,2));
+                    measured_N1_matrix(labeled_stimsets(ss,2),channel_labels(ee)) = ...
+                        conn_plot(ee,ss)+ measured_N1_matrix(labeled_stimsets(ss,2),channel_labels(ee));
                     end
             end
+        end 
     end
 
 
     % adding a -1 on areas that are not covered
     measured_N1_matrix(database(subj).metadata(runs).possible_mat==0) = -1;
-
-    %measured_N1_matrix(isnan(measured_N1_matrix)) = -1 %making nans become -1 (Non covered areas) 
 
     %     %Blocking the script if the absolute matrix does not show any ccep
     %     if isempty(measured_N1_matrix(measured_N1_matrix > 0))
@@ -249,8 +262,8 @@ for subj = 1
     hcb = colorbar;%('TicksMode','manual', 'Ticks',[-1 0 1],'TickLabels', {'not recorded', 'no response', 'Early response(CCEP)'});
     title(hcb,'# CCEP')
     set(gcf,'PaperPositionMode','auto')
-    % print('-dpng','-r300','/home/giulio/figures/measured_N1_matrix')
     title(['ABSOLUTE MATRIX Subject: ' database(subj).subject ' - Run: ' database(subj).metadata(runs).run ])
+    %print('-djpeg','-r300',fullfile('/home/giulio/allimagesplotted', sprintf('measured_N1_matrix %s', database(subj).subject )))
     database(subj).metadata(runs).absolute_mat = measured_N1_matrix; % adding the matrix to the database
 
     %% plot relative ccep connection matrix 
@@ -268,17 +281,15 @@ for subj = 1
         'XDir','normal', 'XTickLabel', Wang_ROI_Names, 'YTickLabel', Wang_ROI_Names);
     xtickangle(90)
     cm = summer(21);
-    A = ones(10,3)
-    cm(1:10,:) = A  % making -1 black 
-    cm(11,:) = [0 0 0] %making 0 white (not showing any ccep) 
-    colormap(cm)
+    A = ones(10,3);
+    cm(1:10,:) = A;  % making -1 black 
+    cm(11,:) = [0 0 0]; %making 0 white (not showing any ccep) 
+    colormap(cm);
     hcb = colorbar('TicksMode','manual', 'Ticks',[-1 0 1],'TickLabels', {'not recorded', 'no response', 'Early response(CCEP)'});
     %hcb.TickLabels = arrayfun( @(x) [num2str(x) '%'], hcb.Ticks * 100, 'UniformOutput', false );
     set(gcf,'PaperPositionMode','auto')
-    %print('-dpng','-r300','/home/giulio/figures/relative_N1_matrix')
-    %   saveas(relative_N1_matrix,sprintf('relative_matrix %d.png',subj)); % will create FIG1, FIG2,...
-    %   hold on 
-    title(['RELATIVE MATRIX Subject: ' database(subj).subject ' - Run: ' database(subj).metadata(runs).run '(' num2str(runs) ')' ])
+    title(['RELATIVE MATRIX Subject: ' database(subj).subject ' - Run: ' database(subj).metadata(runs).run ])
+    %print('-djpeg','-r300',fullfile('/home/giulio/allimagesplotted', sprintf('relative_N1_matrix %s', database(subj).subject )))
     %add the matrix to the database for plotting together 
     database(subj).metadata(runs).relative_mat = relative_N1_matrix; % adding the matrix to the database
 
@@ -288,30 +299,141 @@ end
 % Reciprocity index = reciprocal connections/all connections 
 
 
-for subj = 1%:length(database)
+for subj = 1:length(database)
     database(subj).metadata(runs).all_conn = [];
     database(subj).metadata(runs).reciprocal_conn = [];
     for xx = 1:size(database(subj).metadata(runs).relative_mat,1) 
         for yy = 1:size(database(subj).metadata(runs).relative_mat,2)
-            if database(subj).metadata(runs).relative_mat(xx,yy) > 0.01 
+            if database(subj).metadata(runs).relative_mat(xx,yy) > 0 && xx ~= yy  
                 database(subj).metadata(runs).all_conn(end+1,1:2) = ([xx yy]);
             end
         end
     end
-
+   
+    
+    for xx = 1:length(database(subj).metadata(runs).all_conn(:,1))
+        for yy = 1:length(database(subj).metadata(runs).all_conn(:,2))
+            if database(subj).metadata(runs).all_conn(xx,:) = (database(subj).metadata(runs).all_conn(,1))
+                
+                
+                
+                
+                
+                
 %creating an array with reciprocal conections
     for xx = 1:size(database(subj).metadata(runs).relative_mat,1) 
         for yy = 1:size(database(subj).metadata(runs).relative_mat,2) 
-            if database(subj).metadata(runs).relative_mat(xx,yy)>0 && database(subj).metadata(runs).relative_mat(yy,xx) && xx ~= yy 
+            if database(subj).metadata(runs).relative_mat(xx,yy)>0 && database(subj).metadata(runs).relative_mat(yy,xx)>0 && xx ~= yy 
                 database(subj).metadata(runs).reciprocal_conn(end+1,1:2) = ([xx yy]);
             end 
         end 
     end 
+     
 database(subj).metadata(runs).reciprocity_index = size(database(subj).metadata(runs).reciprocal_conn,1)./size(database(subj).metadata(runs).all_conn,1);
 end 
 
-all_reciprocities = ['RESP0315'; 'RESP0751'; 'RESP0401'; 'RESP0405'; 'RESP0306'; {'RESP0703'}];
-for subj = 1%:length(database)
-    all_reciprocities(subj,2) = num2cell(database(subj).metadata(runs).reciprocity_index); 
+all_reciprocities = ['RESP0315'; 'RESP0751'; 'RESP0401'; 'RESP0306'; {'RESP0703'}];
+for subj = 1:length(database)
+    all_reciprocities(subj,2) = num2cell(database(subj).metadata(runs).reciprocity_index) 
+end
+
+%% density of the network with areas, maybe interesting to do that with
+% electrodes as well? 
+
+%potential connections = n(n-1)/2 with n=n.ofnodes (recorded areas) or all
+%the possible connections 
+%actual connections = n.of times there is a value higher than 0 in the
+%relative matrix 
+
+for subj = 1:5 
+    database(subj).metadata(runs).potential_conn = (sum(database(subj).metadata(runs).possible_mat(:) > 0))
+    database(subj).metadata(runs).actual_conn = sum(database(subj).metadata(runs).relative_mat(:) > 0)
+    database(subj).metadata(runs).density = database(subj).metadata(runs).actual_conn/database(subj).metadata(runs).potential_conn 
 end 
+
+all_densities = ['RESP0315'; 'RESP0751'; 'RESP0401'; 'RESP0306'; {'RESP0703'}];
+for subj = 1:length(database)
+    all_densities(subj,2) = num2cell(database(subj).metadata(runs).density) 
+end
+
+%% concatenating all the relative matrices
+% z = cat(3,database(1).metadata(runs).relative_mat,database(2).metadata(runs).relative_mat,database(3).metadata(runs).relative_mat,...
+%     database(4).metadata(runs).relative_mat,database(5).metadata(runs).relative_mat);
+% 
+% % calculating the mean (if corresponding values are positive, otherwise
+% % leave 0 or 1) 
+% rel_mat_mean = zeros(25,25)
+% for xx = 1:25 
+%     for yy = 1:25 
+%         for j = 1:5
+%             if z(xx,yy,j) > 0 
+%                 rel_mat_mean(xx,yy) = mean(z(xx,yy,j));
+%             elseif z(xx,yy,:) == 0 
+%                 rel_mat_mean(xx,yy) = 0; 
+%             elseif z(xx,yy,:) == -1 
+%                 rel_mat_mean(xx,yy) = -1; 
+%             end 
+%         end
+%     end
+% end
+% 
+% % plot averaged connection matrix 
+%     
+% figure('Position',[0 0 800 800])
+% imagesc(rel_mat_mean,[-1 1])
+% axis square
+% 
+% xlabel('Recording Visual Area'),ylabel('Stimulated Visual Area')
+% set(gca,'XTick',[1:25],'YTick',[1:25],'FontName','Lato','FontSize',12,...
+%     'XDir','normal', 'XTickLabel', Wang_ROI_Names, 'YTickLabel', Wang_ROI_Names);
+% xtickangle(90)
+% cm = jet(21);
+% A = ones(10,3);
+% cm(1:10,:) = A;  % making -1 black 
+% cm(11,:) = [0 0 0]; %making 0 white (not showing any ccep) 
+% colormap(cm);
+% hcb = colorbar('TicksMode','manual', 'Ticks',[-1 0 1],'TickLabels', {'not recorded', 'no response', 'Early response(CCEP)'});
+% %hcb.TickLabels = arrayfun( @(x) [num2str(x) '%'], hcb.Ticks * 100, 'UniformOutput', false );
+% set(gcf,'PaperPositionMode','auto')
+% 
+% %% 
+% % concatenating the matrices of patients who have VOF coverage 
+% vof_coverage_rel_mat = cat(3,database(1).metadata(runs).relative_mat,database(3).metadata(runs).relative_mat,database(4).metadata(runs).relative_mat)
+% 
+% 
+% %calculating the mean 
+% for xx = 1:25 
+%     for yy = 1:25 
+%         if vof_coverage_rel_mat(xx,yy,:) > 0 
+%             vof_rel_mean(xx,yy) = mean(vof_coverage_rel_mat(xx,yy,:));
+%         elseif vof_coverage_rel_mat(xx,yy,:) == 0 
+%         	vof_rel_mean(xx,yy) = 0;
+%         elseif vof_coverage_rel_mat(xx,yy,:) == -1 
+%             vof_rel_mean(xx,yy) = -1;    
+%         end 
+%     end
+% end
+% 
+% 
+% 
+% 
+% %plot vof averaged connection matrix 
+%     
+% figure('Position',[0 0 800 800])
+% imagesc(database(3).metadata(runs).relative_mat,[-1 1])
+% axis square
+% 
+% xlabel('Recording Visual Area'),ylabel('Stimulated Visual Area')
+% set(gca,'XTick',[1:25],'YTick',[1:25],'FontName','Lato','FontSize',12,...
+%     'XDir','normal', 'XTickLabel', Wang_ROI_Names, 'YTickLabel', Wang_ROI_Names);
+% xtickangle(90)
+% cm = jet(21);
+% A = ones(10,3);
+% cm(1:10,:) = A;  % making -1 black 
+% cm(11,:) = [0 0 0]; %making 0 white (not showing any ccep) 
+% colormap(cm);
+% hcb = colorbar('TicksMode','manual', 'Ticks',[-1 0 1],'TickLabels', {'not recorded', 'no response', 'Early response(CCEP)'});
+% %hcb.TickLabels = arrayfun( @(x) [num2str(x) '%'], hcb.Ticks * 100, 'UniformOutput', false );
+% set(gcf,'PaperPositionMode','auto')
+
 

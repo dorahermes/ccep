@@ -4,22 +4,22 @@
 % can be cloned from: https://github.com/dorahermes/ecogBasicCode.git
 addpath('/Fridge/users/giulio/github/ecogBasicCode/render/')
 
-dataRootPath = '/Fridge/users/giulio/ccep/dataBIDS/';
+dataRootPath = '/Fridge/users/jaap/ccep/dataBIDS/';
 
 v_dirs = [90 0;0 0;-12 4];
     
-subjects = {'RESP0315','RESP0751','RESP0401','RESP0405','RESP0306'}; % 'RESP0703' cannot plot 0703 because of the gifti file
+subjects = {'RESP0315','RESP0751','RESP0401','RESP0405','RESP0306','RESP0703' }; % cannot plot 0703 because of the gifti file
 hemi_cap = {'L','R', 'R', 'L', 'R', 'L'};
 hemi_small = {'l','r', 'r', 'l', 'r', 'l'};
 
-v_dirs = [270 0];%;90 0;90 -60;270 -60;0 0];
+%v_dirs = [270 0];%;90 0;90 -60;270 -60;0 0];
 
 Wang_ROI_Names = {...
     'V1v' 'V1d' 'V2v' 'V2d' 'V3v' 'V3d' 'hV4' 'VO1' 'VO2' 'PHC1' 'PHC2' ...
     'TO2' 'TO1' 'LO2' 'LO1' 'V3B' 'V3A' 'IPS0' 'IPS1' 'IPS2' 'IPS3' 'IPS4' ...
     'IPS5' 'SPL1' 'FEF'};
 
-for s = [2]
+for s = [6]
     
     % subject code
     subj = subjects{s};

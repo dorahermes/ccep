@@ -4,13 +4,13 @@
 
 % Make sure that this toolbox is in the path:
 % can be cloned from: https://github.com/dorahermes/ecogBasicCode.git
-addpath('/Fridge/users/dora/github/ecogBasicCode/render/')
+addpath('/Fridge/users/giulio/github/ecogBasicCode/render/')
 
 
 %% Render plain with used electrodes
-dataRootPath = '/Fridge/users/giulio/ccep/dataBIDS/';
-subjects = {'RESP0751'};
-hemi_cap = {'R'};
+dataRootPath = '/Fridge/users/jaap/ccep/dataBIDS/';
+subjects = {'RESP0703'};
+hemi_cap = {'L'};
 
 % pick a viewing angle:
 v_dirs = [90 0];%;90 0;90 -60;270 -60;0 0];
@@ -58,11 +58,11 @@ end
 %% Render Wang/Kastner with electrodes
 
 %clear all
-dataRootPath = '/Fridge/users/giulio/ccep/dataBIDS/';
+dataRootPath = '/Fridge/users/jaap/ccep/dataBIDS/';
 
-subjects = {'RESP0751'};
-hemi_cap = {'R','R'};
-hemi_small = {'r','r'};
+subjects = {'RESP0703'};
+hemi_cap = {'L','R'};
+hemi_small = {'l','r'};
 
 v_dirs = [45 0];%;90 0;90 -60;270 -60;0 0];
 
