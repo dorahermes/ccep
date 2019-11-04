@@ -3,6 +3,9 @@ bin/
 bin-debug/
 bin-release/
 
+#.DS_Store
+.DS_Store
+
 # Other files and folders
 .settings/
 
